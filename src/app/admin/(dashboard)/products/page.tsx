@@ -165,10 +165,10 @@ export default function ProductsPage() {
             {showForm && (
                 <div className="bg-white p-6 rounded-lg shadow-sm mb-8 border border-blue-100">
                     <h2 className="text-lg font-semibold mb-4">{editingId ? 'Edit Product' : 'Add New Product'}</h2>
-                    <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-4">
 
                         {/* Basic Info */}
-                        <div className="col-span-2"><h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">Basic Info</h3></div>
+                        <div className="mt-2"><h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">Basic Info</h3></div>
                         <div>
                             <label className="block text-sm font-medium mb-1">Name *</label>
                             <input type="text" className="w-full border p-2 rounded" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
@@ -179,7 +179,7 @@ export default function ProductsPage() {
                         </div>
 
                         {/* Pricing & Stock */}
-                        <div className="col-span-2 mt-2"><h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">Pricing & Inventory</h3></div>
+                        <div className="mt-4"><h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">Pricing & Inventory</h3></div>
                         <div>
                             <label className="block text-sm font-medium mb-1">Price (INR) *</label>
                             <input type="number" className="w-full border p-2 rounded" required value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} />
@@ -198,7 +198,7 @@ export default function ProductsPage() {
                         </div>
 
                         {/* Relations */}
-                        <div className="col-span-2 mt-2"><h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">Organization</h3></div>
+                        <div className="mt-4"><h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">Organization</h3></div>
                         <div>
                             <label className="block text-sm font-medium mb-1">Category *</label>
                             <select className="w-full border p-2 rounded" required value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })}>
@@ -215,12 +215,12 @@ export default function ProductsPage() {
                         </div>
 
                         {/* Details */}
-                        <div className="col-span-2">
+                        <div>
                             <label className="block text-sm font-medium mb-1">Description</label>
                             <textarea className="w-full border p-2 rounded h-24" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
                         </div>
 
-                        <div className="col-span-2 flex flex-wrap gap-6 mt-2">
+                        <div className="flex flex-wrap gap-6 mt-2">
                             <label className="flex items-center gap-2 cursor-pointer bg-red-50 p-2 rounded border border-red-100 pr-4">
                                 <input type="checkbox" checked={formData.isHot} onChange={e => setFormData({ ...formData, isHot: e.target.checked })} className="w-5 h-5 text-red-600 rounded" />
                                 <span className="font-bold text-red-600 text-sm uppercase">Mark as HOT Product</span>
@@ -238,7 +238,7 @@ export default function ProductsPage() {
                         </div>
 
                         {/* Images */}
-                        <div className="col-span-2 mt-2">
+                        <div className="mt-2">
                             <label className="block text-sm font-medium mb-1">Current Images (Manage)</label>
                             {existingImages.length > 0 ? (
                                 <div className="flex flex-wrap gap-4 mb-4">
@@ -269,7 +269,7 @@ export default function ProductsPage() {
                             />
                         </div>
 
-                        <div className="col-span-2 mt-4">
+                        <div className="mt-4">
                             <button type="submit" className="w-full bg-green-600 text-white px-6 py-3 rounded font-bold hover:bg-green-700">
                                 Save Product
                             </button>
