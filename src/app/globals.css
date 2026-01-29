@@ -26,9 +26,11 @@ body {
 
 @media print {
 
-  /* Hide Admin Sidebar and Header */
+  /* Hide all generic UI shells */
   aside,
   header,
+  nav,
+  footer,
   .no-print,
   button,
   .back-button {
@@ -36,46 +38,58 @@ body {
   }
 
   /* Reset layout for print */
+  html,
+  body,
   main {
+    background: white !important;
+    color: black !important;
     margin: 0 !important;
     padding: 0 !important;
     height: auto !important;
     overflow: visible !important;
-    background: white !important;
   }
 
-  .bg-gray-100 {
-    background-color: white !important;
-  }
-
-  body {
-    background: white !important;
-  }
-
-  /* Ensure content spans full width */
+  /* Ensure the container is visible but doesn't have shadows */
   .max-w-5xl {
     max-width: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
-  }
-
-  .grid {
     display: block !important;
   }
 
-  .lg\:grid-cols-3 {
-    grid-template-columns: 1fr !important;
+  /* Force display of the invoice template */
+  .print-only-invoice {
+    display: block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    background: white !important;
+    color: black !important;
+    padding: 0 !important;
+    margin: 0 !important;
   }
 
-  /* Force white background for printed elements */
-  .bg-white {
-    background-color: white !important;
-    border: none !important;
-    box-shadow: none !important;
+  /* Print specific formatting */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
-  .shadow-sm,
-  .border {
-    box-shadow: none !important;
+  .border,
+  .border-b,
+  .border-t,
+  .border-l,
+  .border-r {
+    border-color: #000 !important;
+  }
+
+  .text-gray-500,
+  .text-gray-600,
+  .text-gray-400 {
+    color: #333 !important;
+  }
+
+  .bg-blue-600 {
+    color: #000 !important;
+    /* Don't waste ink on blue bg in BW prints */
   }
 }
