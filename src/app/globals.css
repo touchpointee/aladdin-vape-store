@@ -94,27 +94,3 @@ body {
   .border-t {
     border-color: #000 !important;
   }
-
-  /* 6. Layout Resets for Print */
-  .grid,
-  .flex {
-    display: block !important;
-  }
-
-  .lg\:col-span-2,
-  .col-span-2 {
-    width: 100% !important;
-  }
-
-  .gap-6 {
-    gap: 0 !important;
-  }
-
-  /* Ensure images don't break across pages */
-  img {
-    page-break-inside: avoid;
-  }
-
-  /* Reduce padding slightly to ensure fit */
-  /* 6. Layout Resets for Print */
-  (Removed)
