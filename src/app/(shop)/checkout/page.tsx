@@ -18,6 +18,8 @@ export default function CheckoutPage() {
     const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
     const [showNewAddressForm, setShowNewAddressForm] = useState(false);
 
+    const [editingId, setEditingId] = useState<string | null>(null);
+
     const [formData, setFormData] = useState({
         name: user?.name || '',
         phone: user?.phone || '',
@@ -29,35 +31,13 @@ export default function CheckoutPage() {
         age: ''
     });
 
-    // Fetch saved addresses on mount if logged in
-    useEffect(() => {
-        if (isLoggedIn && user?.phone) {
-            setFormData(prev => ({ ...prev, phone: user.phone }));
-            fetchAddresses(user.phone);
-        }
-    }, [isLoggedIn, user]);
+    // ... existing useEffect ...
 
-    const fetchAddresses = async (phone: string) => {
-        try {
-            const res = await fetch(`/api/addresses?phone=${phone}`);
-            if (res.ok) {
-                const data = await res.json();
-                setSavedAddresses(data);
-                // Pre-fill with first address if available
-                if (data.length > 0) {
-                    fillAddress(data[0]);
-                } else {
-                    setShowNewAddressForm(true);
-                }
-            }
-        } catch (error) {
-            console.error("Failed to load addresses");
-        }
-    };
+    // ... existing fetchAddresses ...
 
     const fillAddress = (addr: any) => {
         setFormData({
-            name: addr.name || formData.name, // Keep existing name if addr name is missing/different context
+            name: addr.name || formData.name,
             phone: addr.phone,
             email: addr.email || '',
             address: addr.address,
@@ -68,17 +48,35 @@ export default function CheckoutPage() {
         });
         setSelectedAddressId(addr._id);
         setShowNewAddressForm(false);
+        setEditingId(null); // Reset editing when just selecting
     };
 
-    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
+    // ... existing handleChange ...
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
 
         try {
+            // 0. Update Address (if in edit mode) or Create New Address (if new)
+            // We do this BEFORE creating the order to ensure correct address details are saved
+            if (showNewAddressForm && isLoggedIn && user?.phone) {
+                const url = '/api/addresses';
+                const method = editingId ? 'PUT' : 'POST';
+                const body = editingId ? { ...formData, _id: editingId } : { ...formData, phone: user.phone };
+
+                const addrRes = await fetch(url, {
+                    method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+
+                if (addrRes.ok) {
+                    // Refresh addresses to get the latest ID if new, or update list
+                    await fetchAddresses(user.phone);
+                }
+            }
+
             // 1. Create Order
             const orderData = {
                 customer: formData,
@@ -98,26 +96,6 @@ export default function CheckoutPage() {
             });
 
             if (!res.ok) throw new Error('Order failed');
-
-            // 2. Save Address (Side Effect - Fire and forget mostly, or wait)
-            // We save if it's a new address (simple logic: check if it matches any saved ID? Or just always save new entry?)
-            // For this minimal flow, let's just save it as a new entry if the user is logged in
-            if (isLoggedIn && user?.phone) {
-                await fetch('/api/addresses', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        phone: user.phone,
-                        name: formData.name,
-                        email: formData.email,
-                        address: formData.address,
-                        landmark: formData.landmark,
-                        city: formData.city,
-                        pincode: formData.pincode,
-                        age: formData.age
-                    })
-                });
-            }
 
             setSuccess(true);
             clearCart();
@@ -178,11 +156,32 @@ export default function CheckoutPage() {
                                 >
                                     <div className="flex items-start gap-3">
                                         <MapPin className={`mt-0.5 ${selectedAddressId === addr._id ? 'text-blue-600' : 'text-gray-400'}`} size={18} />
-                                        <div>
+                                        <div className="flex-1">
                                             <p className="font-bold text-sm text-gray-900">{addr.name} ({addr.age} Yrs)</p>
                                             <p className="text-sm text-gray-600 leading-snug">{addr.address}, {addr.landmark && `${addr.landmark}, `}{addr.city} - {addr.pincode}</p>
                                             <p className="text-xs text-gray-500 mt-1">{addr.email}</p>
                                         </div>
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                fillAddress(addr);
+                                                setEditingId(addr._id);
+                                                setShowNewAddressForm(true);
+                                                setFormData({
+                                                    name: addr.name,
+                                                    phone: addr.phone,
+                                                    email: addr.email,
+                                                    address: addr.address,
+                                                    landmark: addr.landmark || '',
+                                                    city: addr.city,
+                                                    pincode: addr.pincode,
+                                                    age: addr.age,
+                                                });
+                                            }}
+                                            className="p-1.5 hover:bg-gray-100 rounded text-blue-600 text-xs font-bold"
+                                        >
+                                            Edit
+                                        </button>
                                     </div>
                                 </div>
                             ))}
@@ -190,6 +189,7 @@ export default function CheckoutPage() {
                                 onClick={() => {
                                     setFormData({ ...formData, email: '', address: '', landmark: '', city: '', pincode: '', age: '' });
                                     setSelectedAddressId(null);
+                                    setEditingId(null);
                                     setShowNewAddressForm(true);
                                 }}
                                 className="p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 font-bold text-sm flex items-center justify-center gap-2 hover:border-blue-400 hover:text-blue-600"
