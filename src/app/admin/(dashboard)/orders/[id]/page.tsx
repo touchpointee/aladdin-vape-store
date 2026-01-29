@@ -73,8 +73,7 @@ export default function AdminOrderDetailPage() {
 
     return (
         <div className="max-w-5xl mx-auto">
-            {/* Main UI (Hidden during print) */}
-            <div className="no-print">
+            <div>
                 {/* Header */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                     <div className="flex items-center gap-4">
@@ -221,94 +220,8 @@ export default function AdminOrderDetailPage() {
                     </div>
 
                 </div>
-
-                {/* Print Only Invoice Template */}
-                <div className="print-only-invoice hidden print:block bg-white text-black p-8 font-sans">
-                    <div className="flex justify-between items-start border-b pb-8 mb-8">
-                        <div>
-                            <h1 className="text-3xl font-extrabold uppercase tracking-tighter">Aladdin Store</h1>
-                            <p className="text-sm text-gray-500 mt-1">Premium Vape & Accessories</p>
-                        </div>
-                        <div className="text-right">
-                            <h2 className="text-2xl font-bold text-gray-800 uppercase">Invoice</h2>
-                            <p className="text-sm font-mono mt-1">#{order._id.toString().toUpperCase()}</p>
-                            <p className="text-sm text-gray-500 mt-1">{new Date(order.createdAt).toLocaleDateString()} {new Date(order.createdAt).toLocaleTimeString()}</p>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-12 mb-10">
-                        <div>
-                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Bill To</h3>
-                            <div className="space-y-1">
-                                <p className="text-lg font-bold">{order.customer.name}</p>
-                                <p className="text-sm text-gray-600">{order.customer.email}</p>
-                                <p className="text-sm text-gray-600">Phone: {order.customer.phone}</p>
-                                <p className="text-sm text-gray-600">Age: {order.customer.age} Yrs</p>
-                            </div>
-                        </div>
-                        <div>
-                            <h3 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Shipping Address</h3>
-                            <div className="space-y-1 text-sm text-gray-600 leading-relaxed">
-                                <p>{order.customer.address}</p>
-                                {order.customer.landmark && <p>Landmark: {order.customer.landmark}</p>}
-                                <p>{order.customer.city} - {order.customer.pincode}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="mb-10">
-                        <table className="w-full border-collapse">
-                            <thead>
-                                <tr className="border-b-2 border-black text-left">
-                                    <th className="py-4 text-xs font-bold uppercase tracking-widest">Description</th>
-                                    <th className="py-4 px-4 text-xs font-bold uppercase tracking-widest text-center">Price</th>
-                                    <th className="py-4 px-4 text-xs font-bold uppercase tracking-widest text-center">Qty</th>
-                                    <th className="py-4 text-xs font-bold uppercase tracking-widest text-right">Total</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {order.products.map((item: any, idx: number) => (
-                                    <tr key={idx} className="border-b border-gray-100">
-                                        <td className="py-5">
-                                            <p className="font-bold text-gray-900">{item.product?.name || "Unknown Product"}</p>
-                                            <p className="text-xs text-gray-500 mt-1">{item.product?.puffCount && `${item.product.puffCount} Puffs`} · {item.product?.brand?.name}</p>
-                                        </td>
-                                        <td className="py-5 px-4 text-center text-sm">₹{item.price}</td>
-                                        <td className="py-5 px-4 text-center text-sm">{item.quantity}</td>
-                                        <td className="py-5 text-right font-bold">₹{item.price * item.quantity}</td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div className="flex justify-end pt-6 border-t border-gray-200">
-                        <div className="w-64 space-y-3">
-                            <div className="flex justify-between text-sm text-gray-600">
-                                <span>Subtotal</span>
-                                <span>₹{order.totalPrice}</span>
-                            </div>
-                            <div className="flex justify-between text-sm text-gray-600">
-                                <span>Shipping</span>
-                                <span>Free</span>
-                            </div>
-                            <div className="flex justify-between items-center pt-3 border-t-2 border-black">
-                                <span className="text-lg font-bold uppercase tracking-tighter">Grand Total</span>
-                                <span className="text-2xl font-black text-blue-600">₹{order.totalPrice}</span>
-                            </div>
-                            <div className="pt-4">
-                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-right mb-1">Payment Method</p>
-                                <p className="text-xs font-bold text-right uppercase bg-gray-50 p-2 rounded">{order.paymentMode}</p>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div className="mt-20 pt-10 border-t border-gray-100 text-center">
-                        <p className="text-sm text-gray-400">Thank you for shopping with Aladdin Store!</p>
-                        <p className="text-[10px] text-gray-300 mt-2 uppercase tracking-widest">Generated on {new Date().toLocaleString()}</p>
-                    </div>
-                </div>
             </div>
         </div>
+        </div >
     );
 }
