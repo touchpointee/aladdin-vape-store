@@ -6,9 +6,9 @@ import { useState } from "react";
 
 export default function ProfilePage() {
     const [profile, setProfile] = useState({
-        name: "Guest User",
-        email: "guest@example.com",
-        phone: "+91 9876543210"
+        name: "",
+        email: "",
+        phone: ""
     });
 
     const [loading, setLoading] = useState(false);
