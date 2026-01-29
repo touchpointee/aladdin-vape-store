@@ -9,8 +9,8 @@ interface Product {
     name: string;
     price: number;
     stock: number;
-    category: { _id: string; name: string };
-    brand?: { _id: string; name: string };
+    category?: { _id: string; name: string } | null;
+    brand?: { _id: string; name: string } | null;
     images: string[];
     isHot?: boolean;
     isTopSelling?: boolean;
@@ -85,8 +85,8 @@ export default function ProductsPage() {
             puffCount: product.puffCount?.toString() || '',
             capacity: product.capacity || '',
             resistance: product.resistance || '',
-            category: product.category._id || '', // Ensure ID is used
-            brand: product.brand?._id || '',     // Ensure ID is used
+            category: product.category?._id || '', // Safe access
+            brand: product.brand?._id || '',       // Safe access
             description: product.description || '',
             isHot: product.isHot || false,
             isTopSelling: product.isTopSelling || false,

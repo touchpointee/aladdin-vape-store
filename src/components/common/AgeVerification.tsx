@@ -9,8 +9,30 @@ export default function AgeVerification() {
     const pathname = usePathname();
 
     useEffect(() => {
-        setMounted(true);
+        const checkVerification = () => {
+            const stored = localStorage.getItem("age_verified_timestamp");
+            if (stored) {
+                const timestamp = parseInt(stored, 10);
+                const now = Date.now();
+                const twentyFourHours = 24 * 60 * 60 * 1000;
+
+                if (now - timestamp < twentyFourHours) {
+                    setIsVerified(true);
+                } else {
+                    localStorage.removeItem("age_verified_timestamp");
+                }
+            }
+            setMounted(true);
+        };
+
+        checkVerification();
     }, []);
+
+    const handleVerifyNodes = () => {
+        const now = Date.now();
+        localStorage.setItem("age_verified_timestamp", now.toString());
+        setIsVerified(true);
+    };
 
     const handleExit = () => {
         window.location.href = "https://www.google.com";
@@ -34,7 +56,7 @@ export default function AgeVerification() {
 
                 <div className="flex flex-col gap-3 max-w-[240px] mx-auto">
                     <button
-                        onClick={() => setIsVerified(true)}
+                        onClick={handleVerifyNodes}
                         className="bg-white border-[1px] border-[#0099ff] text-[#0099ff] font-bold py-2.5 px-4 transition-colors w-full uppercase text-sm tracking-wide"
                     >
                         I'm Over 18
