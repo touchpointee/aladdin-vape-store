@@ -20,10 +20,11 @@ export interface IBrand extends Document {
 
 export interface IProduct extends Document {
     name: string;
-    slug: string;
+    capacity?: string;
+    resistance?: string;
+    puffCount?: number;
     brand: mongoose.Types.ObjectId | IBrand;
     category: mongoose.Types.ObjectId | ICategory;
-    puffCount?: string;
     description: string;
     price: number;
     discountPrice?: number;
@@ -106,10 +107,11 @@ const BrandSchema = new Schema<IBrand>(
 const ProductSchema = new Schema<IProduct>(
     {
         name: { type: String, required: true },
-        slug: { type: String, required: true, unique: true },
         brand: { type: Schema.Types.ObjectId, ref: 'Brand', required: true },
         category: { type: Schema.Types.ObjectId, ref: 'Category', required: true },
-        puffCount: { type: String },
+        puffCount: { type: Number },
+        capacity: { type: String },
+        resistance: { type: String },
         description: { type: String, required: true },
         price: { type: Number, required: true },
         discountPrice: { type: Number },

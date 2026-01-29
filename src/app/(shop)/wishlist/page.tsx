@@ -78,18 +78,39 @@ export default function WishlistPage() {
                             </div>
                             <div className="p-3 flex flex-col flex-1 pointer-events-none relative z-20">
                                 <h3 className="text-sm font-semibold text-gray-900 line-clamp-2 mb-1">{product.name}</h3>
-                                <p className="text-sm font-bold text-gray-900 mb-3">INR {product.price}</p>
+
+                                {/* Price Display */}
+                                <div className="mb-3">
+                                    {(product.discountPrice && product.discountPrice < product.price) ? (
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-sm font-bold text-red-500">INR {product.discountPrice}</span>
+                                            <span className="text-xs text-gray-400 line-through">INR {product.price}</span>
+                                            <span className="text-[10px] bg-orange-100 text-orange-600 px-1.5 py-0.5 rounded font-bold">
+                                                -{Math.round(((product.price - product.discountPrice) / product.price) * 100)}%
+                                            </span>
+                                        </div>
+                                    ) : (
+                                        <p className="text-sm font-bold text-gray-900">INR {product.price}</p>
+                                    )}
+                                </div>
 
                                 <button
                                     onClick={(e) => {
                                         e.preventDefault();
                                         e.stopPropagation();
+                                        const finalPrice = (product.discountPrice && product.discountPrice < product.price)
+                                            ? product.discountPrice
+                                            : product.price;
+
                                         addItem({
                                             id: product._id,
                                             name: product.name,
-                                            price: product.price,
+                                            price: finalPrice,
                                             image: product.images?.[0],
-                                            quantity: 1
+                                            quantity: 1,
+                                            puffCount: product.puffCount,
+                                            capacity: product.capacity,
+                                            resistance: product.resistance
                                         });
                                     }}
                                     className="mt-auto w-full py-2 bg-blue-100 text-blue-700 text-xs font-bold uppercase rounded hover:bg-blue-200 flex items-center justify-center gap-2 pointer-events-auto cursor-pointer relative z-30"

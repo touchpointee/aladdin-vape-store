@@ -37,7 +37,6 @@ export async function POST(req: NextRequest) {
 
         // Extract basic fields
         const name = formData.get('name') as string;
-        const slug = formData.get('slug') as string;
         const price = parseFloat(formData.get('price') as string);
         const stock = parseInt(formData.get('stock') as string);
         const category = formData.get('category') as string;
@@ -45,14 +44,16 @@ export async function POST(req: NextRequest) {
         // Optional fields
         const description = formData.get('description') as string || '';
         const discountPrice = formData.get('discountPrice') ? parseFloat(formData.get('discountPrice') as string) : undefined;
-        const puffCount = formData.get('puffCount') as string || undefined;
+        const puffCount = formData.get('puffCount') ? parseInt(formData.get('puffCount') as string) : undefined;
+        const capacity = formData.get('capacity') as string || undefined;
+        const resistance = formData.get('resistance') as string || undefined;
         const brand = formData.get('brand') as string || undefined;
         const isHot = formData.get('isHot') === 'true';
         const isTopSelling = formData.get('isTopSelling') === 'true';
         const isNewArrival = formData.get('isNewArrival') === 'true';
 
         // Validation
-        if (!name || !slug || !price || !category || !stock) {
+        if (!name || !price || !category || !stock) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 
@@ -73,12 +74,13 @@ export async function POST(req: NextRequest) {
 
         const product = await Product.create({
             name,
-            slug,
             description,
             price,
             discountPrice,
             stock,
             puffCount,
+            capacity,
+            resistance,
             category,
             brand,
             isHot,
@@ -89,9 +91,6 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json(product, { status: 201 });
     } catch (error: any) {
-        if (error.code === 11000) {
-            return NextResponse.json({ error: 'Slug must be unique' }, { status: 400 });
-        }
         return NextResponse.json({ error: error.message || 'Failed to create product' }, { status: 500 });
     }
 }
@@ -116,12 +115,13 @@ export async function PUT(req: NextRequest) {
         };
 
         setIfPresent('name');
-        setIfPresent('slug');
         setIfPresent('description');
         setIfPresent('price', parseFloat);
         setIfPresent('discountPrice', parseFloat);
         setIfPresent('stock', parseInt);
-        setIfPresent('puffCount'); // Keep as string or int? Model says String.
+        setIfPresent('puffCount', parseInt);
+        setIfPresent('capacity');
+        setIfPresent('resistance');
         setIfPresent('category');
         setIfPresent('brand');
 

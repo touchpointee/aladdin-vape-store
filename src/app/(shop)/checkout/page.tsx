@@ -14,6 +14,19 @@ export default function CheckoutPage() {
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
 
+    // Sync prices on mount
+    useEffect(() => {
+        if (items.length > 0) {
+            const ids = items.map(i => i.id).join(',');
+            fetch(`/api/products?ids=${ids}`)
+                .then(res => res.json())
+                .then(data => {
+                    useCartStore.getState().syncCartWithServer(data);
+                })
+                .catch(err => console.error("Failed to sync cart", err));
+        }
+    }, []);
+
     const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
     const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
     const [showNewAddressForm, setShowNewAddressForm] = useState(false);
@@ -332,9 +345,17 @@ export default function CheckoutPage() {
                         <h2 className="text-sm font-bold text-gray-900 uppercase mb-4">Order Summary</h2>
                         <div className="space-y-2 mb-4">
                             {items.map(item => (
-                                <div key={item.id} className="flex justify-between text-sm">
-                                    <span className="text-gray-600">{item.name} x {item.quantity}</span>
-                                    <span className="font-bold">₹{(item.price * item.quantity).toFixed(2)}</span>
+                                <div key={item.id} className="flex justify-between text-sm py-2 border-b border-gray-50 last:border-0">
+                                    <div className="flex flex-col">
+                                        <span className="text-gray-800 font-medium">{item.name}</span>
+                                        <span className="text-xs text-gray-500">Qty: {item.quantity}</span>
+                                        <div className="flex gap-2 text-[10px] text-gray-400 mt-0.5">
+                                            {item.puffCount && <span>{item.puffCount} Puffs</span>}
+                                            {item.capacity && <span>{item.capacity}</span>}
+                                            {item.resistance && <span>{item.resistance}</span>}
+                                        </div>
+                                    </div>
+                                    <span className="font-bold text-gray-900">₹{(item.price * item.quantity).toFixed(2)}</span>
                                 </div>
                             ))}
                         </div>

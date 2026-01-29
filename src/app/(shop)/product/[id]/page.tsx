@@ -84,7 +84,9 @@ export default function ProductDetailPage() {
             price: discountedPrice,
             image: product.images?.[0] || "/placeholder.png",
             quantity: quantity,
-            puffCount: product.puffCount
+            puffCount: product.puffCount,
+            capacity: product.capacity,
+            resistance: product.resistance
         });
         openCart();
     };
@@ -151,6 +153,16 @@ Link: ${window.location.href}`;
                         {product.puffCount && (
                             <span className="bg-gray-100 text-gray-600 text-xs md:text-sm px-3 py-1 rounded-full border">
                                 {product.puffCount} Puffs
+                            </span>
+                        )}
+                        {product.capacity && (
+                            <span className="bg-gray-100 text-gray-600 text-xs md:text-sm px-3 py-1 rounded-full border">
+                                {product.capacity}
+                            </span>
+                        )}
+                        {product.resistance && (
+                            <span className="bg-gray-100 text-gray-600 text-xs md:text-sm px-3 py-1 rounded-full border">
+                                {product.resistance}
                             </span>
                         )}
                         <span className="bg-gray-100 text-gray-600 text-xs md:text-sm px-3 py-1 rounded-full border">

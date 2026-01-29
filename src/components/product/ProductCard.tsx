@@ -109,6 +109,16 @@ export default function ProductCard({ product }: ProductCardProps) {
                         {product.puffCount} Puffs
                     </div>
                 )}
+                {product.capacity && (
+                    <div className="text-[10px] text-gray-500 mb-2">
+                        {product.capacity}
+                    </div>
+                )}
+                {product.resistance && (
+                    <div className="text-[10px] text-gray-500 mb-2">
+                        {product.resistance}
+                    </div>
+                )}
 
                 {/* Rating */}
                 <div className="flex gap-0.5">

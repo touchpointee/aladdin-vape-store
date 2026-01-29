@@ -17,8 +17,9 @@ interface Product {
     isNewArrival?: boolean;
     discountPrice?: number;
     description?: string;
-    slug?: string;
-    puffCount?: string;
+    puffCount?: number;
+    capacity?: string;
+    resistance?: string;
 }
 
 interface Option {
@@ -37,11 +38,12 @@ export default function ProductsPage() {
     const [editingId, setEditingId] = useState<string | null>(null);
     const [formData, setFormData] = useState({
         name: '',
-        slug: '',
         price: '',
         discountPrice: '',
         stock: '',
         puffCount: '',
+        capacity: '',
+        resistance: '',
         category: '',
         brand: '',
         description: '',
@@ -77,11 +79,12 @@ export default function ProductsPage() {
         setEditingId(product._id);
         setFormData({
             name: product.name,
-            slug: product.slug || '',
             price: product.price.toString(),
             discountPrice: product.discountPrice?.toString() || '',
             stock: product.stock.toString(),
             puffCount: product.puffCount?.toString() || '',
+            capacity: product.capacity || '',
+            resistance: product.resistance || '',
             category: product.category._id || '', // Ensure ID is used
             brand: product.brand?._id || '',     // Ensure ID is used
             description: product.description || '',
@@ -126,7 +129,7 @@ export default function ProductsPage() {
                 setShowForm(false);
                 setEditingId(null); // Reset edit mode
                 setFormData({
-                    name: '', slug: '', price: '', discountPrice: '', stock: '', puffCount: '', category: '', brand: '', description: '', isHot: false, isTopSelling: false, isNewArrival: false
+                    name: '', price: '', discountPrice: '', stock: '', puffCount: '', capacity: '', resistance: '', category: '', brand: '', description: '', isHot: false, isTopSelling: false, isNewArrival: false
                 });
                 setImageFiles([]);
                 setExistingImages([]);
@@ -150,7 +153,7 @@ export default function ProductsPage() {
                         setEditingId(null);
                         if (!showForm) { // If opening, reset
                             setFormData({
-                                name: '', slug: '', price: '', discountPrice: '', stock: '', puffCount: '', category: '', brand: '', description: '', isHot: false, isTopSelling: false, isNewArrival: false
+                                name: '', price: '', discountPrice: '', stock: '', puffCount: '', capacity: '', resistance: '', category: '', brand: '', description: '', isHot: false, isTopSelling: false, isNewArrival: false
                             });
                             setExistingImages([]);
                         }
@@ -173,10 +176,6 @@ export default function ProductsPage() {
                             <label className="block text-sm font-medium mb-1">Name *</label>
                             <input type="text" className="w-full border p-2 rounded" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Slug *</label>
-                            <input type="text" className="w-full border p-2 rounded" required value={formData.slug} onChange={e => setFormData({ ...formData, slug: e.target.value })} />
-                        </div>
 
                         {/* Pricing & Stock */}
                         <div className="mt-4"><h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">Pricing & Inventory</h3></div>
@@ -192,9 +191,19 @@ export default function ProductsPage() {
                             <label className="block text-sm font-medium mb-1">Stock *</label>
                             <input type="number" className="w-full border p-2 rounded" required value={formData.stock} onChange={e => setFormData({ ...formData, stock: e.target.value })} />
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Puff Count</label>
-                            <input type="number" className="w-full border p-2 rounded" value={formData.puffCount} onChange={e => setFormData({ ...formData, puffCount: e.target.value })} />
+                        <div className="grid grid-cols-2 gap-4">
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Puff Count</label>
+                                <input type="number" className="w-full border p-2 rounded" value={formData.puffCount} onChange={e => setFormData({ ...formData, puffCount: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Capacity</label>
+                                <input type="text" className="w-full border p-2 rounded" value={formData.capacity} placeholder="e.g. 10ml" onChange={e => setFormData({ ...formData, capacity: e.target.value })} />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium mb-1">Resistance</label>
+                                <input type="text" className="w-full border p-2 rounded" value={formData.resistance} placeholder="e.g. 0.8ohm" onChange={e => setFormData({ ...formData, resistance: e.target.value })} />
+                            </div>
                         </div>
 
                         {/* Relations */}

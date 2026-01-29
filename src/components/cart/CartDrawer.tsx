@@ -13,7 +13,16 @@ export default function CartDrawer() {
 
     useEffect(() => {
         setMounted(true);
-    }, []);
+        if (items.length > 0 && isOpen) {
+            const ids = items.map(i => i.id).join(',');
+            fetch(`/api/products?ids=${ids}`)
+                .then(res => res.json())
+                .then(data => {
+                    useCartStore.getState().syncCartWithServer(data);
+                })
+                .catch(err => console.error("Failed to sync cart", err));
+        }
+    }, [isOpen]);
 
     if (!mounted) return null;
 
