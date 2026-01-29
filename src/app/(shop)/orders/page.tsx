@@ -1,38 +1,41 @@
+"use client";
+
 import Link from "next/link";
-import { ArrowLeft, Package, ChevronRight } from "lucide-react";
-import connectDB from "@/lib/db";
-import { Order, Product } from "@/models/all";
+import { ArrowLeft, Package, ChevronRight, Loader2 } from "lucide-react";
+import { useAuthStore } from "@/store/authStore";
+import { useEffect, useState } from "react";
 
-export const dynamic = 'force-dynamic';
+export default function OrdersPage() {
+    const { user, isLoggedIn } = useAuthStore();
+    const [orders, setOrders] = useState<any[]>([]);
+    const [loading, setLoading] = useState(true);
 
-async function getUserOrders() {
-    // TODO: Get actual logged in user ID or Phone.
-    // For now, we fetch ALL orders to demonstrate UI (or limit by a dummy phone for guest simulation)
-    await connectDB();
-
-    // Simulating "My Orders" by fetching latest 5 orders. 
-    // In real app: Order.find({ 'customer.phone': userPhone })...
-    const orders = await Order.find({})
-        .sort({ createdAt: -1 })
-        .limit(10)
-        .populate('products.product')
-        .lean();
-
-    return orders.map(order => ({
-        ...order,
-        _id: order._id.toString(),
-        products: order.products.filter((p: any) => p.product).map((p: any) => ({
-            ...p,
-            product: {
-                ...p.product,
-                _id: p.product._id.toString()
+    useEffect(() => {
+        const fetchOrders = async () => {
+            if (isLoggedIn && user?.phone) {
+                try {
+                    const res = await fetch(`/api/orders?phone=${user.phone}`);
+                    if (res.ok) {
+                        const data = await res.json();
+                        setOrders(data);
+                    }
+                } catch (error) {
+                    console.error("Failed to fetch orders");
+                }
             }
-        }))
-    }));
-}
+            setLoading(false);
+        };
 
-export default async function OrdersPage() {
-    const orders = await getUserOrders();
+        fetchOrders();
+    }, [isLoggedIn, user]);
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <Loader2 className="animate-spin text-blue-600" size={32} />
+            </div>
+        );
+    }
 
     return (
         <div className="bg-gray-50 min-h-screen pb-safe">
@@ -45,7 +48,12 @@ export default async function OrdersPage() {
             </div>
 
             <div className="p-4 space-y-4">
-                {orders.length === 0 ? (
+                {!isLoggedIn ? (
+                    <div className="text-center py-20 text-gray-500">
+                        <p>Please login to view your orders.</p>
+                        <Link href="/login" className="text-blue-600 font-bold mt-2 inline-block">Login Now</Link>
+                    </div>
+                ) : orders.length === 0 ? (
                     <div className="text-center py-20 text-gray-500">
                         <Package size={48} className="mx-auto mb-4 opacity-50" />
                         <p>No orders found.</p>
@@ -62,7 +70,7 @@ export default async function OrdersPage() {
                                 <div>
                                     <span className="text-xs font-bold text-gray-400 uppercase">Order #{order._id.slice(-6)}</span>
                                     <h3 className="text-sm font-bold text-gray-900 mt-1">
-                                        {order.products.length} Item{order.products.length !== 1 ? 's' : ''}
+                                        {order.products?.length || 0} Item{order.products?.length !== 1 ? 's' : ''}
                                     </h3>
                                 </div>
                                 <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${order.status === 'Delivered' ? 'bg-green-100 text-green-600' :

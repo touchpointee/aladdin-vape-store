@@ -44,8 +44,24 @@ export async function POST(req: NextRequest) {
     }
 }
 
-export async function GET() {
+export async function GET(req: NextRequest) {
     await connectDB();
-    const orders = await Order.find({}).populate('products.product').sort({ createdAt: -1 });
+    const { searchParams } = new URL(req.url);
+    const phone = searchParams.get('phone');
+
+    const query: any = {};
+    if (phone) {
+        query['customer.phone'] = phone;
+    } else {
+        // Security: Don't allow listing all orders without admin access or specific phone
+        // Or if this is for admin usage, it should check auth. 
+        // For this simple task, we'll return empty if no phone is provided for the "Shop" side API.
+        // Assuming this endpoint is shared? 
+        // Wait, admin API is different (/api/admin/orders). This is /api/orders.
+        // So public API should NOT return all orders.
+        return NextResponse.json([]);
+    }
+
+    const orders = await Order.find(query).populate('products.product').sort({ createdAt: -1 });
     return NextResponse.json(orders);
 }
