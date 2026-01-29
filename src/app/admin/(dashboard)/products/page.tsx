@@ -280,45 +280,51 @@ export default function ProductsPage() {
 
             {/* List */}
             <div className="bg-white rounded-lg shadow overflow-hidden">
-                <table className="w-full text-left">
-                    <thead className="bg-gray-50 border-b">
-                        <tr>
-                            <th className="p-4 font-medium">Image</th>
-                            <th className="p-4 font-medium">Name</th>
-                            <th className="p-4 font-medium">Category</th>
-                            <th className="p-4 font-medium">Price</th>
-                            <th className="p-4 font-medium">Stock</th>
-                            <th className="p-4 font-medium">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y">
-                        {loading ? (
-                            <tr><td colSpan={6} className="p-4 text-center">Loading...</td></tr>
-                        ) : products.map((prod) => (
-                            <tr key={prod._id} className="hover:bg-gray-50">
-                                <td className="p-4">
-                                    {prod.images?.[0] && (
-                                        <div className="relative w-12 h-12 rounded overflow-hidden">
-                                            <Image src={prod.images[0]} alt={prod.name} fill className="object-cover" />
-                                        </div>
-                                    )}
-                                </td>
-                                <td className="p-4 font-medium">{prod.name}</td>
-                                <td className="p-4 text-gray-500">{prod.category?.name}</td>
-                                <td className="p-4 font-bold">{prod.price} INR</td>
-                                <td className={`p-4 ${prod.stock < 5 ? 'text-red-500 font-bold' : 'text-green-600'}`}>
-                                    {prod.stock}
-                                </td>
-                                <td className="p-4">
-                                    <button onClick={() => handleEdit(prod)} className="text-blue-600 hover:underline">Edit</button>
-                                </td>
+                <div className="overflow-x-auto">
+                    <table className="w-full text-left whitespace-nowrap md:whitespace-normal">
+                        <thead className="bg-gray-50 border-b">
+                            <tr>
+                                <th className="p-4 font-medium">Image</th>
+                                <th className="p-4 font-medium">Name</th>
+                                <th className="p-4 font-medium">Category</th>
+                                <th className="p-4 font-medium">Price</th>
+                                <th className="p-4 font-medium">Stock</th>
+                                <th className="p-4 font-medium">Actions</th>
                             </tr>
-                        ))}
-                        {!loading && products.length === 0 && (
-                            <tr><td colSpan={6} className="p-8 text-center text-gray-500">No products found.</td></tr>
-                        )}
-                    </tbody>
-                </table>
+                        </thead>
+                        <tbody className="divide-y">
+                            {loading ? (
+                                <tr><td colSpan={6} className="p-4 text-center">Loading...</td></tr>
+                            ) : products.map((prod) => (
+                                <tr key={prod._id} className="hover:bg-gray-50">
+                                    <td className="p-4">
+                                        {prod.images?.[0] && (
+                                            <div className="relative w-12 h-12 rounded overflow-hidden flex-shrink-0">
+                                                <Image src={prod.images[0]} alt={prod.name} fill className="object-cover" />
+                                            </div>
+                                        )}
+                                    </td>
+                                    <td className="p-4 font-medium">
+                                        <div className="line-clamp-2 w-48 md:w-64 whitespace-normal" title={prod.name}>
+                                            {prod.name}
+                                        </div>
+                                    </td>
+                                    <td className="p-4 text-gray-500">{prod.category?.name}</td>
+                                    <td className="p-4 font-bold">{prod.price} INR</td>
+                                    <td className={`p-4 ${prod.stock < 5 ? 'text-red-500 font-bold' : 'text-green-600'}`}>
+                                        {prod.stock}
+                                    </td>
+                                    <td className="p-4">
+                                        <button onClick={() => handleEdit(prod)} className="text-blue-600 hover:underline">Edit</button>
+                                    </td>
+                                </tr>
+                            ))}
+                            {!loading && products.length === 0 && (
+                                <tr><td colSpan={6} className="p-8 text-center text-gray-500">No products found.</td></tr>
+                            )}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     );
