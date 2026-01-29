@@ -20,9 +20,12 @@ export default function CheckoutPage() {
     const [formData, setFormData] = useState({
         name: user?.name || '',
         phone: user?.phone || '',
+        email: '',
         address: '',
+        landmark: '',
         city: '',
-        pincode: ''
+        pincode: '',
+        age: ''
     });
 
     // Fetch saved addresses on mount if logged in
@@ -55,9 +58,12 @@ export default function CheckoutPage() {
         setFormData({
             name: addr.name || formData.name, // Keep existing name if addr name is missing/different context
             phone: addr.phone,
+            email: addr.email || '',
             address: addr.address,
+            landmark: addr.landmark || '',
             city: addr.city,
-            pincode: addr.pincode
+            pincode: addr.pincode,
+            age: addr.age || ''
         });
         setShowNewAddressForm(false);
     };
@@ -101,9 +107,12 @@ export default function CheckoutPage() {
                     body: JSON.stringify({
                         phone: user.phone,
                         name: formData.name,
+                        email: formData.email,
                         address: formData.address,
+                        landmark: formData.landmark,
                         city: formData.city,
-                        pincode: formData.pincode
+                        pincode: formData.pincode,
+                        age: formData.age
                     })
                 });
             }
@@ -168,15 +177,16 @@ export default function CheckoutPage() {
                                     <div className="flex items-start gap-3">
                                         <MapPin className={`mt-0.5 ${formData.address === addr.address ? 'text-blue-600' : 'text-gray-400'}`} size={18} />
                                         <div>
-                                            <p className="font-bold text-sm text-gray-900">{addr.name}</p>
-                                            <p className="text-sm text-gray-600 leading-snug">{addr.address}, {addr.city} - {addr.pincode}</p>
+                                            <p className="font-bold text-sm text-gray-900">{addr.name} ({addr.age} Yrs)</p>
+                                            <p className="text-sm text-gray-600 leading-snug">{addr.address}, {addr.landmark && `${addr.landmark}, `}{addr.city} - {addr.pincode}</p>
+                                            <p className="text-xs text-gray-500 mt-1">{addr.email}</p>
                                         </div>
                                     </div>
                                 </div>
                             ))}
                             <button
                                 onClick={() => {
-                                    setFormData({ ...formData, address: '', city: '', pincode: '' });
+                                    setFormData({ ...formData, email: '', address: '', landmark: '', city: '', pincode: '', age: '' });
                                     setShowNewAddressForm(true);
                                 }}
                                 className="p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 font-bold text-sm flex items-center justify-center gap-2 hover:border-blue-400 hover:text-blue-600"
@@ -204,16 +214,38 @@ export default function CheckoutPage() {
                                     />
                                 </div>
                                 <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Phone Number</label>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email Address</label>
                                     <input
-                                        name="phone" required type="tel"
-                                        value={formData.phone}
+                                        name="email" required type="email"
+                                        value={formData.email}
                                         onChange={handleChange}
                                         className="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 outline-none"
-                                        placeholder="+91 9876543210"
-                                        readOnly={!!isLoggedIn} // If logged in, lock phone to ensure order linking
+                                        placeholder="john@example.com"
                                     />
-                                    {isLoggedIn && <p className="text-[10px] text-gray-400 mt-1">Phone number linked to account.</p>}
+                                </div>
+                                <div className="flex gap-4">
+                                    <div className="flex-1">
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Phone Number</label>
+                                        <input
+                                            name="phone" required type="tel"
+                                            value={formData.phone}
+                                            onChange={handleChange}
+                                            className="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 outline-none"
+                                            placeholder="+91 9876543210"
+                                            readOnly={!!isLoggedIn} // If logged in, lock phone to ensure order linking
+                                        />
+                                        {isLoggedIn && <p className="text-[10px] text-gray-400 mt-1">Linked to account.</p>}
+                                    </div>
+                                    <div className="w-24">
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Age</label>
+                                        <input
+                                            name="age" required type="number"
+                                            value={formData.age}
+                                            onChange={handleChange}
+                                            className="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 outline-none"
+                                            placeholder="21"
+                                        />
+                                    </div>
                                 </div>
                                 <div>
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Address</label>
@@ -223,6 +255,16 @@ export default function CheckoutPage() {
                                         onChange={handleChange}
                                         className="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 outline-none"
                                         placeholder="House No, Street Area"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Landmark</label>
+                                    <input
+                                        name="landmark"
+                                        value={formData.landmark}
+                                        onChange={handleChange}
+                                        className="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 outline-none"
+                                        placeholder="Near Park, Behind Temple etc."
                                     />
                                 </div>
                                 <div className="flex gap-4">

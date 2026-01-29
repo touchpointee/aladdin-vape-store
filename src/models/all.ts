@@ -43,9 +43,12 @@ export interface IOrder extends Document {
     customer: {
         name: string;
         phone: string;
+        email: string;
         address: string;
+        landmark?: string;
         city: string;
         pincode: string;
+        age: number;
     };
     products: {
         product: mongoose.Types.ObjectId | IProduct;
@@ -70,9 +73,12 @@ export interface ISettings extends Document {
 export interface IAddress extends Document {
     phone: string; // Linked to user by phone
     name: string;
+    email: string;
     address: string;
+    landmark?: string;
     city: string;
     pincode: string;
+    age: number;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -124,9 +130,12 @@ const OrderSchema = new Schema<IOrder>(
         customer: {
             name: { type: String, required: true },
             phone: { type: String, required: true },
+            email: { type: String, required: true },
             address: { type: String, required: true },
+            landmark: { type: String },
             city: { type: String, required: true },
             pincode: { type: String, required: true },
+            age: { type: Number, required: true },
         },
         products: [
             {
@@ -159,9 +168,12 @@ const AddressSchema = new Schema<IAddress>(
     {
         phone: { type: String, required: true, index: true },
         name: { type: String, required: true },
+        email: { type: String, required: true },
         address: { type: String, required: true },
+        landmark: { type: String },
         city: { type: String, required: true },
         pincode: { type: String, required: true },
+        age: { type: Number, required: true },
     },
     { timestamps: true }
 );

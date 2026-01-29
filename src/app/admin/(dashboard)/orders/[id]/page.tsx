@@ -174,12 +174,16 @@ export default function AdminOrderDetailPage() {
                         </h2>
                         <div className="space-y-4 text-sm">
                             <div>
-                                <label className="text-gray-500 text-xs uppercase">Name</label>
-                                <div className="font-medium">{order.customer.name}</div>
+                                <label className="text-gray-500 text-xs uppercase">Name & Age</label>
+                                <div className="font-medium">{order.customer.name} ({order.customer.age} Yrs)</div>
                             </div>
                             <div>
                                 <label className="text-gray-500 text-xs uppercase">Phone</label>
                                 <div className="font-medium">{order.customer.phone}</div>
+                            </div>
+                            <div>
+                                <label className="text-gray-500 text-xs uppercase">Email</label>
+                                <div className="font-medium">{order.customer.email}</div>
                             </div>
                             <div>
                                 <label className="text-gray-500 text-xs uppercase">Payment Mode</label>
@@ -192,6 +196,7 @@ export default function AdminOrderDetailPage() {
                                 </h3>
                                 <p className="text-gray-600 leading-relaxed">
                                     {order.customer.address}<br />
+                                    {order.customer.landmark && <>{order.customer.landmark}<br /></>}
                                     {order.customer.city}<br />
                                     {order.customer.pincode}
                                 </p>

@@ -58,9 +58,10 @@ export default function AddressesPage() {
                             <div className="flex items-start gap-3">
                                 <MapPin className="text-blue-500 mt-1 shrink-0" size={20} />
                                 <div>
-                                    <h3 className="text-sm font-bold text-gray-900 uppercase mb-1">{addr.name}</h3>
-                                    <p className="text-sm text-gray-600 leading-relaxed mb-2">{addr.address}, {addr.city} - {addr.pincode}</p>
-                                    <p className="text-xs text-gray-500 font-semibold">Phone: {addr.phone}</p>
+                                    <h3 className="text-sm font-bold text-gray-900 uppercase mb-1">{addr.name} ({addr.age} Yrs)</h3>
+                                    <p className="text-sm text-gray-600 leading-relaxed mb-1">{addr.address}, {addr.landmark && `${addr.landmark}, `}{addr.city} - {addr.pincode}</p>
+                                    <p className="text-xs text-gray-500 font-semibold mb-0.5">Phone: {addr.phone}</p>
+                                    <p className="text-xs text-gray-400">{addr.email}</p>
                                 </div>
                             </div>
 
