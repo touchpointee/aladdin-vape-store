@@ -25,6 +25,10 @@ body {
 }
 
 @media print {
+  @page {
+    margin: 0mm;
+    size: auto;
+  }
 
   /* 1. Hide everything by default (Screen UI) */
   .no-print,
@@ -43,6 +47,7 @@ body {
     height: auto !important;
     overflow: visible !important;
     background: #fff !important;
+    padding: 10mm !important;
   }
 
   main {
