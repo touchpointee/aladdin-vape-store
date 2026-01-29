@@ -82,6 +82,21 @@ export default function BrandsPage() {
         }
     };
 
+    const handleDelete = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this brand?')) return;
+        try {
+            const res = await fetch(`/api/admin/brands?id=${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                alert('Brand Deleted!');
+                fetchBrands();
+            } else {
+                alert('Failed to delete brand');
+            }
+        } catch (error) {
+            alert('Error deleting brand');
+        }
+    };
+
     return (
         <div>
             <h1 className="text-2xl font-bold mb-6">Brand Management</h1>
@@ -164,7 +179,7 @@ export default function BrandsPage() {
                                 <td className="p-4 font-medium">{brand.name}</td>
                                 <td className="p-4 flex gap-3">
                                     <button onClick={() => handleEdit(brand)} className="text-blue-600 hover:underline">Edit</button>
-                                    <button className="text-red-500 hover:underline">Delete</button>
+                                    <button onClick={() => handleDelete(brand._id)} className="text-red-500 hover:underline">Delete</button>
                                 </td>
                             </tr>
                         ))}

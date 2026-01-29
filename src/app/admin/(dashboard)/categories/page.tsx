@@ -85,6 +85,21 @@ export default function CategoriesPage() {
         }
     };
 
+    const handleDelete = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this category?')) return;
+        try {
+            const res = await fetch(`/api/admin/categories?id=${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                alert('Category Deleted!');
+                fetchCategories();
+            } else {
+                alert('Failed to delete category');
+            }
+        } catch (error) {
+            alert('Error deleting category');
+        }
+    };
+
     return (
         <div>
             <h1 className="text-2xl font-bold mb-6">Category Management</h1>
@@ -175,7 +190,7 @@ export default function CategoriesPage() {
                                 <td className="p-4 font-medium">{cat.name}</td>
                                 <td className="p-4 flex gap-3">
                                     <button onClick={() => handleEdit(cat)} className="text-blue-600 hover:underline">Edit</button>
-                                    <button className="text-red-500 hover:underline">Delete</button>
+                                    <button onClick={() => handleDelete(cat._id)} className="text-red-500 hover:underline">Delete</button>
                                 </td>
                             </tr>
                         ))}
