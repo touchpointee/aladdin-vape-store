@@ -175,3 +175,24 @@ export async function PUT(req: NextRequest) {
         return NextResponse.json({ error: error.message || 'Failed to update product' }, { status: 500 });
     }
 }
+
+export async function DELETE(req: NextRequest) {
+    await connectDB();
+    try {
+        const { searchParams } = new URL(req.url);
+        const id = searchParams.get('id');
+
+        if (!id) {
+            return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+        }
+
+        const deleted = await Product.findByIdAndDelete(id);
+        if (!deleted) {
+            return NextResponse.json({ error: 'Product not found' }, { status: 404 });
+        }
+
+        return NextResponse.json({ message: 'Product deleted' });
+    } catch (error) {
+        return NextResponse.json({ error: 'Failed to delete product' }, { status: 500 });
+    }
+}

@@ -18,7 +18,7 @@ export async function GET() {
             try {
                 const catIndexes = await categories.indexes();
                 const catSlugIndex = catIndexes.find((i: any) => i.key.slug);
-                if (catSlugIndex) {
+                if (catSlugIndex && catSlugIndex.name) {
                     await categories.dropIndex(catSlugIndex.name);
                     messages.push(`Dropped category index: ${catSlugIndex.name}`);
                 } else {
@@ -35,7 +35,7 @@ export async function GET() {
             try {
                 const brandIndexes = await brands.indexes();
                 const brandSlugIndex = brandIndexes.find((i: any) => i.key.slug);
-                if (brandSlugIndex) {
+                if (brandSlugIndex && brandSlugIndex.name) {
                     await brands.dropIndex(brandSlugIndex.name);
                     messages.push(`Dropped brand index: ${brandSlugIndex.name}`);
                 } else {
@@ -52,7 +52,7 @@ export async function GET() {
             try {
                 const productIndexes = await products.indexes();
                 const productSlugIndex = productIndexes.find((i: any) => i.key.slug);
-                if (productSlugIndex) {
+                if (productSlugIndex && productSlugIndex.name) {
                     await products.dropIndex(productSlugIndex.name);
                     messages.push(`Dropped product index: ${productSlugIndex.name}`);
                 } else {

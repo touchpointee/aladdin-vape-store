@@ -143,6 +143,21 @@ export default function ProductsPage() {
         }
     };
 
+    const handleDelete = async (id: string) => {
+        if (!confirm('Are you sure you want to delete this product?')) return;
+        try {
+            const res = await fetch(`/api/admin/products?id=${id}`, { method: 'DELETE' });
+            if (res.ok) {
+                alert('Product Deleted!');
+                fetchData();
+            } else {
+                alert('Failed to delete product');
+            }
+        } catch (error) {
+            alert('Error deleting product');
+        }
+    };
+
     return (
         <div>
             <div className="flex justify-between items-center mb-6">
@@ -323,8 +338,9 @@ export default function ProductsPage() {
                                     <td className={`p-4 ${prod.stock < 5 ? 'text-red-500 font-bold' : 'text-green-600'}`}>
                                         {prod.stock}
                                     </td>
-                                    <td className="p-4">
+                                    <td className="p-4 flex gap-2">
                                         <button onClick={() => handleEdit(prod)} className="text-blue-600 hover:underline">Edit</button>
+                                        <button onClick={() => handleDelete(prod._id)} className="text-red-500 hover:underline">Delete</button>
                                     </td>
                                 </tr>
                             ))}

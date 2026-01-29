@@ -85,3 +85,24 @@ export async function PUT(req: NextRequest) {
         return NextResponse.json({ error: error.message || 'Failed to update brand' }, { status: 500 });
     }
 }
+
+export async function DELETE(req: NextRequest) {
+    await connectDB();
+    try {
+        const { searchParams } = new URL(req.url);
+        const id = searchParams.get('id');
+
+        if (!id) {
+            return NextResponse.json({ error: 'ID is required' }, { status: 400 });
+        }
+
+        const deleted = await Brand.findByIdAndDelete(id);
+        if (!deleted) {
+            return NextResponse.json({ error: 'Brand not found' }, { status: 404 });
+        }
+
+        return NextResponse.json({ message: 'Brand deleted' });
+    } catch (error) {
+        return NextResponse.json({ error: 'Failed to delete brand' }, { status: 500 });
+    }
+}
