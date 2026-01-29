@@ -27,7 +27,7 @@ export default async function ShopLayout({
     return (
         <div className="w-full min-h-screen bg-gray-50 flex flex-col items-center">
 
-            <div className="w-full h-[100dvh] md:h-auto md:min-h-screen bg-white relative flex flex-col md:overflow-visible transition-all duration-300">
+            <div className="w-full min-h-screen bg-white relative flex flex-col transition-all duration-300">
 
                 {/* Header - Sticky on Mobile, Normal on Desktop */}
                 <div className="flex-none z-50 sticky top-0">
@@ -35,7 +35,7 @@ export default async function ShopLayout({
                 </div>
 
                 {/* Main Content */}
-                <main className="flex-1 overflow-y-auto md:overflow-visible bg-gray-50 md:bg-white scrollbar-hide relative z-0">
+                <main className="flex-1 bg-gray-50 md:bg-white relative z-0">
                     {children}
                 </main>
 
@@ -46,7 +46,7 @@ export default async function ShopLayout({
                 <FloatingWhatsApp />
 
                 {/* Bottom Nav - MOBILE ONLY (Hidden on MD+) */}
-                <div className="flex-none z-40 md:hidden">
+                <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden">
                     <BottomNav />
                 </div>
 
