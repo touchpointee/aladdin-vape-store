@@ -26,49 +26,56 @@ body {
 
 @media print {
 
-  /* Hide all generic UI shells */
+  /* 1. Hide everything by default (Screen UI) */
+  .no-print,
   aside,
   header,
-  nav,
   footer,
-  .no-print,
+  nav,
   button,
   .back-button {
     display: none !important;
   }
 
-  /* Reset layout for print */
+  /* 2. Reset Layout Containers for Printing */
   html,
-  body,
-  main {
-    background: white !important;
-    color: black !important;
-    margin: 0 !important;
-    padding: 0 !important;
+  body {
     height: auto !important;
     overflow: visible !important;
+    background: #fff !important;
   }
 
-  /* Ensure the container is visible but doesn't have shadows */
-  .max-w-5xl {
-    max-width: 100% !important;
+  main {
     margin: 0 !important;
     padding: 0 !important;
+    background: #fff !important;
     display: block !important;
   }
 
-  /* Force display of the invoice template */
+  /* 3. Handle the specific content container */
+  .max-w-5xl {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+    border: none !important;
+  }
+
+  /* 4. Force visibility of the Invoice Template */
   .print-only-invoice {
     display: block !important;
     visibility: visible !important;
     opacity: 1 !important;
-    background: white !important;
-    color: black !important;
-    padding: 0 !important;
+    position: relative !important;
     margin: 0 !important;
+    padding: 2cm !important;
+    /* Proper margin for A4 */
+    background: #fff !important;
+    color: #000 !important;
   }
 
-  /* Print specific formatting */
+  /* 5. Print Adjustments */
   * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
@@ -76,20 +83,7 @@ body {
 
   .border,
   .border-b,
-  .border-t,
-  .border-l,
-  .border-r {
+  .border-t {
     border-color: #000 !important;
-  }
-
-  .text-gray-500,
-  .text-gray-600,
-  .text-gray-400 {
-    color: #333 !important;
-  }
-
-  .bg-blue-600 {
-    color: #000 !important;
-    /* Don't waste ink on blue bg in BW prints */
   }
 }

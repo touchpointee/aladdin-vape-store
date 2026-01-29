@@ -223,7 +223,7 @@ export default function AdminOrderDetailPage() {
                 </div>
 
                 {/* Print Only Invoice Template */}
-                <div className="print-only-invoice bg-white text-black p-8 font-sans">
+                <div className="print-only-invoice hidden print:block bg-white text-black p-8 font-sans">
                     <div className="flex justify-between items-start border-b pb-8 mb-8">
                         <div>
                             <h1 className="text-3xl font-extrabold uppercase tracking-tighter">Aladdin Store</h1>
