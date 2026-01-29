@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Menu, ShoppingBag, User, X, Search, Heart } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
+import { useWishlistStore } from "@/store/wishlistStore";
 import { useEffect, useState } from "react";
 import Image from "next/image";
 
@@ -15,6 +16,7 @@ interface HeaderProps {
 export default function Header({ categories = [] }: HeaderProps) {
     const router = useRouter(); // Initialize router
     const { totalItems, openCart } = useCartStore();
+    const { items: wishlistItems } = useWishlistStore();
     const [mounted, setMounted] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -184,9 +186,11 @@ export default function Header({ categories = [] }: HeaderProps) {
                             <div className="relative">
                                 <Heart size={24} className="group-hover:scale-110 transition-transform" />
                                 {/* Badge */}
-                                <span className="absolute -top-1 -right-2 bg-orange-500 text-white text-[10px] font-bold h-4 w-4 flex items-center justify-center rounded-full border border-white">
-                                    0
-                                </span>
+                                {mounted && wishlistItems.length > 0 && (
+                                    <span className="absolute -top-1 -right-2 bg-orange-500 text-white text-[10px] font-bold h-4 w-4 flex items-center justify-center rounded-full border border-white">
+                                        {wishlistItems.length}
+                                    </span>
+                                )}
                             </div>
                         </Link>
 

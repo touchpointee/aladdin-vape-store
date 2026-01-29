@@ -3,11 +3,13 @@
 import Link from "next/link";
 import { Home, User, Heart, ShoppingBag, LayoutGrid } from "lucide-react";
 import { useCartStore } from "@/store/cartStore";
+import { useWishlistStore } from "@/store/wishlistStore";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 
 export default function BottomNav() {
     const { openCart, totalItems } = useCartStore();
+    const { items: wishlistItems } = useWishlistStore();
     const [mounted, setMounted] = useState(false);
     const pathnameOriginal = usePathname();
     const pathname = pathnameOriginal || '';
@@ -49,15 +51,15 @@ export default function BottomNav() {
                 <Link href="/wishlist" className={`flex flex-col items-center justify-center w-full h-full ${isActiveWishlist ? 'text-blue-600' : 'text-gray-500 relative'}`}>
                     <div className={`${isActiveWishlist ? 'bg-blue-600 p-2 text-white shadow-lg shadow-blue-200' : 'p-1'} rounded-full mb-1 transition-all relative`}>
                         <Heart size={20} />
-                        {mounted && totalItems() > 0 && !isActiveWishlist && (
-                            <span className="absolute -top-1 -right-1 bg-blue-500 text-white text-[8px] font-bold w-4 h-4 flex items-center justify-center rounded-full border border-white">
-                                {totalItems()}
+                        {mounted && wishlistItems.length > 0 && !isActiveWishlist && (
+                            <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-bold w-4 h-4 flex items-center justify-center rounded-full border border-white">
+                                {wishlistItems.length}
                             </span>
                         )}
                     </div>
-                    {mounted && totalItems() > 0 && isActiveWishlist && (
+                    {mounted && wishlistItems.length > 0 && isActiveWishlist && (
                         <span className="absolute top-0 right-8 bg-red-500 text-white text-[8px] font-bold w-4 h-4 flex items-center justify-center rounded-full border border-white z-10">
-                            {totalItems()}
+                            {wishlistItems.length}
                         </span>
                     )}
                     <span className="text-[10px] font-medium">WISHLIST</span>
