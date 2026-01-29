@@ -45,6 +45,7 @@ body {
   html,
   body {
     height: auto !important;
+    min-height: 0 !important;
     overflow: visible !important;
     background: #fff !important;
     padding: 10mm !important;
@@ -55,6 +56,8 @@ body {
     padding: 0 !important;
     background: #fff !important;
     display: block !important;
+    min-height: 0 !important;
+    height: auto !important;
   }
 
   /* 3. Handle the specific content container */
