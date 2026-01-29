@@ -26,7 +26,8 @@ const PrintOrderReceipt: React.FC<PrintOrderReceiptProps> = ({ order }) => {
                     {/* Logo Placeholder */}
                     <div className="w-24 h-24 relative mb-2">
                         <div className="w-full h-full flex items-center justify-center">
-                            <Image src="/logo.jpg" alt="Logo" width={96} height={96} className="object-contain" />
+                            {/* Using standard img tag for better print compatibility */}
+                            <img src="/logo.jpg" alt="Logo" className="object-contain w-full h-full" />
                         </div>
                     </div>
 
