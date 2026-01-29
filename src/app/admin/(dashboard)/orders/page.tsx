@@ -1,4 +1,4 @@
-import connectDB, { Order } from "@/lib/db";
+import connectDB from "@/lib/db";
 import { Order as OrderModel } from "@/models/all";
 import Link from "next/link";
 
@@ -41,9 +41,9 @@ export default async function AdminOrdersPage() {
                                 <td className="p-4 text-sm">{order.paymentMode}</td>
                                 <td className="p-4">
                                     <span className={`px-2 py-1 text-xs rounded ${order.status === 'Delivered' ? 'bg-green-100 text-green-700' :
-                                            order.status === 'Cancelled' ? 'bg-red-100 text-red-700' :
-                                                order.status === 'Confirmed' ? 'bg-blue-100 text-blue-700' :
-                                                    'bg-yellow-100 text-yellow-700'
+                                        order.status === 'Cancelled' ? 'bg-red-100 text-red-700' :
+                                            order.status === 'Confirmed' ? 'bg-blue-100 text-blue-700' :
+                                                'bg-yellow-100 text-yellow-700'
                                         }`}>
                                         {order.status}
                                     </span>
