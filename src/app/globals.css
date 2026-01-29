@@ -48,7 +48,7 @@ body {
     min-height: 0 !important;
     overflow: visible !important;
     background: #fff !important;
-    padding: 5mm !important;
+    padding: 10mm !important;
   }
 
   main {
@@ -116,8 +116,5 @@ body {
   }
 
   /* Reduce padding slightly to ensure fit */
-  html,
-  body {
-    padding: 5mm !important;
-  }
-}
+  /* 6. Layout Resets for Print */
+  (Removed)
