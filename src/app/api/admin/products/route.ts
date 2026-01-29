@@ -45,7 +45,7 @@ export async function POST(req: NextRequest) {
         // Optional fields
         const description = formData.get('description') as string || '';
         const discountPrice = formData.get('discountPrice') ? parseFloat(formData.get('discountPrice') as string) : undefined;
-        const puffCount = formData.get('puffCount') ? parseInt(formData.get('puffCount') as string) : undefined;
+        const puffCount = formData.get('puffCount') as string || undefined;
         const brand = formData.get('brand') as string || undefined;
         const isHot = formData.get('isHot') === 'true';
         const isTopSelling = formData.get('isTopSelling') === 'true';
