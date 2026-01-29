@@ -222,6 +222,6 @@ export default function AdminOrderDetailPage() {
                 </div>
             </div>
         </div>
-        </div >
+
     );
 }
