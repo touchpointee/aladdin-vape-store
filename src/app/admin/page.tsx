@@ -1,6 +1,5 @@
 import connectDB from "@/lib/db";
-import Order from "@/models/Order";
-import Product from "@/models/Product";
+import { Order, Product } from "@/models/all";
 
 // Use dynamic to ensure fresh data
 export const dynamic = 'force-dynamic';
