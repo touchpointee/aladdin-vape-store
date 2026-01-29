@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     const brandId = searchParams.get('brand');
     const isHot = searchParams.get('isHot');
 
-    const query: any = { status: 'active' };
+    const query: any = {};
     if (categoryId) query.category = categoryId;
     if (brandId) query.brand = brandId;
     if (isHot === 'true') query.isHot = true;
@@ -51,6 +51,7 @@ export async function POST(req: NextRequest) {
         const isHot = formData.get('isHot') === 'true';
         const isTopSelling = formData.get('isTopSelling') === 'true';
         const isNewArrival = formData.get('isNewArrival') === 'true';
+        const status = formData.get('status') as 'active' | 'inactive' || 'active';
 
         // Validation
         if (!name || !price || !category || !stock) {
@@ -86,6 +87,7 @@ export async function POST(req: NextRequest) {
             isHot,
             isTopSelling,
             isNewArrival,
+            status,
             images: imageUrls,
         });
 
@@ -133,6 +135,7 @@ export async function PUT(req: NextRequest) {
         if (formData.has('isHot')) updateData.isHot = formData.get('isHot') === 'true';
         if (formData.has('isTopSelling')) updateData.isTopSelling = formData.get('isTopSelling') === 'true';
         if (formData.has('isNewArrival')) updateData.isNewArrival = formData.get('isNewArrival') === 'true';
+        if (formData.has('status')) updateData.status = formData.get('status');
 
         // Handle Images
         // 1. Get kept existing images
@@ -154,12 +157,11 @@ export async function PUT(req: NextRequest) {
         }
 
         // 3. Combine to replace the images array
-        // Only update images if we are either adding new ones OR we have explicitly sent existing ones (meaning potential deletion)
-        // If the user didn't touch images, existingImages might be empty if the frontend doesn't send them? 
-        // Logic: The frontend MUST send 'existingImages' if it intends to keep them.
-
-        const finalImages = [...existingImages, ...newImageUrls];
-        updateData.images = finalImages;
+        // Only update images if we are either adding new ones OR we have explicitly sent existing ones
+        if (formData.has('existingImages') || files.length > 0) {
+            const finalImages = [...existingImages, ...newImageUrls];
+            updateData.images = finalImages;
+        }
 
         const product = await Product.findByIdAndUpdate(_id, { $set: updateData }, { new: true });
 

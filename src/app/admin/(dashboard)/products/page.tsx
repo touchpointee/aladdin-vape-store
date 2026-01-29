@@ -15,6 +15,7 @@ interface Product {
     isHot?: boolean;
     isTopSelling?: boolean;
     isNewArrival?: boolean;
+    status?: 'active' | 'inactive';
     discountPrice?: number;
     description?: string;
     puffCount?: number;
@@ -50,6 +51,7 @@ export default function ProductsPage() {
         isHot: false,
         isTopSelling: false,
         isNewArrival: false,
+        status: 'active',
     });
     const [imageFiles, setImageFiles] = useState<File[]>([]);
     const [existingImages, setExistingImages] = useState<string[]>([]);
@@ -91,6 +93,7 @@ export default function ProductsPage() {
             isHot: product.isHot || false,
             isTopSelling: product.isTopSelling || false,
             isNewArrival: product.isNewArrival || false,
+            status: product.status || 'active',
         });
         setExistingImages(product.images || []);
         setShowForm(true);
@@ -129,7 +132,7 @@ export default function ProductsPage() {
                 setShowForm(false);
                 setEditingId(null); // Reset edit mode
                 setFormData({
-                    name: '', price: '', discountPrice: '', stock: '', puffCount: '', capacity: '', resistance: '', category: '', brand: '', description: '', isHot: false, isTopSelling: false, isNewArrival: false
+                    name: '', price: '', discountPrice: '', stock: '', puffCount: '', capacity: '', resistance: '', category: '', brand: '', description: '', isHot: false, isTopSelling: false, isNewArrival: false, status: 'active'
                 });
                 setImageFiles([]);
                 setExistingImages([]);
@@ -140,6 +143,28 @@ export default function ProductsPage() {
             }
         } catch (error) {
             alert('Failed to save product');
+        }
+    };
+
+    const handleToggleStatus = async (id: string, currentStatus: string) => {
+        const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
+        try {
+            const data = new FormData();
+            data.append('_id', id);
+            data.append('status', newStatus);
+
+            const res = await fetch('/api/admin/products', {
+                method: 'PUT',
+                body: data,
+            });
+
+            if (res.ok) {
+                setProducts(products.map(p => p._id === id ? { ...p, status: newStatus as any } : p));
+            } else {
+                alert('Failed to update status');
+            }
+        } catch (error) {
+            alert('Error updating status');
         }
     };
 
@@ -168,7 +193,7 @@ export default function ProductsPage() {
                         setEditingId(null);
                         if (!showForm) { // If opening, reset
                             setFormData({
-                                name: '', price: '', discountPrice: '', stock: '', puffCount: '', capacity: '', resistance: '', category: '', brand: '', description: '', isHot: false, isTopSelling: false, isNewArrival: false
+                                name: '', price: '', discountPrice: '', stock: '', puffCount: '', capacity: '', resistance: '', category: '', brand: '', description: '', isHot: false, isTopSelling: false, isNewArrival: false, status: 'active'
                             });
                             setExistingImages([]);
                         }
@@ -334,13 +359,39 @@ export default function ProductsPage() {
                                         </div>
                                     </td>
                                     <td className="p-4 text-gray-500">{prod.category?.name}</td>
-                                    <td className="p-4 font-bold">{prod.price} INR</td>
+                                    <td className="p-4">
+                                        <div className="flex flex-col gap-1">
+                                            {prod.discountPrice && prod.discountPrice < prod.price ? (
+                                                <>
+                                                    <span className="font-bold text-red-600">{prod.discountPrice} INR</span>
+                                                    <span className="text-xs text-gray-400 line-through">{prod.price} INR</span>
+                                                </>
+                                            ) : (
+                                                <span className="font-bold text-gray-900">{prod.price} INR</span>
+                                            )}
+                                        </div>
+                                    </td>
                                     <td className={`p-4 ${prod.stock < 5 ? 'text-red-500 font-bold' : 'text-green-600'}`}>
                                         {prod.stock}
                                     </td>
-                                    <td className="p-4 flex gap-2">
-                                        <button onClick={() => handleEdit(prod)} className="text-blue-600 hover:underline">Edit</button>
-                                        <button onClick={() => handleDelete(prod._id)} className="text-red-500 hover:underline">Delete</button>
+                                    <td className="p-4 flex items-center gap-4">
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={() => handleToggleStatus(prod._id, prod.status || 'active')}
+                                                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${prod.status === 'inactive' ? 'bg-gray-200' : 'bg-green-500'}`}
+                                            >
+                                                <span
+                                                    className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${prod.status === 'inactive' ? 'translate-x-1' : 'translate-x-6'}`}
+                                                />
+                                            </button>
+                                            <span className="text-[10px] font-bold uppercase text-gray-400">
+                                                {prod.status === 'inactive' ? 'Hidden' : 'Live'}
+                                            </span>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => handleEdit(prod)} className="text-blue-600 hover:underline">Edit</button>
+                                            <button onClick={() => handleDelete(prod._id)} className="text-red-500 hover:underline">Delete</button>
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
