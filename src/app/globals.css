@@ -91,6 +91,7 @@ body {
 
   .border,
   .border-b,
-  border-color: #000 !important;
-}
+  .border-t {
+    border-color: #000 !important;
+  }
 }
