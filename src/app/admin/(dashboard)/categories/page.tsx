@@ -6,7 +6,6 @@ import Image from "next/image";
 interface Category {
     _id: string;
     name: string;
-    slug: string;
     image: string;
 }
 
@@ -17,7 +16,6 @@ export default function CategoriesPage() {
     // Form State
     const [formData, setFormData] = useState({
         name: '',
-        slug: '',
         description: '',
     });
     const [imageFile, setImageFile] = useState<File | null>(null);
@@ -48,7 +46,6 @@ export default function CategoriesPage() {
         setEditingId(category._id);
         setFormData({
             name: category.name,
-            slug: category.slug,
             description: (category as any).description || '',
         });
         setPreviewImage(category.image);
@@ -57,12 +54,11 @@ export default function CategoriesPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.name || !formData.slug) return alert('Name and Slug required');
+        if (!formData.name) return alert('Name is required');
 
         const data = new FormData();
         if (editingId) data.append('_id', editingId);
         data.append('name', formData.name);
-        data.append('slug', formData.slug);
         data.append('description', formData.description);
         if (imageFile) {
             data.append('image', imageFile);
@@ -76,7 +72,7 @@ export default function CategoriesPage() {
             });
             if (res.ok) {
                 alert(editingId ? 'Category Updated!' : 'Category Created!');
-                setFormData({ name: '', slug: '', description: '' });
+                setFormData({ name: '', description: '' });
                 setImageFile(null);
                 setEditingId(null);
                 fetchCategories(); // Refresh list
@@ -101,7 +97,7 @@ export default function CategoriesPage() {
                         <button
                             onClick={() => {
                                 setEditingId(null);
-                                setFormData({ name: '', slug: '', description: '' });
+                                setFormData({ name: '', description: '' });
                                 setImageFile(null);
                             }}
                             className="text-sm text-red-500 underline"
@@ -118,16 +114,6 @@ export default function CategoriesPage() {
                             className="w-full border p-2 rounded"
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Slug (URL)</label>
-                        <input
-                            type="text"
-                            className="w-full border p-2 rounded"
-                            value={formData.slug}
-                            onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                             required
                         />
                     </div>
@@ -171,13 +157,12 @@ export default function CategoriesPage() {
                         <tr>
                             <th className="p-4 font-medium">Image</th>
                             <th className="p-4 font-medium">Name</th>
-                            <th className="p-4 font-medium">Slug</th>
                             <th className="p-4 font-medium">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y">
                         {loading ? (
-                            <tr><td colSpan={4} className="p-4 text-center">Loading...</td></tr>
+                            <tr><td colSpan={3} className="p-4 text-center">Loading...</td></tr>
                         ) : categories.map((cat) => (
                             <tr key={cat._id} className="hover:bg-gray-50">
                                 <td className="p-4">
@@ -188,7 +173,6 @@ export default function CategoriesPage() {
                                     )}
                                 </td>
                                 <td className="p-4 font-medium">{cat.name}</td>
-                                <td className="p-4 text-gray-500">{cat.slug}</td>
                                 <td className="p-4 flex gap-3">
                                     <button onClick={() => handleEdit(cat)} className="text-blue-600 hover:underline">Edit</button>
                                     <button className="text-red-500 hover:underline">Delete</button>

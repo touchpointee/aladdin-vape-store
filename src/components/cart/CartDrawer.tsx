@@ -125,14 +125,8 @@ export default function CartDrawer() {
 
                     <div className="grid grid-cols-1 gap-3">
                         <Link href="/checkout" onClick={closeCart} className="block w-full">
-                            <button className="w-full py-3 bg-white border-2 border-blue-500 text-gray-800 font-bold text-sm uppercase tracking-wide hover:bg-blue-50 transition-colors">
+                            <button className="w-full py-3 bg-blue-500 text-white font-bold text-sm uppercase tracking-wide hover:bg-blue-600 transition-colors shadow-lg shadow-blue-200">
                                 CHECK OUT
-                            </button>
-                        </Link>
-
-                        <Link href="/cart" onClick={closeCart} className="block w-full">
-                            <button className="w-full py-3 bg-blue-500 text-white font-bold text-sm uppercase tracking-wide hover:bg-blue-600 transition-colors">
-                                VIEW CART
                             </button>
                         </Link>
                     </div>

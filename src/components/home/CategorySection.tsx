@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 interface CategorySectionProps {
-    categories: { _id: string; name: string; slug: string; image?: string }[];
+    categories: { _id: string; name: string; image?: string }[];
 }
 
 export default function CategorySection({ categories }: CategorySectionProps) {
@@ -17,7 +17,7 @@ export default function CategorySection({ categories }: CategorySectionProps) {
                 {categories.map((cat) => (
                     <Link
                         key={cat._id}
-                        href={`/products?category=${cat.slug}`}
+                        href={`/products?category=${cat._id}`}
                         className="group relative h-28 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all"
                     >
                         {/* Background Image/Color */}

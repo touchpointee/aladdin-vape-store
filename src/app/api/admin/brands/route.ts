@@ -21,11 +21,10 @@ export async function POST(req: NextRequest) {
     try {
         const formData = await req.formData();
         const name = formData.get('name') as string;
-        const slug = formData.get('slug') as string;
         const file = formData.get('logo') as File;
 
-        if (!name || !slug) {
-            return NextResponse.json({ error: 'Name and Slug are required' }, { status: 400 });
+        if (!name) {
+            return NextResponse.json({ error: 'Name is required' }, { status: 400 });
         }
 
         let logoUrl = '';
@@ -37,7 +36,6 @@ export async function POST(req: NextRequest) {
 
         const brand = await Brand.create({
             name,
-            slug,
             logo: logoUrl,
         });
 
@@ -57,7 +55,6 @@ export async function PUT(req: NextRequest) {
         const formData = await req.formData();
         const _id = formData.get('_id') as string;
         const name = formData.get('name') as string;
-        const slug = formData.get('slug') as string;
         const file = formData.get('logo') as File;
 
         if (!_id) {
@@ -66,7 +63,6 @@ export async function PUT(req: NextRequest) {
 
         const updateData: any = {};
         if (name) updateData.name = name;
-        if (slug) updateData.slug = slug;
 
         if (file && file.size > 0) {
             const buffer = Buffer.from(await file.arrayBuffer());

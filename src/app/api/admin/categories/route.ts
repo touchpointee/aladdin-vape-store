@@ -21,12 +21,11 @@ export async function POST(req: NextRequest) {
     try {
         const formData = await req.formData();
         const name = formData.get('name') as string;
-        const slug = formData.get('slug') as string; // User provided or auto-generated
         const description = formData.get('description') as string;
         const file = formData.get('image') as File;
 
-        if (!name || !slug) {
-            return NextResponse.json({ error: 'Name and Slug are required' }, { status: 400 });
+        if (!name) {
+            return NextResponse.json({ error: 'Name is required' }, { status: 400 });
         }
 
         let imageUrl = '';
@@ -38,7 +37,6 @@ export async function POST(req: NextRequest) {
 
         const category = await Category.create({
             name,
-            slug,
             description,
             image: imageUrl,
         });
@@ -59,7 +57,6 @@ export async function PUT(req: NextRequest) {
         const formData = await req.formData();
         const _id = formData.get('_id') as string;
         const name = formData.get('name') as string;
-        const slug = formData.get('slug') as string;
         const description = formData.get('description') as string;
         const file = formData.get('image') as File;
 
@@ -69,7 +66,6 @@ export async function PUT(req: NextRequest) {
 
         const updateData: any = {};
         if (name) updateData.name = name;
-        if (slug) updateData.slug = slug;
         if (description !== undefined) updateData.description = description;
 
         if (file && file.size > 0) {

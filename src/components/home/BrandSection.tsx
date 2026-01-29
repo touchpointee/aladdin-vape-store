@@ -4,7 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 
 interface BrandSectionProps {
-    brands: { _id: string; name: string; slug: string; logo?: string }[];
+    brands: { _id: string; name: string; logo?: string }[];
 }
 
 export default function BrandSection({ brands }: BrandSectionProps) {
@@ -18,7 +18,7 @@ export default function BrandSection({ brands }: BrandSectionProps) {
                 {brands.map((brand) => (
                     <Link
                         key={brand._id}
-                        href={`/products?brand=${brand.slug}`}
+                        href={`/products?brand=${brand._id}`}
                         className="flex-none w-[100px] flex flex-col items-center gap-2 group"
                     >
                         <div className="w-[80px] h-[80px] rounded-full bg-white border border-gray-100 shadow-sm flex items-center justify-center p-2 overflow-hidden group-hover:border-blue-500 transition-colors">

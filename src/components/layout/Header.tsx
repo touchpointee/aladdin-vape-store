@@ -218,7 +218,7 @@ export default function Header({ categories = [] }: HeaderProps) {
                         {categories.slice(0, 8).map((cat) => (
                             <Link
                                 key={cat._id}
-                                href={`/products?category=${cat.slug}`}
+                                href={`/products?category=${cat._id}`}
                                 className="text-xs font-bold text-gray-800 uppercase hover:text-blue-600 transition flex items-center gap-1 whitespace-nowrap"
                             >
                                 {cat.name} <span className="text-[8px] text-gray-400">▼</span>
@@ -277,7 +277,7 @@ export default function Header({ categories = [] }: HeaderProps) {
                                 categories.map((cat) => (
                                     <Link
                                         key={cat._id}
-                                        href={`/products?category=${cat.slug}`}
+                                        href={`/products?category=${cat._id}`}
                                         onClick={() => setMobileMenuOpen(false)}
                                         className="block px-3 py-2 rounded-lg hover:bg-gray-50 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
                                     >

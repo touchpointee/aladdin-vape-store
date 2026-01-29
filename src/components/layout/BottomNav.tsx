@@ -51,17 +51,12 @@ export default function BottomNav() {
                 <Link href="/wishlist" className={`flex flex-col items-center justify-center w-full h-full ${isActiveWishlist ? 'text-blue-600' : 'text-gray-500 relative'}`}>
                     <div className={`${isActiveWishlist ? 'bg-blue-600 p-2 text-white shadow-lg shadow-blue-200' : 'p-1'} rounded-full mb-1 transition-all relative`}>
                         <Heart size={20} />
-                        {mounted && wishlistItems.length > 0 && !isActiveWishlist && (
+                        {mounted && wishlistItems.length > 0 && (
                             <span className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-bold w-4 h-4 flex items-center justify-center rounded-full border border-white">
                                 {wishlistItems.length}
                             </span>
                         )}
                     </div>
-                    {mounted && wishlistItems.length > 0 && isActiveWishlist && (
-                        <span className="absolute top-0 right-8 bg-red-500 text-white text-[8px] font-bold w-4 h-4 flex items-center justify-center rounded-full border border-white z-10">
-                            {wishlistItems.length}
-                        </span>
-                    )}
                     <span className="text-[10px] font-medium">WISHLIST</span>
                 </Link>
 

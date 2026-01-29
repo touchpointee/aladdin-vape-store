@@ -6,7 +6,6 @@ import Image from "next/image";
 interface Brand {
     _id: string;
     name: string;
-    slug: string;
     logo: string;
 }
 
@@ -17,7 +16,6 @@ export default function BrandsPage() {
     // Form State
     const [formData, setFormData] = useState({
         name: '',
-        slug: '',
     });
     const [imageFile, setImageFile] = useState<File | null>(null);
 
@@ -47,7 +45,6 @@ export default function BrandsPage() {
         setEditingId(brand._id);
         setFormData({
             name: brand.name,
-            slug: brand.slug,
         });
         setPreviewImage(brand.logo);
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -55,12 +52,11 @@ export default function BrandsPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.name || !formData.slug) return alert('Name and Slug required');
+        if (!formData.name) return alert('Name is required');
 
         const data = new FormData();
         if (editingId) data.append('_id', editingId);
         data.append('name', formData.name);
-        data.append('slug', formData.slug);
         if (imageFile) {
             data.append('logo', imageFile);
         }
@@ -73,7 +69,7 @@ export default function BrandsPage() {
             });
             if (res.ok) {
                 alert(editingId ? 'Brand Updated!' : 'Brand Created!');
-                setFormData({ name: '', slug: '' });
+                setFormData({ name: '' });
                 setImageFile(null);
                 setEditingId(null);
                 fetchBrands(); // Refresh list
@@ -98,7 +94,7 @@ export default function BrandsPage() {
                         <button
                             onClick={() => {
                                 setEditingId(null);
-                                setFormData({ name: '', slug: '' });
+                                setFormData({ name: '' });
                                 setImageFile(null);
                             }}
                             className="text-sm text-red-500 underline"
@@ -115,16 +111,6 @@ export default function BrandsPage() {
                             className="w-full border p-2 rounded"
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                            required
-                        />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium mb-1">Slug (URL)</label>
-                        <input
-                            type="text"
-                            className="w-full border p-2 rounded"
-                            value={formData.slug}
-                            onChange={(e) => setFormData({ ...formData, slug: e.target.value })}
                             required
                         />
                     </div>
@@ -160,13 +146,12 @@ export default function BrandsPage() {
                         <tr>
                             <th className="p-4 font-medium">Logo</th>
                             <th className="p-4 font-medium">Name</th>
-                            <th className="p-4 font-medium">Slug</th>
                             <th className="p-4 font-medium">Actions</th>
                         </tr>
                     </thead>
                     <tbody className="divide-y">
                         {loading ? (
-                            <tr><td colSpan={4} className="p-4 text-center">Loading...</td></tr>
+                            <tr><td colSpan={3} className="p-4 text-center">Loading...</td></tr>
                         ) : brands.map((brand) => (
                             <tr key={brand._id} className="hover:bg-gray-50">
                                 <td className="p-4">
@@ -177,7 +162,6 @@ export default function BrandsPage() {
                                     )}
                                 </td>
                                 <td className="p-4 font-medium">{brand.name}</td>
-                                <td className="p-4 text-gray-500">{brand.slug}</td>
                                 <td className="p-4 flex gap-3">
                                     <button onClick={() => handleEdit(brand)} className="text-blue-600 hover:underline">Edit</button>
                                     <button className="text-red-500 hover:underline">Delete</button>
