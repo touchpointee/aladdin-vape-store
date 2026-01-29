@@ -15,6 +15,7 @@ export default function CheckoutPage() {
     const [success, setSuccess] = useState(false);
 
     const [savedAddresses, setSavedAddresses] = useState<any[]>([]);
+    const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
     const [showNewAddressForm, setShowNewAddressForm] = useState(false);
 
     const [formData, setFormData] = useState({
@@ -65,6 +66,7 @@ export default function CheckoutPage() {
             pincode: addr.pincode,
             age: addr.age || ''
         });
+        setSelectedAddressId(addr._id);
         setShowNewAddressForm(false);
     };
 
@@ -171,11 +173,11 @@ export default function CheckoutPage() {
                                 <div
                                     key={addr._id}
                                     onClick={() => fillAddress(addr)}
-                                    className={`p-4 rounded-lg border cursor-pointer transition-colors ${formData.address === addr.address ? 'bg-blue-50 border-blue-500 ring-1 ring-blue-500' : 'bg-white border-gray-200 hover:border-gray-300'
+                                    className={`p-4 rounded-lg border cursor-pointer transition-colors ${selectedAddressId === addr._id ? 'bg-blue-50 border-blue-500 ring-1 ring-blue-500' : 'bg-white border-gray-200 hover:border-gray-300'
                                         }`}
                                 >
                                     <div className="flex items-start gap-3">
-                                        <MapPin className={`mt-0.5 ${formData.address === addr.address ? 'text-blue-600' : 'text-gray-400'}`} size={18} />
+                                        <MapPin className={`mt-0.5 ${selectedAddressId === addr._id ? 'text-blue-600' : 'text-gray-400'}`} size={18} />
                                         <div>
                                             <p className="font-bold text-sm text-gray-900">{addr.name} ({addr.age} Yrs)</p>
                                             <p className="text-sm text-gray-600 leading-snug">{addr.address}, {addr.landmark && `${addr.landmark}, `}{addr.city} - {addr.pincode}</p>
@@ -187,6 +189,7 @@ export default function CheckoutPage() {
                             <button
                                 onClick={() => {
                                     setFormData({ ...formData, email: '', address: '', landmark: '', city: '', pincode: '', age: '' });
+                                    setSelectedAddressId(null);
                                     setShowNewAddressForm(true);
                                 }}
                                 className="p-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 font-bold text-sm flex items-center justify-center gap-2 hover:border-blue-400 hover:text-blue-600"
