@@ -4,11 +4,15 @@ import Link from "next/link";
 import { ArrowLeft, User, Camera } from "lucide-react";
 import { useState } from "react";
 
+import { useAuthStore } from "@/store/authStore";
+
 export default function ProfilePage() {
+    const { user } = useAuthStore();
+
     const [profile, setProfile] = useState({
-        name: "",
+        name: user?.name || "",
         email: "",
-        phone: ""
+        phone: user?.phone || ""
     });
 
     const [loading, setLoading] = useState(false);

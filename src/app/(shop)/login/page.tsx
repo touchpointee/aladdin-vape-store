@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
+import { useAuthStore } from "@/store/authStore";
 
 export default function LoginPage() {
     const router = useRouter();
@@ -24,30 +25,18 @@ export default function LoginPage() {
         }, 1000);
     };
 
+    const { login } = useAuthStore();
+
     const handleVerifyOtp = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
 
-        try {
-            const res = await fetch('/api/auth/login', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ phone, otp }),
-            });
-
-            const data = await res.json();
-
-            if (res.ok) {
-                // Success: Redirect to Admin
-                router.push("/admin/dashboard"); // Or /admin/brands if dashboard doesn't exist yet
-            } else {
-                alert(data.error || "Login Failed");
-            }
-        } catch (err) {
-            alert("Something went wrong");
-        } finally {
+        // Mock verification - Accept any OTP
+        setTimeout(() => {
+            login(phone); // Store user in local state
             setLoading(false);
-        }
+            router.push("/account"); // Redirect to account page
+        }, 800);
     };
 
     return (
