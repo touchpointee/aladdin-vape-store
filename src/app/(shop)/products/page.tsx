@@ -13,14 +13,12 @@ async function getData(searchParams: { category?: string; brand?: string; sort?:
 
     const filter: any = { status: "active" };
 
-    // Apply Filters by Slug
+    // Apply Filters by ID (Directly from searchParams)
     if (searchParams.category) {
-        const cat = await Category.findOne({ slug: searchParams.category });
-        if (cat) filter.category = cat._id;
+        filter.category = searchParams.category;
     }
     if (searchParams.brand) {
-        const brand = await Brand.findOne({ slug: searchParams.brand });
-        if (brand) filter.brand = brand._id;
+        filter.brand = searchParams.brand;
     }
 
     // Apply Search Query
@@ -45,8 +43,8 @@ async function getData(searchParams: { category?: string; brand?: string; sort?:
         .sort(sort)
         .limit(50); // Pagination can be added later
 
-    const categories = await Category.find({ status: "active" }).select("_id name slug");
-    const brands = await Brand.find({ status: "active" }).select("_id name slug");
+    const categories = await Category.find({ status: "active" }).select("_id name");
+    const brands = await Brand.find({ status: "active" }).select("_id name");
 
     return { products, categories, brands };
 }
