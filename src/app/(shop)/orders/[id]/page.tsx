@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, MapPin, Truck, CreditCard, ShoppingBag } from "lucide-react";
 import connectDB from "@/lib/db";
-import Order from "@/models/Order";
-import Product from "@/models/Product";
+import { Order, Product } from "@/models/all";
 import Image from "next/image";
 
 export const dynamic = 'force-dynamic';
