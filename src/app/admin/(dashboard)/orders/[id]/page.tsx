@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { ArrowLeft, Package, User, MapPin, Truck, CheckCircle, XCircle, Clock } from "lucide-react";
+import { ArrowLeft, Package, User, MapPin, Truck, CheckCircle, XCircle, Clock, Printer } from "lucide-react";
 import Link from "next/link";
 import { IOrder } from "@/models/all";
 
@@ -29,6 +29,10 @@ export default function AdminOrderDetailPage() {
         } finally {
             setLoading(false);
         }
+    };
+
+    const handlePrint = () => {
+        window.print();
     };
 
     const handleStatusUpdate = async (newStatus: string) => {
@@ -70,19 +74,28 @@ export default function AdminOrderDetailPage() {
     return (
         <div className="max-w-5xl mx-auto">
             {/* Header */}
-            <div className="flex items-center gap-4 mb-6">
-                <Link href="/admin/orders" className="p-2 hover:bg-gray-200 rounded-full transition">
-                    <ArrowLeft size={20} />
-                </Link>
-                <div>
-                    <h1 className="text-2xl font-bold flex items-center gap-3">
-                        Order #{order._id.toString().substring(0, 8)}
-                        <span className={`px-3 py-1 text-sm rounded-full ${getStatusColor(order.status)}`}>
-                            {order.status}
-                        </span>
-                    </h1>
-                    <p className="text-gray-500 text-sm">Placed on {new Date(order.createdAt).toLocaleString()}</p>
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                    <Link href="/admin/orders" className="back-button p-2 hover:bg-gray-200 rounded-full transition">
+                        <ArrowLeft size={20} />
+                    </Link>
+                    <div>
+                        <h1 className="text-2xl font-bold flex items-center gap-3">
+                            Order #{order._id.toString().substring(0, 8)}
+                            <span className={`px-3 py-1 text-sm rounded-full ${getStatusColor(order.status)}`}>
+                                {order.status}
+                            </span>
+                        </h1>
+                        <p className="text-gray-500 text-sm">Placed on {new Date(order.createdAt).toLocaleString()}</p>
+                    </div>
                 </div>
+                <button
+                    onClick={handlePrint}
+                    className="no-print flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium"
+                >
+                    <Printer size={20} />
+                    Print Invoice
+                </button>
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -129,7 +142,7 @@ export default function AdminOrderDetailPage() {
                 {/* Right Column: Customer & Actions */}
                 <div className="space-y-6">
                     {/* Status Actions */}
-                    <div className="bg-white rounded-lg shadow-sm border p-6">
+                    <div className="no-print bg-white rounded-lg shadow-sm border p-6">
                         <h2 className="font-bold text-gray-800 mb-4">Update Status</h2>
                         <div className="space-y-2">
                             <button

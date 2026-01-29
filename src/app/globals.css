@@ -23,3 +23,59 @@ body {
   -ms-overflow-style: none;
   scrollbar-width: none;
 }
+
+@media print {
+
+  /* Hide Admin Sidebar and Header */
+  aside,
+  header,
+  .no-print,
+  button,
+  .back-button {
+    display: none !important;
+  }
+
+  /* Reset layout for print */
+  main {
+    margin: 0 !important;
+    padding: 0 !important;
+    height: auto !important;
+    overflow: visible !important;
+    background: white !important;
+  }
+
+  .bg-gray-100 {
+    background-color: white !important;
+  }
+
+  body {
+    background: white !important;
+  }
+
+  /* Ensure content spans full width */
+  .max-w-5xl {
+    max-width: 100% !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .grid {
+    display: block !important;
+  }
+
+  .lg\:grid-cols-3 {
+    grid-template-columns: 1fr !important;
+  }
+
+  /* Force white background for printed elements */
+  .bg-white {
+    background-color: white !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .shadow-sm,
+  .border {
+    box-shadow: none !important;
+  }
+}
