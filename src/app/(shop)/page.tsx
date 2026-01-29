@@ -6,7 +6,7 @@ import ProductGrid from "@/components/product/ProductGrid";
 import MobileSearch from "@/components/home/MobileSearch";
 import PromoBanner from "@/components/home/PromoBanner";
 import connectDB from "@/lib/db";
-import { Product, Category, Brand } from "@/models/all";
+import { Product, Category, Brand, Settings } from "@/models/all";
 
 export const dynamic = 'force-dynamic';
 
@@ -15,11 +15,11 @@ async function getHomeData() {
     const conn = await connectDB();
     if (!conn) {
       console.warn("Skipping data fetch - DB Connection failed");
-      return { products: [], categories: [], brands: [], newArrivals: [], disposables: [] };
+      return { products: [], categories: [], brands: [], newArrivals: [], disposables: [], bannerSettings: null };
     }
 
     // Parallel fetching for performance
-    const [products, categories, brands, newArrivals, disposables] = await Promise.all([
+    const [products, categories, brands, newArrivals, disposables, settingsDoc] = await Promise.all([
       // Hot Products
       Product.find({ status: 'active', isHot: true }).sort({ createdAt: -1 }).limit(8).lean(),
       // Categories
@@ -30,6 +30,8 @@ async function getHomeData() {
       Product.find({ status: 'active', isNewArrival: true }).sort({ createdAt: -1 }).limit(8).lean(),
       // Top Selling
       Product.find({ status: 'active', isTopSelling: true }).sort({ createdAt: -1 }).limit(8).lean(),
+      // Settings
+      Settings.findOne({ key: 'home_banners' }).lean(),
     ]);
 
     const serialize = (items: any[]) => items.map(i => ({
@@ -39,29 +41,39 @@ async function getHomeData() {
       category: i.category?.toString()
     }));
 
+    let bannerSettings = null;
+    if (settingsDoc && settingsDoc.value) {
+      try {
+        bannerSettings = JSON.parse(settingsDoc.value);
+      } catch (e) {
+        console.error("Failed to parse banner settings", e);
+      }
+    }
+
     return {
       products: serialize(products),
       categories: serialize(categories),
       brands: serialize(brands),
       newArrivals: serialize(newArrivals),
-      disposables: serialize(disposables)
+      disposables: serialize(disposables),
+      bannerSettings
     };
 
   } catch (error) {
     console.warn("DB not ready or error:", error);
-    return { products: [], categories: [], brands: [], newArrivals: [], disposables: [] };
+    return { products: [], categories: [], brands: [], newArrivals: [], disposables: [], bannerSettings: null };
   }
 }
 
 export default async function Home() {
-  const { products, categories, brands, newArrivals, disposables } = await getHomeData();
+  const { products, categories, brands, newArrivals, disposables, bannerSettings } = await getHomeData();
 
   return (
     <div className="pb-24">
       {/* Search Bar - Mobile Visible Only */}
       <MobileSearch />
 
-      <HeroSection />
+      <HeroSection settings={bannerSettings} />
 
       {/* 2. Categories */}
       <CategorySection categories={categories as any} />

@@ -13,12 +13,12 @@ export default function CategorySection({ categories }: CategorySectionProps) {
     return (
         <div className="mt-8 px-4">
             <h3 className="text-lg font-bold text-gray-900 uppercase mb-4">Shop by Category</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar scroll-smooth snap-x">
                 {categories.map((cat) => (
                     <Link
                         key={cat._id}
                         href={`/products?category=${cat._id}`}
-                        className="group relative h-28 rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all"
+                        className="flex-none w-[160px] md:w-[200px] h-28 group relative rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all snap-start"
                     >
                         {/* Background Image/Color */}
                         <div className="absolute inset-0 bg-gray-100">
@@ -31,7 +31,7 @@ export default function CategorySection({ categories }: CategorySectionProps) {
 
                         {/* Overlay */}
                         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex flex-col justify-end p-3">
-                            <span className="text-white font-bold text-sm uppercase tracking-wider">{cat.name}</span>
+                            <span className="text-white font-bold text-sm uppercase tracking-wider line-clamp-2">{cat.name}</span>
                         </div>
                     </Link>
                 ))}
