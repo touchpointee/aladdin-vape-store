@@ -1,48 +1,47 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
 
 export default function AgeVerification() {
     const [isVerified, setIsVerified] = useState(false);
     const [mounted, setMounted] = useState(false);
+    const pathname = usePathname();
 
     useEffect(() => {
         setMounted(true);
-        // We do NOT check localStorage/sessionStorage as requested ("ask in each visit")
-        // Just reliance on React state which resets on refresh
     }, []);
 
     const handleExit = () => {
-        // Redirect away or close window
         window.location.href = "https://www.google.com";
     };
 
-    if (!mounted) return null; // Avoid hydration mismatch
-    if (isVerified) return null;
+    if (!mounted) return null;
+    if (isVerified || pathname?.startsWith('/admin')) return null;
 
     return (
-        <div className="fixed inset-0 z-[9999] bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm">
-            <div className="bg-white rounded-lg shadow-2xl max-w-lg w-full p-8 text-center animate-in fade-in zoom-in duration-300">
-                <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 uppercase tracking-wider">
+        <div className="fixed inset-0 z-[9999] bg-black/40 flex items-center justify-center p-4 backdrop-blur-[2px]">
+            <div className="bg-white rounded shadow-2xl max-w-[400px] w-full p-8 text-center animate-in fade-in zoom-in duration-300">
+                <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-4 uppercase tracking-[0.05em] leading-tight">
                     Are you over 18 years of age?
                 </h2>
 
-                <div className="w-24 h-1 bg-black mx-auto mb-6"></div>
+                <div className="w-20 h-[1px] bg-gray-400 mx-auto mb-6"></div>
 
-                <p className="text-gray-600 text-lg mb-8 leading-relaxed">
-                    The content of this website cannot be shown unless you verify your age. Please verify that you are over 18 to see this page.
+                <p className="text-gray-700 text-[15px] mb-8 leading-relaxed max-w-[300px] mx-auto">
+                    The content of this website cannot be shown unless you verify your age. Please verify that you are over 18 to see this page
                 </p>
 
-                <div className="flex flex-col md:flex-row gap-4 justify-center">
+                <div className="flex flex-col gap-3 max-w-[240px] mx-auto">
                     <button
                         onClick={() => setIsVerified(true)}
-                        className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-4 px-8 rounded-md transition-colors w-full md:w-auto uppercase tracking-wide"
+                        className="bg-white border-[1px] border-[#0099ff] text-[#0099ff] font-bold py-2.5 px-4 transition-colors w-full uppercase text-sm tracking-wide"
                     >
                         I'm Over 18
                     </button>
                     <button
                         onClick={handleExit}
-                        className="bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-4 px-8 rounded-md transition-colors w-full md:w-auto uppercase tracking-wide"
+                        className="bg-[#0099ff] border-[1px] border-[#0099ff] text-white font-bold py-2.5 px-4 hover:bg-[#0088ee] transition-colors w-full uppercase text-sm tracking-wide"
                     >
                         Exit
                     </button>
