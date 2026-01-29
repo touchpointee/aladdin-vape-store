@@ -31,9 +31,31 @@ export default function CheckoutPage() {
         age: ''
     });
 
-    // ... existing useEffect ...
+    // Fetch saved addresses on mount if logged in
+    useEffect(() => {
+        if (isLoggedIn && user?.phone) {
+            setFormData(prev => ({ ...prev, phone: user.phone }));
+            fetchAddresses(user.phone);
+        }
+    }, [isLoggedIn, user]);
 
-    // ... existing fetchAddresses ...
+    const fetchAddresses = async (phone: string) => {
+        try {
+            const res = await fetch(`/api/addresses?phone=${phone}`);
+            if (res.ok) {
+                const data = await res.json();
+                setSavedAddresses(data);
+                // Pre-fill with first address if available
+                if (data.length > 0) {
+                    fillAddress(data[0]);
+                } else {
+                    setShowNewAddressForm(true);
+                }
+            }
+        } catch (error) {
+            console.error("Failed to load addresses");
+        }
+    };
 
     const fillAddress = (addr: any) => {
         setFormData({
@@ -51,7 +73,9 @@ export default function CheckoutPage() {
         setEditingId(null); // Reset editing when just selecting
     };
 
-    // ... existing handleChange ...
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
