@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, Package, ChevronRight } from "lucide-react";
 import connectDB from "@/lib/db";
-import Order from "@/models/Order";
-import Product from "@/models/Product"; // Ensure Model registration
+import { Order, Product } from "@/models/all";
 
 export const dynamic = 'force-dynamic';
 
@@ -67,8 +66,8 @@ export default async function OrdersPage() {
                                     </h3>
                                 </div>
                                 <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase ${order.status === 'Delivered' ? 'bg-green-100 text-green-600' :
-                                        order.status === 'Cancelled' ? 'bg-red-100 text-red-600' :
-                                            'bg-blue-100 text-blue-600'
+                                    order.status === 'Cancelled' ? 'bg-red-100 text-red-600' :
+                                        'bg-blue-100 text-blue-600'
                                     }`}>
                                     {order.status}
                                 </span>
