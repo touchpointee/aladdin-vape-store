@@ -91,6 +91,9 @@ export async function POST(req: NextRequest) {
 
         return NextResponse.json(product, { status: 201 });
     } catch (error: any) {
+        if (error.code === 11000) {
+            return NextResponse.json({ error: `Duplicate entry: ${JSON.stringify(error.keyValue)}` }, { status: 400 });
+        }
         return NextResponse.json({ error: error.message || 'Failed to create product' }, { status: 500 });
     }
 }
@@ -166,6 +169,9 @@ export async function PUT(req: NextRequest) {
 
         return NextResponse.json(product);
     } catch (error: any) {
+        if (error.code === 11000) {
+            return NextResponse.json({ error: `Duplicate entry: ${JSON.stringify(error.keyValue)}` }, { status: 400 });
+        }
         return NextResponse.json({ error: error.message || 'Failed to update product' }, { status: 500 });
     }
 }

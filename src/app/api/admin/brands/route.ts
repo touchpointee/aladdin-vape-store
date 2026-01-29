@@ -42,7 +42,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(brand, { status: 201 });
     } catch (error: any) {
         if (error.code === 11000) {
-            return NextResponse.json({ error: 'Slug must be unique' }, { status: 400 });
+            return NextResponse.json({ error: `Duplicate entry: ${JSON.stringify(error.keyValue)}` }, { status: 400 });
         }
         return NextResponse.json({ error: error.message || 'Failed to create brand' }, { status: 500 });
     }
@@ -80,7 +80,7 @@ export async function PUT(req: NextRequest) {
         return NextResponse.json(brand);
     } catch (error: any) {
         if (error.code === 11000) {
-            return NextResponse.json({ error: 'Slug must be unique' }, { status: 400 });
+            return NextResponse.json({ error: `Duplicate entry: ${JSON.stringify(error.keyValue)}` }, { status: 400 });
         }
         return NextResponse.json({ error: error.message || 'Failed to update brand' }, { status: 500 });
     }
