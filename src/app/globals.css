@@ -48,7 +48,7 @@ body {
     min-height: 0 !important;
     overflow: visible !important;
     background: #fff !important;
-    padding: 10mm !important;
+    padding: 5mm !important;
   }
 
   main {
@@ -93,5 +93,31 @@ body {
   .border-b,
   .border-t {
     border-color: #000 !important;
+  }
+
+  /* 6. Layout Resets for Print */
+  .grid,
+  .flex {
+    display: block !important;
+  }
+
+  .lg\:col-span-2,
+  .col-span-2 {
+    width: 100% !important;
+  }
+
+  .gap-6 {
+    gap: 0 !important;
+  }
+
+  /* Ensure images don't break across pages */
+  img {
+    page-break-inside: avoid;
+  }
+
+  /* Reduce padding slightly to ensure fit */
+  html,
+  body {
+    padding: 5mm !important;
   }
 }
