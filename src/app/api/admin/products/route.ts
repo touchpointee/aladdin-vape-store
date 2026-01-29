@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
-import Product from '@/models/Product';
+import { Product } from '@/models/all';
 import { uploadImage } from '@/lib/minio';
 
 // GET: List all products (with optional filters)
