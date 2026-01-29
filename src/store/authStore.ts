@@ -11,6 +11,7 @@ interface AuthState {
     isLoggedIn: boolean;
     login: (phone: string) => void;
     logout: () => void;
+    updateUser: (updates: Partial<User>) => void;
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -20,6 +21,9 @@ export const useAuthStore = create<AuthState>()(
             isLoggedIn: false,
             login: (phone) => set({ user: { phone }, isLoggedIn: true }),
             logout: () => set({ user: null, isLoggedIn: false }),
+            updateUser: (updates) => set((state) => ({
+                user: state.user ? { ...state.user, ...updates } : null
+            })),
         }),
         {
             name: 'vape-auth-storage',

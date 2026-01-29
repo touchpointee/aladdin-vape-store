@@ -7,7 +7,7 @@ import { useState } from "react";
 import { useAuthStore } from "@/store/authStore";
 
 export default function ProfilePage() {
-    const { user } = useAuthStore();
+    const { user, updateUser } = useAuthStore();
 
     const [profile, setProfile] = useState({
         name: user?.name || "",
@@ -20,7 +20,15 @@ export default function ProfilePage() {
     const handleSave = (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        setTimeout(() => setLoading(false), 1000); // Mock save
+
+        // Update store
+        updateUser({
+            name: profile.name,
+            phone: profile.phone
+        });
+
+        // Mock API call simulation
+        setTimeout(() => setLoading(false), 500);
     };
 
     return (
@@ -65,10 +73,9 @@ export default function ProfilePage() {
                             <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Phone Number</label>
                             <input
                                 value={profile.phone}
-                                readOnly
-                                className="w-full border-b border-gray-200 py-2 text-sm bg-gray-50 text-gray-500 cursor-not-allowed"
+                                onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
+                                className="w-full border-b border-gray-200 py-2 text-sm focus:border-blue-500 outline-none font-medium"
                             />
-                            <p className="text-[10px] text-gray-400 mt-1">Phone number cannot be changed.</p>
                         </div>
                     </div>
 

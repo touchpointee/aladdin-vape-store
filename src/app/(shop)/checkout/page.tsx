@@ -235,9 +235,7 @@ export default function CheckoutPage() {
                                             onChange={handleChange}
                                             className="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 outline-none"
                                             placeholder="+91 9876543210"
-                                            readOnly={!!isLoggedIn} // If logged in, lock phone to ensure order linking
                                         />
-                                        {isLoggedIn && <p className="text-[10px] text-gray-400 mt-1">Linked to account.</p>}
                                     </div>
                                     <div className="w-24">
                                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Age</label>
