@@ -1,0 +1,206 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Image from "next/image";
+import { ArrowLeft, Package, User, MapPin, Truck, CheckCircle, XCircle, Clock } from "lucide-react";
+import Link from "next/link";
+import { IOrder } from "@/models/all";
+
+export default function AdminOrderDetailPage() {
+    const { id } = useParams();
+    const router = useRouter();
+    const [order, setOrder] = useState<any>(null);
+    const [loading, setLoading] = useState(true);
+    const [updating, setUpdating] = useState(false);
+
+    useEffect(() => {
+        fetchOrder();
+    }, [id]);
+
+    const fetchOrder = async () => {
+        try {
+            const res = await fetch(`/api/admin/orders/${id}`);
+            if (!res.ok) throw new Error("Failed");
+            const data = await res.json();
+            setOrder(data);
+        } catch (error) {
+            console.error("Error fetching order", error);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleStatusUpdate = async (newStatus: string) => {
+        if (!confirm(`Are you sure you want to change status to ${newStatus}?`)) return;
+
+        setUpdating(true);
+        try {
+            const res = await fetch(`/api/admin/orders/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ status: newStatus })
+            });
+
+            if (res.ok) {
+                const updatedOrder = await res.json();
+                setOrder(updatedOrder);
+            } else {
+                alert("Failed to update status");
+            }
+        } catch (error) {
+            console.error("Error updating status", error);
+        } finally {
+            setUpdating(false);
+        }
+    };
+
+    if (loading) return <div className="p-8 text-center text-gray-500">Loading order details...</div>;
+    if (!order) return <div className="p-8 text-center text-red-500">Order not found</div>;
+
+    const getStatusColor = (status: string) => {
+        switch (status) {
+            case 'Confirmed': return 'bg-blue-100 text-blue-700';
+            case 'Delivered': return 'bg-green-100 text-green-700';
+            case 'Cancelled': return 'bg-red-100 text-red-700';
+            default: return 'bg-yellow-100 text-yellow-700';
+        }
+    };
+
+    return (
+        <div className="max-w-5xl mx-auto">
+            {/* Header */}
+            <div className="flex items-center gap-4 mb-6">
+                <Link href="/admin/orders" className="p-2 hover:bg-gray-200 rounded-full transition">
+                    <ArrowLeft size={20} />
+                </Link>
+                <div>
+                    <h1 className="text-2xl font-bold flex items-center gap-3">
+                        Order #{order._id.toString().substring(0, 8)}
+                        <span className={`px-3 py-1 text-sm rounded-full ${getStatusColor(order.status)}`}>
+                            {order.status}
+                        </span>
+                    </h1>
+                    <p className="text-gray-500 text-sm">Placed on {new Date(order.createdAt).toLocaleString()}</p>
+                </div>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+                {/* Left Column: Order Items */}
+                <div className="lg:col-span-2 space-y-6">
+                    <div className="bg-white rounded-lg shadow-sm border p-6">
+                        <h2 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <Package size={20} /> Order Items
+                        </h2>
+                        <div className="space-y-4">
+                            {order.products.map((item: any, idx: number) => (
+                                <div key={idx} className="flex gap-4 border-b last:border-0 pb-4 last:pb-0">
+                                    <div className="relative w-20 h-20 bg-gray-100 rounded-lg overflow-hidden flex-shrink-0">
+                                        {item.product?.images?.[0] && (
+                                            <Image
+                                                src={item.product.images[0]}
+                                                alt={item.product.name}
+                                                fill
+                                                className="object-contain p-2"
+                                            />
+                                        )}
+                                    </div>
+                                    <div className="flex-1">
+                                        <h3 className="font-medium text-gray-900">{item.product?.name || "Unknown Product"}</h3>
+                                        <div className="text-sm text-gray-500">
+                                            {item.product?.puffCount && `${item.product.puffCount} Puffs`} · {item.product?.brand?.name}
+                                        </div>
+                                        <div className="mt-2 flex justify-between items-center text-sm">
+                                            <span className="text-gray-600">Qty: {item.quantity}</span>
+                                            <span className="font-bold">₹{item.price * item.quantity}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                        <div className="mt-6 pt-4 border-t flex justify-between items-center">
+                            <span className="font-semibold text-gray-600">Total Amount</span>
+                            <span className="text-2xl font-bold text-blue-600">₹{order.totalPrice}</span>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Column: Customer & Actions */}
+                <div className="space-y-6">
+                    {/* Status Actions */}
+                    <div className="bg-white rounded-lg shadow-sm border p-6">
+                        <h2 className="font-bold text-gray-800 mb-4">Update Status</h2>
+                        <div className="space-y-2">
+                            <button
+                                onClick={() => handleStatusUpdate('Pending')}
+                                disabled={updating || order.status === 'Pending'}
+                                className="w-full flex items-center justify-between p-3 rounded border hover:bg-gray-50 disabled:opacity-50"
+                            >
+                                <span className="flex items-center gap-2"><Clock size={16} className="text-yellow-500" /> Pending</span>
+                                {order.status === 'Pending' && <CheckCircle size={16} className="text-green-500" />}
+                            </button>
+                            <button
+                                onClick={() => handleStatusUpdate('Confirmed')}
+                                disabled={updating || order.status === 'Confirmed'}
+                                className="w-full flex items-center justify-between p-3 rounded border hover:bg-gray-50 disabled:opacity-50"
+                            >
+                                <span className="flex items-center gap-2"><CheckCircle size={16} className="text-blue-500" /> Confirmed</span>
+                                {order.status === 'Confirmed' && <CheckCircle size={16} className="text-green-500" />}
+                            </button>
+                            <button
+                                onClick={() => handleStatusUpdate('Delivered')}
+                                disabled={updating || order.status === 'Delivered'}
+                                className="w-full flex items-center justify-between p-3 rounded border hover:bg-gray-50 disabled:opacity-50"
+                            >
+                                <span className="flex items-center gap-2"><Truck size={16} className="text-green-500" /> Delivered</span>
+                                {order.status === 'Delivered' && <CheckCircle size={16} className="text-green-500" />}
+                            </button>
+                            <button
+                                onClick={() => handleStatusUpdate('Cancelled')}
+                                disabled={updating || order.status === 'Cancelled'}
+                                className="w-full flex items-center justify-between p-3 rounded border hover:bg-gray-50 disabled:opacity-50"
+                            >
+                                <span className="flex items-center gap-2"><XCircle size={16} className="text-red-500" /> Cancelled</span>
+                                {order.status === 'Cancelled' && <CheckCircle size={16} className="text-green-500" />}
+                            </button>
+                        </div>
+                    </div>
+
+                    {/* Customer Info */}
+                    <div className="bg-white rounded-lg shadow-sm border p-6">
+                        <h2 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
+                            <User size={20} /> Customer Details
+                        </h2>
+                        <div className="space-y-4 text-sm">
+                            <div>
+                                <label className="text-gray-500 text-xs uppercase">Name</label>
+                                <div className="font-medium">{order.customer.name}</div>
+                            </div>
+                            <div>
+                                <label className="text-gray-500 text-xs uppercase">Phone</label>
+                                <div className="font-medium">{order.customer.phone}</div>
+                            </div>
+                            <div>
+                                <label className="text-gray-500 text-xs uppercase">Payment Mode</label>
+                                <div className="font-medium">{order.paymentMode}</div>
+                            </div>
+
+                            <div className="pt-2 border-t mt-2">
+                                <h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
+                                    <MapPin size={16} /> Shipping Address
+                                </h3>
+                                <p className="text-gray-600 leading-relaxed">
+                                    {order.customer.address}<br />
+                                    {order.customer.city}<br />
+                                    {order.customer.pincode}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    );
+}
