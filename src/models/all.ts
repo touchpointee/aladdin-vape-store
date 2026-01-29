@@ -67,6 +67,16 @@ export interface ISettings extends Document {
     updatedAt: Date;
 }
 
+export interface IAddress extends Document {
+    phone: string; // Linked to user by phone
+    name: string;
+    address: string;
+    city: string;
+    pincode: string;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
 // --- Schemas ---
 
 const CategorySchema = new Schema<ICategory>(
@@ -145,6 +155,17 @@ const SettingsSchema = new Schema<ISettings>(
     { timestamps: true }
 );
 
+const AddressSchema = new Schema<IAddress>(
+    {
+        phone: { type: String, required: true, index: true },
+        name: { type: String, required: true },
+        address: { type: String, required: true },
+        city: { type: String, required: true },
+        pincode: { type: String, required: true },
+    },
+    { timestamps: true }
+);
+
 // --- Models ---
 // Check if models exist to prevent overwrite error during hot reload
 export const Category: Model<ICategory> = mongoose.models.Category || mongoose.model<ICategory>('Category', CategorySchema);
@@ -152,3 +173,4 @@ export const Brand: Model<IBrand> = mongoose.models.Brand || mongoose.model<IBra
 export const Product: Model<IProduct> = mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema);
 export const Order: Model<IOrder> = mongoose.models.Order || mongoose.model<IOrder>('Order', OrderSchema);
 export const Settings: Model<ISettings> = mongoose.models.Settings || mongoose.model<ISettings>('Settings', SettingsSchema);
+export const Address: Model<IAddress> = mongoose.models.Address || mongoose.model<IAddress>('Address', AddressSchema);
