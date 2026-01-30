@@ -74,7 +74,7 @@ export default function InfiniteProductGrid({ initialProducts, searchParams }: I
 
     return (
         <div className="flex flex-col gap-8">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-0">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 p-0">
                 {products.map((product, index) => {
                     // Trigger load more when we reach the 20th product from the end (approx)
                     // Or just use a trigger element at the bottom.

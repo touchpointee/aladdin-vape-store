@@ -80,7 +80,7 @@ export default async function Home() {
       <CategorySection categories={categories as any} />
 
       {/* 3. New Arrivals Section */}
-      <div className="mt-12 px-4">
+      <div className="mt-12 px-4 max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-bold text-gray-900 uppercase tracking-tight">New Arrivals</h3>
           <Link href="/products?isNewArrival=true" className="text-xs text-blue-500 font-bold uppercase hover:underline">
@@ -97,7 +97,7 @@ export default async function Home() {
       <BrandSection brands={brands as any} />
 
       {/* 6. Hot Products */}
-      <div className="mt-12 px-4">
+      <div className="mt-12 px-4 max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-bold text-gray-900 uppercase tracking-tight">Hot Products</h3>
           <Link href="/products?isHot=true" className="text-xs text-blue-500 font-bold uppercase hover:underline">
@@ -108,7 +108,7 @@ export default async function Home() {
       </div>
 
       {/* 7. Top Selling Products */}
-      <div className="mt-12 px-4">
+      <div className="mt-12 px-4 max-w-7xl mx-auto">
         <div className="flex justify-between items-center mb-6">
           <h3 className="text-xl font-bold text-gray-900 uppercase tracking-tight">Top Selling</h3>
           <Link href="/products?isTopSelling=true" className="text-xs text-blue-500 font-bold uppercase hover:underline">
