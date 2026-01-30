@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { useCartStore } from './cartStore';
 
 interface User {
     phone: string;
@@ -20,7 +21,10 @@ export const useAuthStore = create<AuthState>()(
             user: null,
             isLoggedIn: false,
             login: (phone) => set({ user: { phone }, isLoggedIn: true }),
-            logout: () => set({ user: null, isLoggedIn: false }),
+            logout: () => {
+                useCartStore.getState().clearCart();
+                set({ user: null, isLoggedIn: false });
+            },
             updateUser: (updates) => set((state) => ({
                 user: state.user ? { ...state.user, ...updates } : null
             })),
