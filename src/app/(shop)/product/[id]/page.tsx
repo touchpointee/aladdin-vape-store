@@ -54,6 +54,9 @@ export async function generateMetadata(
     return {
         title: product.metaTitle || product.name,
         description: product.metaDescription || product.description?.substring(0, 160) || `Buy ${product.name} at Aladdin Vape Store. Best price: INR ${discountedPrice}`,
+        alternates: {
+            canonical: `/product/${product.slug || product._id}`
+        },
         openGraph: {
             title: product.metaTitle || `${product.name} | Aladdin Vape Store`,
             description: product.metaDescription || product.description?.substring(0, 160),
