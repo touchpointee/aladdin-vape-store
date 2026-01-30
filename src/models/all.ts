@@ -153,8 +153,8 @@ ProductSchema.pre('save', function (this: any) {
     if (this.isModified('name') || !this.slug) {
         this.slug = this.name.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
     }
-    if (!this.metaTitle || (this.isModified('name') && this.metaTitle === `${this.name} | Aladdin Vape Store`)) {
-        this.metaTitle = `${this.name} | Aladdin Vape Store`;
+    if (!this.metaTitle || (this.isModified('name') && this.metaTitle.includes('Aladdin Vape Store'))) {
+        this.metaTitle = `${this.name} | Buy Online | Best Price in India | Aladdin Vape Store`;
     }
     if (!this.metaDescription && this.description) {
         const plainDesc = this.description.replace(/<[^>]*>/g, '').substring(0, 155);

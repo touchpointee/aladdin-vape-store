@@ -26,8 +26,8 @@ export async function POST(req: NextRequest) {
                     update.slug = generatedSlug;
                 }
 
-                if (!product.metaTitle) {
-                    update.metaTitle = `${product.name} | Aladdin Vape Store`;
+                if (!product.metaTitle || product.metaTitle.includes('Aladdin Vape Store')) {
+                    update.metaTitle = `${product.name} | Buy Online | Best Price in India | Aladdin Vape Store`;
                 }
 
                 if (!product.metaDescription && product.description) {

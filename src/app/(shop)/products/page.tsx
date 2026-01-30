@@ -35,8 +35,8 @@ export async function generateMetadata(props: { searchParams: Promise<SearchPara
             : await Category.findOne({ slug: searchParams.category });
 
         if (cat) {
-            title = `${cat.name} Vapes | Aladdin Vape Store`;
-            description = `Shop the best ${cat.name} vapes and accessories in India. Authentic products and fast delivery.`;
+            title = `${cat.name} Vapes | Buy Online at Best Price in India | Aladdin Vape Store`;
+            description = `Shop the best ${cat.name} vapes and accessories in India. Authentic products, cash on delivery, and fast delivery at Aladdin Vape Store.`;
         }
     } else if (searchParams.brand) {
         const brand = searchParams.brand.match(/^[0-9a-fA-F]{24}$/)
@@ -44,8 +44,8 @@ export async function generateMetadata(props: { searchParams: Promise<SearchPara
             : await Brand.findOne({ slug: searchParams.brand });
 
         if (brand) {
-            title = `${brand.name} Vapes | Aladdin Vape Store`;
-            description = `Premium ${brand.name} vape products available at Aladdin Vape Store. 100% authentic.`;
+            title = `${brand.name} Vapes | Buy Online | Lowest Prices in India | Aladdin Vape Store`;
+            description = `Premium ${brand.name} vape products available at Aladdin Vape Store. 100% authentic products with fast shipping across India.`;
         }
     } else if (searchParams.query) {
         title = `Search results for "${searchParams.query}" | Aladdin Vape Store`;

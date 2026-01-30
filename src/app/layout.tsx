@@ -19,7 +19,7 @@ export const metadata: Metadata = {
     template: '%s | Aladdin Vape Store'
   },
   description: 'Shop the best premium vapes, disposable pods, e-liquids and accessories in India at Aladdin Vape Store. Fast delivery and authentic products.',
-  keywords: ['vape india', 'disposable vape', 'e-liquid india', 'vape pods', 'aladdin vapestore', 'premium vapes'],
+  keywords: ['vape india', 'disposable vape india', 'e-liquid india', 'vape pods online', 'aladdin vapestore', 'premium vapes india', 'buy vapes online india', 'vape price india', 'vape shop near me', 'iget india price', 'elf bar india', 'vape cash on delivery india'],
   authors: [{ name: 'Aladdin Vape Store' }],
   creator: 'Aladdin Vape Store',
   publisher: 'Aladdin Vape Store',

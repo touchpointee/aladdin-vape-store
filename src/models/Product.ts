@@ -60,8 +60,8 @@ ProductSchema.pre('save', function (this: any) {
     }
 
     // 2. Default Meta Title
-    if (!this.metaTitle || (this.isModified('name') && this.metaTitle === `${this.name} | Aladdin Vape Store`)) {
-        this.metaTitle = `${this.name} | Aladdin Vape Store`;
+    if (!this.metaTitle || (this.isModified('name') && this.metaTitle.includes('Aladdin Vape Store'))) {
+        this.metaTitle = `${this.name} | Buy Online | Best Price in India | Aladdin Vape Store`;
     }
 
     // 3. Default Meta Description
