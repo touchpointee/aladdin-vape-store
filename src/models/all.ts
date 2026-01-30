@@ -63,7 +63,7 @@ export interface IOrder extends Document {
     }[];
     totalPrice: number;
     paymentMode: 'COD';
-    status: 'Pending' | 'Confirmed' | 'Delivered' | 'Cancelled';
+    status: 'Pending' | 'Packed' | 'In Transit' | 'Delivered' | 'Cancelled';
     orderType: 'website' | 'whatsapp';
     createdAt: Date;
     updatedAt: Date;
@@ -185,7 +185,7 @@ const OrderSchema = new Schema<IOrder>(
         paymentMode: { type: String, enum: ['COD'], default: 'COD' },
         status: {
             type: String,
-            enum: ['Pending', 'Confirmed', 'Delivered', 'Cancelled'],
+            enum: ['Pending', 'Packed', 'In Transit', 'Delivered', 'Cancelled'],
             default: 'Pending',
         },
         orderType: { type: String, enum: ['website', 'whatsapp'], default: 'website' },

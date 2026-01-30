@@ -35,7 +35,7 @@ export async function PATCH(
             return NextResponse.json({ error: 'Status is required' }, { status: 400 });
         }
 
-        const validStatuses = ['Pending', 'Confirmed', 'Delivered', 'Cancelled'];
+        const validStatuses = ['Pending', 'Packed', 'In Transit', 'Delivered', 'Cancelled'];
         if (!validStatuses.includes(status)) {
             return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
         }

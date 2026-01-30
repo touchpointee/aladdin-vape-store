@@ -177,7 +177,7 @@ export default function CheckoutPage() {
                 <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6">
                     <CheckCircle size={40} className="text-green-500" />
                 </div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">Order Confirmed!</h1>
+                <h1 className="text-2xl font-bold text-gray-900 mb-2">Order Placed Successfully!</h1>
                 <p className="text-gray-500 mb-8">Thank you for your purchase. We will ship your order soon.</p>
                 <Link href="/" className="bg-blue-500 text-white px-8 py-3 rounded-full font-bold uppercase hover:bg-blue-600">
                     Continue Shopping

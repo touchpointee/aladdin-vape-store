@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ArrowLeft, MapPin, Truck, CreditCard, ShoppingBag } from "lucide-react";
+import { ArrowLeft, MapPin, Truck, CreditCard, ShoppingBag, Package, CheckCircle, XCircle } from "lucide-react";
 import connectDB from "@/lib/db";
 import { Order, Product } from "@/models/all";
 import Image from "next/image";
@@ -55,25 +55,50 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                 {/* Status Card */}
                 <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 bg-green-50 rounded-full flex items-center justify-center text-green-600">
-                            <Truck size={20} />
+                        <div className={`w-10 h-10 rounded-full flex items-center justify-center ${order.status === 'Cancelled' ? 'bg-red-50 text-red-600' : 'bg-green-50 text-green-600'}`}>
+                            {order.status === 'Pending' && <ShoppingBag size={20} />}
+                            {order.status === 'Packed' && <Package size={20} />}
+                            {order.status === 'In Transit' && <Truck size={20} />}
+                            {order.status === 'Delivered' && <CheckCircle size={20} />}
+                            {order.status === 'Cancelled' && <XCircle size={20} />}
                         </div>
                         <div>
                             <p className="text-sm font-bold text-gray-900">{order.status}</p>
                             <p className="text-xs text-gray-500">Order placed on {new Date(order.createdAt).toLocaleDateString()}</p>
                         </div>
                     </div>
-                    {/* Simple Timeline (Static for now) */}
+                    {/* Timeline */}
                     <div className="pl-5 border-l-2 border-gray-100 space-y-4 relative">
                         <div className="relative">
                             <div className="absolute -left-[25px] top-1 w-3 h-3 bg-green-500 rounded-full ring-4 ring-white"></div>
                             <p className="text-xs font-bold text-gray-900">Order Placed</p>
                             <p className="text-[10px] text-gray-400">Your order has been received</p>
                         </div>
-                        {order.status !== 'Pending' && (
+                        {['Packed', 'In Transit', 'Delivered'].includes(order.status) && (
                             <div className="relative">
                                 <div className="absolute -left-[25px] top-1 w-3 h-3 bg-green-500 rounded-full ring-4 ring-white"></div>
-                                <p className="text-xs font-bold text-gray-900">Dispatched</p>
+                                <p className="text-xs font-bold text-gray-900">Packed</p>
+                                <p className="text-[10px] text-gray-400">Your items are securely packed</p>
+                            </div>
+                        )}
+                        {['In Transit', 'Delivered'].includes(order.status) && (
+                            <div className="relative">
+                                <div className="absolute -left-[25px] top-1 w-3 h-3 bg-green-500 rounded-full ring-4 ring-white"></div>
+                                <p className="text-xs font-bold text-gray-900">In Transit</p>
+                                <p className="text-[10px] text-gray-400">Your order is on the way</p>
+                            </div>
+                        )}
+                        {order.status === 'Delivered' && (
+                            <div className="relative">
+                                <div className="absolute -left-[25px] top-1 w-3 h-3 bg-green-500 rounded-full ring-4 ring-white"></div>
+                                <p className="text-xs font-bold text-gray-900">Delivered</p>
+                                <p className="text-[10px] text-gray-400">Order has been delivered successfully</p>
+                            </div>
+                        )}
+                        {order.status === 'Cancelled' && (
+                            <div className="relative">
+                                <div className="absolute -left-[25px] top-1 w-3 h-3 bg-red-500 rounded-full ring-4 ring-white"></div>
+                                <p className="text-xs font-bold text-gray-900 text-red-600">Cancelled</p>
                             </div>
                         )}
                     </div>

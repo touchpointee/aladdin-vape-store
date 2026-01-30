@@ -66,7 +66,8 @@ export default function AdminOrderDetailPage() {
 
     const getStatusColor = (status: string) => {
         switch (status) {
-            case 'Confirmed': return 'bg-blue-100 text-blue-700';
+            case 'Packed': return 'bg-blue-100 text-blue-700';
+            case 'In Transit': return 'bg-purple-100 text-purple-700';
             case 'Delivered': return 'bg-green-100 text-green-700';
             case 'Cancelled': return 'bg-red-100 text-red-700';
             default: return 'bg-yellow-100 text-yellow-700';
@@ -145,7 +146,7 @@ export default function AdminOrderDetailPage() {
                                 </div>
                                 <div className="mt-6 pt-4 border-t space-y-2">
                                     <div className="flex justify-between items-center text-sm">
-                                        <span className="text-gray-600">Items Subtotal</span>
+                                        <span className="text-gray-600">Subtotal</span>
                                         <span className="font-semibold text-gray-800">₹{order.products.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0)}</span>
                                     </div>
                                     <div className="flex justify-between items-center text-sm">
@@ -176,19 +177,27 @@ export default function AdminOrderDetailPage() {
                                         {order.status === 'Pending' && <CheckCircle size={16} className="text-green-500" />}
                                     </button>
                                     <button
-                                        onClick={() => handleStatusUpdate('Confirmed')}
-                                        disabled={updating || order.status === 'Confirmed'}
+                                        onClick={() => handleStatusUpdate('Packed')}
+                                        disabled={updating || order.status === 'Packed'}
                                         className="w-full flex items-center justify-between p-3 rounded border hover:bg-gray-50 disabled:opacity-50"
                                     >
-                                        <span className="flex items-center gap-2"><CheckCircle size={16} className="text-blue-500" /> Confirmed</span>
-                                        {order.status === 'Confirmed' && <CheckCircle size={16} className="text-green-500" />}
+                                        <span className="flex items-center gap-2"><Package size={16} className="text-blue-500" /> Packed</span>
+                                        {order.status === 'Packed' && <CheckCircle size={16} className="text-green-500" />}
+                                    </button>
+                                    <button
+                                        onClick={() => handleStatusUpdate('In Transit')}
+                                        disabled={updating || order.status === 'In Transit'}
+                                        className="w-full flex items-center justify-between p-3 rounded border hover:bg-gray-50 disabled:opacity-50"
+                                    >
+                                        <span className="flex items-center gap-2"><Truck size={16} className="text-purple-500" /> In Transit</span>
+                                        {order.status === 'In Transit' && <CheckCircle size={16} className="text-green-500" />}
                                     </button>
                                     <button
                                         onClick={() => handleStatusUpdate('Delivered')}
                                         disabled={updating || order.status === 'Delivered'}
                                         className="w-full flex items-center justify-between p-3 rounded border hover:bg-gray-50 disabled:opacity-50"
                                     >
-                                        <span className="flex items-center gap-2"><Truck size={16} className="text-green-500" /> Delivered</span>
+                                        <span className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500" /> Delivered</span>
                                         {order.status === 'Delivered' && <CheckCircle size={16} className="text-green-500" />}
                                     </button>
                                     <button
