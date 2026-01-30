@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Poppins } from 'next/font/google';
 import './globals.css';
 import AgeVerification from '@/components/common/AgeVerification';
+import Script from 'next/script';
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -18,7 +19,7 @@ export const metadata: Metadata = {
     template: '%s | Aladdin Vape Store'
   },
   description: 'Shop the best premium vapes, disposable pods, e-liquids and accessories in India at Aladdin Vape Store. Fast delivery and authentic products.',
-  keywords: ['vape india', 'disposable vape', 'e-liquid india', 'vape pods', 'aladdin vape store', 'premium vapes'],
+  keywords: ['vape india', 'disposable vape', 'e-liquid india', 'vape pods', 'aladdin vapestore', 'premium vapes'],
   authors: [{ name: 'Aladdin Vape Store' }],
   creator: 'Aladdin Vape Store',
   publisher: 'Aladdin Vape Store',
@@ -54,7 +55,7 @@ export const metadata: Metadata = {
     images: ['/promo-banner.png'],
   },
   verification: {
-    google: 'google-site-verification-id', // Placeholder, user can update
+    google: 'G-X3QGJNV4R9',
   },
 };
 
@@ -67,6 +68,22 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
+      <head>
+        <Script
+          async
+          src="https://www.googletagmanager.com/gtag/js?id=G-X3QGJNV4R9"
+          strategy="afterInteractive"
+        />
+        <Script id="google-analytics" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);}
+            gtag('js', new Date());
+
+            gtag('config', 'G-X3QGJNV4R9');
+          `}
+        </Script>
+      </head>
       <body className={`${poppins.className} bg-gray-200 min-h-screen`}>
         <AgeVerification />
         {children}
