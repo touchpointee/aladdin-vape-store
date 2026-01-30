@@ -17,15 +17,14 @@ const PrintOrderReceipt: React.FC<PrintOrderReceiptProps> = ({ order }) => {
             <style type="text/css" media="print">
                 {`
                 @page { 
-                    size: 100mm 150mm; 
-                    margin: 0mm;
+                    size: auto; 
+                    margin: 5mm;
                 }
                 html, body { 
-                    width: 100mm !important;
-                    height: 150mm !important;
+                    width: 100% !important;
+                    height: auto !important;
                     margin: 0 !important; 
                     padding: 0 !important;
-                    overflow: hidden !important;
                     background-color: white !important;
                 }
                 body {
@@ -33,85 +32,94 @@ const PrintOrderReceipt: React.FC<PrintOrderReceiptProps> = ({ order }) => {
                     print-color-adjust: exact !important;
                 }
                 .print\:block { 
-                    width: 100mm !important;
-                    height: 150mm !important;
-                    position: fixed !important;
-                    top: 0 !important;
-                    left: 0 !important;
+                    width: 100% !important;
+                    min-height: 100vh !important;
+                    position: relative !important;
                     display: flex !important;
                     flex-direction: column !important;
-                    justify-content: space-between !important;
                     background-color: white !important;
-                    padding: 5mm !important;
+                    padding: 10mm !important;
                     box-sizing: border-box !important;
                 }
                 /* Hide everything else */
                 body > *:not(.print\:block) { display: none !important; }
                 `}
             </style>
-            <div className="hidden print:block font-mono text-black w-full max-w-none bg-white">
+            <div className="hidden print:block font-sans text-black w-full bg-white">
                 {/* Header Section */}
-                <div className="flex flex-col items-center justify-center text-center mb-4 w-full">
-                    {/* Logo Placeholder */}
-                    <div className="w-16 h-16 relative mb-1">
-                        <div className="w-full h-full flex items-center justify-center">
-                            {/* Using standard img tag for better print compatibility */}
-                            <img src="/logo.jpg" alt="Logo" className="object-contain w-full h-full" />
-                        </div>
+                <div className="flex flex-col items-center justify-center text-center mb-8 w-full border-b-2 border-black pb-6">
+                    {/* Logo */}
+                    <div className="w-24 h-24 relative mb-4">
+                        <img src="/logo.jpg" alt="Logo" className="object-contain w-full h-full mx-auto" />
                     </div>
 
-                    <h1 className="text-xl font-bold font-serif tracking-wide border-b-0 w-full text-center">Aladdin store India</h1>
+                    <h1 className="text-4xl font-bold font-serif tracking-widest uppercase mb-2">Aladdin store India</h1>
 
-                    <div className="text-xs font-medium px-2 leading-tight w-full text-center">
+                    <div className="text-sm font-semibold px-4 leading-relaxed max-w-2xl mx-auto">
                         Aladdin Store trivandrum, trivandrum, Kerala - 695008
                     </div>
 
-                    <div className="text-xs mt-1 flex flex-col items-center font-semibold w-full text-center">
-                        <div>{orderDate} {orderTime}</div>
-                        <div>+91 9567255785</div>
+                    <div className="text-sm mt-3 font-bold">
+                        <div>{orderDate} at {orderTime}</div>
+                        <div>Phone: +91 9567255785</div>
                     </div>
                 </div>
 
 
                 {/* Customer Details Section */}
-                <div className="space-y-2 text-xs font-semibold mb-4 px-1 flex-1">
-                    <div className="flex">
-                        <span className="w-28 shrink-0">Customer Name:</span>
-                        <span>{order.customer.name}</span>
+                <div className="space-y-4 text-base font-bold mb-10 px-2">
+                    <div className="flex border-b border-gray-100 pb-2">
+                        <span className="w-40 shrink-0 text-gray-500 uppercase text-xs">Customer Name</span>
+                        <span className="text-lg">{order.customer.name} ({order.customer.age} Yrs)</span>
                     </div>
-                    <div className="flex">
-                        <span className="w-28 shrink-0">Phone:</span>
-                        <span>{order.customer.phone}</span>
+                    <div className="flex border-b border-gray-100 pb-2">
+                        <span className="w-40 shrink-0 text-gray-500 uppercase text-xs">Phone Number</span>
+                        <span className="text-lg">{order.customer.phone}</span>
                     </div>
-                    <div className="flex items-start">
-                        <span className="w-28 shrink-0">Address:</span>
-                        <div className="flex flex-col">
-                            <span>{order.customer.address}</span>
-                            {order.customer.landmark && <span>{order.customer.landmark}</span>}
-                            <span className="uppercase">{order.customer.city}, {order.customer.pincode}</span>
+                    <div className="flex items-start border-b border-gray-100 pb-2">
+                        <span className="w-40 shrink-0 text-gray-500 uppercase text-xs">Shipping Address</span>
+                        <div className="flex flex-col text-lg uppercase">
+                            <span className="font-black">{order.customer.address}</span>
+                            {order.customer.landmark && <span className="text-sm">{order.customer.landmark}</span>}
+                            <span>{order.customer.city} - {order.customer.pincode}</span>
                         </div>
                     </div>
                 </div>
 
                 {/* Order Summary Section */}
-                <div className="border-t border-b py-2 mb-4 px-1 space-y-1">
-                    <div className="flex justify-between text-xs font-bold">
-                        <span>Items Subtotal:</span>
-                        <span>₹{order.products.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0)}</span>
+                <div className="border-2 border-black p-6 mb-8 rounded-xl">
+                    <h2 className="text-xs font-black uppercase mb-4 tracking-widest text-center border-b pb-2">Payment Summary</h2>
+                    <div className="space-y-3">
+                        <div className="flex justify-between text-lg font-medium">
+                            <span>Items Subtotal:</span>
+                            <span>₹{order.products.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0)}</span>
+                        </div>
+                        <div className="flex justify-between text-lg font-medium">
+                            <span>Delivery Charge:</span>
+                            <span>₹100</span>
+                        </div>
+                        <div className="flex justify-between text-3xl font-black pt-4 border-t-2 border-dashed border-black mt-2">
+                            <span>TOTAL PAID:</span>
+                            <span className="text-blue-600">₹{order.totalPrice}</span>
+                        </div>
                     </div>
-                    <div className="flex justify-between text-xs font-bold">
-                        <span>Delivery Charge:</span>
-                        <span>₹100</span>
-                    </div>
-                    <div className="flex justify-between text-sm font-black pt-1 border-t border-dashed">
-                        <span>TOTAL AMOUNT:</span>
-                        <span>₹{order.totalPrice}</span>
+                    <div className="mt-4 text-center">
+                        <span className="bg-black text-white px-4 py-1 rounded text-xs font-bold uppercase tracking-widest">
+                            Mode: {order.paymentMode} | Status: {order.paymentStatus || 'COD'}
+                        </span>
                     </div>
                 </div>
 
-                {/* Footer / Order Number */}
-                <div className="mt-auto pt-2 border-t text-xs font-bold flex justify-between">
-                    <span>Order #{order._id.toString().slice(-8).toUpperCase()}</span>
+                {/* Footer Section */}
+                <div className="mt-auto pt-8 border-t-2 border-black flex justify-between items-center">
+                    <div className="flex flex-col">
+                        <span className="text-xs text-gray-500 uppercase">Order Identifier</span>
+                        <span className="text-lg font-black font-mono tracking-tighter">#{order._id.toString().toUpperCase()}</span>
+                    </div>
+                    <div className="text-right">
+                        <p className="text-xs font-bold italic">Thank you for shopping with us!</p>
+                        <p className="text-[10px] text-gray-400">This is a system generated invoice</p>
+                    </div>
                 </div>
             </div>
         </>
