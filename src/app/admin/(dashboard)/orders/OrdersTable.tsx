@@ -39,6 +39,7 @@ export default function OrdersTable({ initialOrders }: { initialOrders: any[] })
                                 <th className="p-4 text-sm font-medium text-gray-500">Customer</th>
                                 <th className="p-4 text-sm font-medium text-gray-500">Total</th>
                                 <th className="p-4 text-sm font-medium text-gray-500">Payment</th>
+                                <th className="p-4 text-sm font-medium text-gray-500">Pay Status</th>
                                 <th className="p-4 text-sm font-medium text-gray-500">Status</th>
                                 <th className="p-4 text-sm font-medium text-gray-500">Date</th>
                                 <th className="p-4 text-sm font-medium text-gray-500">Actions</th>
@@ -80,6 +81,11 @@ export default function OrdersTable({ initialOrders }: { initialOrders: any[] })
                                         </div>
                                     </td>
                                     <td className="p-4 text-sm">{order.paymentMode}</td>
+                                    <td className="p-4">
+                                        <span className={`px-2 py-1 text-[10px] font-bold rounded-full uppercase ${order.paymentStatus === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
+                                            {order.paymentStatus || 'COD'}
+                                        </span>
+                                    </td>
                                     <td className="p-4">
                                         <span className={`px-2 py-1 text-xs rounded ${order.status === 'Delivered' ? 'bg-green-100 text-green-700' :
                                             order.status === 'Cancelled' ? 'bg-red-100 text-red-700' :

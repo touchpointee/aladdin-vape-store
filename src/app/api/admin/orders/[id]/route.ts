@@ -29,20 +29,32 @@ export async function PATCH(
         await connectDB();
         const { id } = await params;
         const body = await req.json();
-        const { status } = body;
+        const { status, paymentStatus } = body;
 
-        if (!status) {
-            return NextResponse.json({ error: 'Status is required' }, { status: 400 });
+        const updateData: any = {};
+        if (status) {
+            const validStatuses = ['Pending', 'Packed', 'In Transit', 'Delivered', 'Cancelled'];
+            if (!validStatuses.includes(status)) {
+                return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+            }
+            updateData.status = status;
         }
 
-        const validStatuses = ['Pending', 'Packed', 'In Transit', 'Delivered', 'Cancelled'];
-        if (!validStatuses.includes(status)) {
-            return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
+        if (paymentStatus) {
+            const validPaymentStatuses = ['COD', 'Paid'];
+            if (!validPaymentStatuses.includes(paymentStatus)) {
+                return NextResponse.json({ error: 'Invalid payment status' }, { status: 400 });
+            }
+            updateData.paymentStatus = paymentStatus;
+        }
+
+        if (Object.keys(updateData).length === 0) {
+            return NextResponse.json({ error: 'At least one field (status or paymentStatus) is required' }, { status: 400 });
         }
 
         const order = await Order.findByIdAndUpdate(
             id,
-            { status },
+            updateData,
             { new: true }
         ).populate('products.product');
 

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { ArrowLeft, Package, User, MapPin, Truck, CheckCircle, XCircle, Clock, Printer } from "lucide-react";
+import { ArrowLeft, Package, User, MapPin, Truck, CheckCircle, XCircle, Clock, Printer, CreditCard } from "lucide-react";
 import Link from "next/link";
 import { IOrder } from "@/models/all";
 import PrintOrderReceipt from "@/components/admin/PrintOrderReceipt";
@@ -34,6 +34,30 @@ export default function AdminOrderDetailPage() {
 
     const handlePrint = () => {
         window.print();
+    };
+
+    const handlePaymentUpdate = async (newPaymentStatus: string) => {
+        if (!confirm(`Are you sure you want to change payment status to ${newPaymentStatus}?`)) return;
+
+        setUpdating(true);
+        try {
+            const res = await fetch(`/api/admin/orders/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ paymentStatus: newPaymentStatus })
+            });
+
+            if (res.ok) {
+                const updatedOrder = await res.json();
+                setOrder(updatedOrder);
+            } else {
+                alert("Failed to update payment status");
+            }
+        } catch (error) {
+            console.error("Error updating payment status", error);
+        } finally {
+            setUpdating(false);
+        }
     };
 
     const handleStatusUpdate = async (newStatus: string) => {
@@ -164,9 +188,42 @@ export default function AdminOrderDetailPage() {
                         </div>
                         {/* Right Column: Customer & Actions */}
                         <div className="space-y-6">
+                            {/* Payment Status Actions */}
+                            <div className="no-print bg-white rounded-lg shadow-sm border p-6">
+                                <h2 className="font-bold text-gray-800 mb-4">Payment Status</h2>
+                                <div className="space-y-4">
+                                    <div className="flex gap-2">
+                                        <button
+                                            onClick={() => handlePaymentUpdate('Paid')}
+                                            disabled={updating || order.paymentStatus === 'Paid'}
+                                            className={`flex-1 flex items-center justify-center gap-2 p-2.5 rounded-lg border-2 transition font-bold text-sm ${order.paymentStatus === 'Paid'
+                                                ? 'bg-green-50 border-green-500 text-green-700'
+                                                : 'border-gray-200 hover:border-green-300 text-gray-600'
+                                                }`}
+                                        >
+                                            <CheckCircle size={16} /> Paid
+                                        </button>
+                                        <button
+                                            onClick={() => handlePaymentUpdate('COD')}
+                                            disabled={updating || order.paymentStatus === 'COD'}
+                                            className={`flex-1 flex items-center justify-center gap-2 p-2.5 rounded-lg border-2 transition font-bold text-sm ${order.paymentStatus === 'COD'
+                                                ? 'bg-yellow-50 border-yellow-500 text-yellow-700'
+                                                : 'border-gray-200 hover:border-yellow-300 text-gray-600'
+                                                }`}
+                                        >
+                                            <Clock size={16} /> COD
+                                        </button>
+                                    </div>
+                                    <div className="p-3 bg-gray-50 rounded-lg text-xs text-gray-500 flex items-center gap-2">
+                                        <CreditCard size={14} className="shrink-0" />
+                                        <span>Current: <strong>{order.paymentStatus || 'COD'}</strong> via {order.paymentMode}</span>
+                                    </div>
+                                </div>
+                            </div>
+
                             {/* Status Actions */}
                             <div className="no-print bg-white rounded-lg shadow-sm border p-6">
-                                <h2 className="font-bold text-gray-800 mb-4">Update Status</h2>
+                                <h2 className="font-bold text-gray-800 mb-4">Update Fulfillment Status</h2>
                                 <div className="space-y-2">
                                     <button
                                         onClick={() => handleStatusUpdate('Pending')}
