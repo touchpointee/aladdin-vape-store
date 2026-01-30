@@ -16,11 +16,28 @@ const PrintOrderReceipt: React.FC<PrintOrderReceiptProps> = ({ order }) => {
         <>
             <style type="text/css" media="print">
                 {`
-                @page { size: auto; margin: 20mm; }
-                html, body { height: auto !important; overflow: visible !important; }
+                @page { size: A4 portrait; margin: 0; }
+                html, body { 
+                    width: 210mm;
+                    height: 297mm;
+                    margin: 0 !important; 
+                    padding: 0 !important;
+                    overflow: hidden !important;
+                }
+                body {
+                    padding: 10mm !important; /* Internal padding for content */
+                }
+                .print\:block { 
+                    width: 100% !important;
+                    height: auto !important;
+                    position: relative !important;
+                    display: block !important;
+                }
+                /* Hide everything else */
+                body > *:not(.print\:block) { display: none !important; }
                 `}
             </style>
-            <div className="hidden print:block font-mono text-black p-8 max-w-2xl mx-auto bg-white">
+            <div className="hidden print:block font-mono text-black w-full max-w-none bg-white">
                 {/* Header Section */}
                 <div className="flex flex-col items-center justify-center text-center space-y-4 mb-8 w-full">
                     {/* Logo Placeholder */}

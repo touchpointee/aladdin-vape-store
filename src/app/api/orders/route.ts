@@ -20,7 +20,10 @@ export async function POST(req: NextRequest) {
             if (product.stock < item.quantity) {
                 throw new Error(`Insufficient stock for product: ${product.name}`);
             }
-            calculatedTotal += product.price * item.quantity; // Note: Use discount price if applicable logic added later
+            const effectivePrice = (product.discountPrice && product.discountPrice < product.price)
+                ? product.discountPrice
+                : product.price;
+            calculatedTotal += effectivePrice * item.quantity;
         }
 
         // Create order

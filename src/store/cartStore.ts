@@ -10,6 +10,7 @@ export interface CartItem {
     puffCount?: number;
     capacity?: string;
     resistance?: string;
+    originalPrice?: number;
 }
 
 interface CartState {
@@ -80,7 +81,8 @@ export const useCartStore = create<CartState>()(
                         image: serverProduct.images?.[0] || item.image,
                         puffCount: serverProduct.puffCount,
                         capacity: serverProduct.capacity,
-                        resistance: serverProduct.resistance
+                        resistance: serverProduct.resistance,
+                        originalPrice: discountedPrice < serverProduct.price ? serverProduct.price : undefined
                     };
                 });
 

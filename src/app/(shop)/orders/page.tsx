@@ -84,7 +84,8 @@ export default function OrdersPage() {
                             <div className="flex justify-between items-end border-t pt-3 mt-3">
                                 <div>
                                     <p className="text-xs text-gray-500">Total Amount</p>
-                                    <p className="text-lg font-bold text-gray-900">₹{order.totalPrice}</p>
+                                    {/* Calculate total from items to fix display for old orders with wrong DB totals */}
+                                    <p className="text-lg font-bold text-gray-900">₹{order.products?.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0)}</p>
                                 </div>
                                 <div className="flex items-center text-blue-500 text-xs font-bold">
                                     View Details <ChevronRight size={14} />

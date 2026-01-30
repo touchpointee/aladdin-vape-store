@@ -130,7 +130,14 @@ export default function AdminOrderDetailPage() {
                                                 </div>
                                                 <div className="mt-2 flex justify-between items-center text-sm">
                                                     <span className="text-gray-600">Qty: {item.quantity}</span>
-                                                    <span className="font-bold">₹{item.price * item.quantity}</span>
+                                                    <div className="flex flex-col items-end">
+                                                        <span className="font-bold">₹{item.price * item.quantity}</span>
+                                                        {item.originalPrice && item.originalPrice > item.price && (
+                                                            <span className="text-xs text-gray-400 line-through">
+                                                                ₹{item.originalPrice * item.quantity}
+                                                            </span>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
@@ -138,11 +145,13 @@ export default function AdminOrderDetailPage() {
                                 </div>
                                 <div className="mt-6 pt-4 border-t flex justify-between items-center">
                                     <span className="font-semibold text-gray-600">Total Amount</span>
-                                    <span className="text-2xl font-bold text-blue-600">₹{order.totalPrice}</span>
+                                    {/* Calculate total from items to fix display for old orders with wrong DB totals */}
+                                    <span className="text-2xl font-bold text-blue-600">
+                                        ₹{order.products.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0)}
+                                    </span>
                                 </div>
                             </div>
                         </div>
-
                         {/* Right Column: Customer & Actions */}
                         <div className="space-y-6">
                             {/* Status Actions */}
@@ -196,7 +205,18 @@ export default function AdminOrderDetailPage() {
                                     </div>
                                     <div>
                                         <label className="text-gray-500 text-xs uppercase">Phone</label>
-                                        <div className="font-medium">{order.customer.phone}</div>
+                                        <div className="flex items-center justify-between">
+                                            <div className="font-medium">{order.customer.phone}</div>
+                                            <a
+                                                href={`https://wa.me/${order.customer.phone?.replace(/\s+/g, '')}`}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-green-600 hover:text-green-700 font-bold text-xs flex items-center gap-1 border border-green-200 bg-green-50 px-2 py-1 rounded"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-message-circle"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" /></svg>
+                                                WhatsApp
+                                            </a>
+                                        </div>
                                     </div>
                                     <div>
                                         <label className="text-gray-500 text-xs uppercase">Email</label>
@@ -223,8 +243,8 @@ export default function AdminOrderDetailPage() {
                         </div>
 
                     </div>
-                </div>
-            </div>
+                </div >
+            </div >
 
             <PrintOrderReceipt order={order} />
         </>

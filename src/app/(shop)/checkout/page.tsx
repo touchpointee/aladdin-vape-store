@@ -120,7 +120,8 @@ export default function CheckoutPage() {
                 products: items.map(item => ({
                     product: item.id,
                     quantity: item.quantity,
-                    price: item.price
+                    price: item.price,
+                    originalPrice: item.originalPrice
                 })),
                 totalPrice: subtotal(),
                 paymentMode: 'COD'
@@ -355,7 +356,14 @@ export default function CheckoutPage() {
                                             {item.resistance && <span>{item.resistance}</span>}
                                         </div>
                                     </div>
-                                    <span className="font-bold text-gray-900">₹{(item.price * item.quantity).toFixed(2)}</span>
+                                    <div className="flex flex-col items-end">
+                                        <span className="font-bold text-gray-900">₹{(item.price * item.quantity).toFixed(2)}</span>
+                                        {item.originalPrice && item.originalPrice > item.price && (
+                                            <span className="text-xs text-gray-400 line-through">
+                                                ₹{(item.originalPrice * item.quantity).toFixed(2)}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             ))}
                         </div>
@@ -373,7 +381,7 @@ export default function CheckoutPage() {
                         {loading ? 'Processing...' : 'Confirm Order'}
                     </button>
                 </form>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }

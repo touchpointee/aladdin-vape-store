@@ -54,7 +54,32 @@ export default function OrdersTable({ initialOrders }: { initialOrders: any[] })
                                         <div className="font-bold">{order.customer.name}</div>
                                         <div className="text-xs text-gray-500">{order.customer.phone}</div>
                                     </td>
-                                    <td className="p-4 font-bold">₹{order.totalPrice}</td>
+                                    <td className="p-4 font-bold">
+                                        <div className="flex flex-col">
+                                            {/* Calculate total from items to fix display for old orders with wrong DB totals */}
+                                            <span>₹{order.products?.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0)}</span>
+                                            {(() => {
+                                                const currentTotal = order.products?.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
+                                                const originalTotal = order.products?.reduce((acc: number, item: any) => {
+                                                    // item.originalPrice might be undefined if no discount or old order.
+                                                    // If originalPrice exists and is > price, use it. Else use price.
+                                                    const itemOriginalPrice = (item.originalPrice && item.originalPrice > item.price)
+                                                        ? item.originalPrice
+                                                        : item.price;
+                                                    return acc + (itemOriginalPrice * item.quantity);
+                                                }, 0);
+
+                                                if (originalTotal > currentTotal) {
+                                                    return (
+                                                        <span className="text-xs text-gray-400 line-through">
+                                                            ₹{originalTotal}
+                                                        </span>
+                                                    );
+                                                }
+                                                return null;
+                                            })()}
+                                        </div>
+                                    </td>
                                     <td className="p-4 text-sm">{order.paymentMode}</td>
                                     <td className="p-4">
                                         <span className={`px-2 py-1 text-xs rounded ${order.status === 'Delivered' ? 'bg-green-100 text-green-700' :

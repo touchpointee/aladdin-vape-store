@@ -98,7 +98,14 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                                 <div className="flex-1">
                                     <h4 className="text-sm font-medium text-gray-800 line-clamp-1">{item.product.name}</h4>
                                     <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
-                                    <p className="text-sm font-bold text-gray-900 mt-1">₹{item.price * item.quantity}</p>
+                                    <div className="flex flex-col items-start mt-1">
+                                        <span className="text-sm font-bold text-gray-900">₹{item.price * item.quantity}</span>
+                                        {item.originalPrice && item.originalPrice > item.price && (
+                                            <span className="text-xs text-gray-400 line-through">
+                                                ₹{item.originalPrice * item.quantity}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         ))}
@@ -126,7 +133,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                     <div className="space-y-2 text-sm">
                         <div className="flex justify-between text-gray-500">
                             <span>Subtotal</span>
-                            <span>₹{order.totalPrice}</span>
+                            {/* Calculate subtotal from items to fix display for old orders with wrong DB totals */}
+                            <span>₹{order.products.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0)}</span>
                         </div>
                         <div className="flex justify-between text-gray-500">
                             <span>Shipping</span>
@@ -134,7 +142,8 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                         </div>
                         <div className="border-t pt-2 flex justify-between font-bold text-lg text-gray-900 mt-2">
                             <span>Total</span>
-                            <span>₹{order.totalPrice}</span>
+                            {/* Calculate total from items to fix display for old orders with wrong DB totals */}
+                            <span>₹{order.products.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0)}</span>
                         </div>
                     </div>
                     <div className="mt-3 bg-blue-50 text-blue-700 text-xs px-3 py-2 rounded font-semibold text-center uppercase">
