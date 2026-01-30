@@ -21,15 +21,15 @@ async function getHomeData() {
     // Parallel fetching for performance
     const [products, categories, brands, newArrivals, disposables, settingsDoc] = await Promise.all([
       // Hot Products
-      Product.find({ status: 'active', isHot: true }).sort({ createdAt: -1 }).limit(8).lean(),
+      Product.find({ status: { $regex: '^active$', $options: 'i' }, isHot: true }).sort({ createdAt: -1 }).limit(8).lean(),
       // Categories
-      Category.find({ status: 'active' }).sort({ createdAt: -1 }).lean(),
+      Category.find({ status: { $regex: '^active$', $options: 'i' } }).sort({ createdAt: -1 }).lean(),
       // Brands
-      Brand.find({ status: 'active' }).sort({ createdAt: -1 }).lean(),
+      Brand.find({ status: { $regex: '^active$', $options: 'i' } }).sort({ createdAt: -1 }).lean(),
       // New Arrivals
-      Product.find({ status: 'active', isNewArrival: true }).sort({ createdAt: -1 }).limit(8).lean(),
+      Product.find({ status: { $regex: '^active$', $options: 'i' }, isNewArrival: true }).sort({ createdAt: -1 }).limit(8).lean(),
       // Top Selling
-      Product.find({ status: 'active', isTopSelling: true }).sort({ createdAt: -1 }).limit(8).lean(),
+      Product.find({ status: { $regex: '^active$', $options: 'i' }, isTopSelling: true }).sort({ createdAt: -1 }).limit(8).lean(),
       // Settings
       Settings.findOne({ key: 'home_banners' }).lean(),
     ]);

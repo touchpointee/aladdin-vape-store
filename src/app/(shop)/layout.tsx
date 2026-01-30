@@ -16,7 +16,7 @@ export default async function ShopLayout({
     try {
         const conn = await connectDB();
         if (conn) {
-            categories = await Category.find({ status: 'active' }).sort({ createdAt: -1 }).limit(8).lean();
+            categories = await Category.find({ status: { $regex: '^active$', $options: 'i' } }).sort({ createdAt: -1 }).limit(8).lean();
             // Serialize
             categories = categories.map(c => ({ ...c, _id: c._id.toString() } as any));
         }

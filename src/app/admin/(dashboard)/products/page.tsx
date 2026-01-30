@@ -183,25 +183,56 @@ export default function ProductsPage() {
         }
     };
 
+    const [searchQuery, setSearchQuery] = useState('');
+
+    // Filtered Products
+    const filteredProducts = products.filter(product => {
+        const query = searchQuery.toLowerCase();
+        return (
+            product.name.toLowerCase().includes(query) ||
+            product.category?.name.toLowerCase().includes(query) ||
+            product.brand?.name.toLowerCase().includes(query)
+        );
+    });
+
     return (
         <div>
-            <div className="flex justify-between items-center mb-6">
+            <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                 <h1 className="text-2xl font-bold">Product Management</h1>
-                <button
-                    onClick={() => {
-                        setShowForm(!showForm);
-                        setEditingId(null);
-                        if (!showForm) { // If opening, reset
-                            setFormData({
-                                name: '', price: '', discountPrice: '', stock: '', puffCount: '', capacity: '', resistance: '', category: '', brand: '', description: '', isHot: false, isTopSelling: false, isNewArrival: false, status: 'active'
-                            });
-                            setExistingImages([]);
-                        }
-                    }}
-                    className="bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2"
-                >
-                    <Plus size={20} /> {showForm ? 'Cancel' : 'Add Product'}
-                </button>
+
+                <div className="flex items-center gap-4 w-full md:w-auto">
+                    {/* Search Bar */}
+                    <div className="relative flex-1 md:w-64">
+                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                            </svg>
+                        </div>
+                        <input
+                            type="text"
+                            placeholder="Search products..."
+                            className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                    </div>
+
+                    <button
+                        onClick={() => {
+                            setShowForm(!showForm);
+                            setEditingId(null);
+                            if (!showForm) { // If opening, reset
+                                setFormData({
+                                    name: '', price: '', discountPrice: '', stock: '', puffCount: '', capacity: '', resistance: '', category: '', brand: '', description: '', isHot: false, isTopSelling: false, isNewArrival: false, status: 'active'
+                                });
+                                setExistingImages([]);
+                            }
+                        }}
+                        className="bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2 whitespace-nowrap"
+                    >
+                        <Plus size={20} /> {showForm ? 'Cancel' : 'Add Product'}
+                    </button>
+                </div>
             </div>
 
             {/* Create Form */}
@@ -344,7 +375,7 @@ export default function ProductsPage() {
                         <tbody className="divide-y">
                             {loading ? (
                                 <tr><td colSpan={6} className="p-4 text-center">Loading...</td></tr>
-                            ) : products.map((prod) => (
+                            ) : filteredProducts.map((prod) => (
                                 <tr key={prod._id} className="hover:bg-gray-50">
                                     <td className="p-4">
                                         {prod.images?.[0] && (
@@ -395,7 +426,7 @@ export default function ProductsPage() {
                                     </td>
                                 </tr>
                             ))}
-                            {!loading && products.length === 0 && (
+                            {!loading && filteredProducts.length === 0 && (
                                 <tr><td colSpan={6} className="p-8 text-center text-gray-500">No products found.</td></tr>
                             )}
                         </tbody>

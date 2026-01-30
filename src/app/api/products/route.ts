@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
     const ids = searchParams.get('ids'); // Comma separated
     const searchQuery = searchParams.get('search'); // Search Query
 
-    const query: any = { status: 'active' };
+    const query: any = { status: { $regex: '^active$', $options: 'i' } };
     if (categoryId) query.category = categoryId;
     if (brandId) query.brand = brandId;
     if (isHot === 'true') query.isHot = true;

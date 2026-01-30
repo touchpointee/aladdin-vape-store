@@ -8,10 +8,10 @@ import ProductFilter from "@/components/product/ProductFilter";
 import ProductSearchHeader from "@/components/product/ProductSearchHeader";
 
 // Helper to fetch data
-async function getData(searchParams: { category?: string; brand?: string; sort?: string; query?: string; isHot?: string; isTopSelling?: string; isNewArrival?: string }) {
+async function getData(searchParams: { category?: string; brand?: string; sort?: string; query?: string; isHot?: string; isTopSelling?: string; isNewArrival?: string; page?: string }) {
     await connectDB();
 
-    const filter: any = { status: "active" };
+    const filter: any = { status: { $regex: '^active$', $options: 'i' } };
 
     // Apply Filters by ID (Directly from searchParams)
     if (searchParams.category) {
@@ -36,17 +36,26 @@ async function getData(searchParams: { category?: string; brand?: string; sort?:
     if (searchParams.sort === "price_asc") sort = { price: 1 };
     if (searchParams.sort === "price_desc") sort = { price: -1 };
 
+    // Pagination
+    const page = parseInt(searchParams.page || "1", 10) || 1;
+    const limit = 20;
+    const skip = (page - 1) * limit;
+
     // Fetch
-    const products = await Product.find(filter)
-        .populate("category")
-        .populate("brand")
-        .sort(sort)
-        .limit(50); // Pagination can be added later
+    const [products, totalProducts] = await Promise.all([
+        Product.find(filter)
+            .populate("category")
+            .populate("brand")
+            .sort(sort)
+            .skip(skip)
+            .limit(limit),
+        Product.countDocuments(filter)
+    ]);
 
-    const categories = await Category.find({ status: "active" }).select("_id name");
-    const brands = await Brand.find({ status: "active" }).select("_id name");
+    const categories = await Category.find({ status: { $regex: '^active$', $options: 'i' } }).select("_id name");
+    const brands = await Brand.find({ status: { $regex: '^active$', $options: 'i' } }).select("_id name");
 
-    return { products, categories, brands };
+    return { products, categories, brands, totalProducts, totalPages: Math.ceil(totalProducts / limit), currentPage: page };
 }
 
 export default async function ProductsPage(props: {
@@ -61,8 +70,9 @@ export default async function ProductsPage(props: {
     const isHot = Array.isArray(searchParams?.isHot) ? searchParams.isHot[0] : searchParams?.isHot;
     const isTopSelling = Array.isArray(searchParams?.isTopSelling) ? searchParams.isTopSelling[0] : searchParams?.isTopSelling;
     const isNewArrival = Array.isArray(searchParams?.isNewArrival) ? searchParams.isNewArrival[0] : searchParams?.isNewArrival;
+    const pageParam = Array.isArray(searchParams?.page) ? searchParams.page[0] : searchParams?.page;
 
-    const { products, categories, brands } = await getData({ category, brand, sort, query, isHot, isTopSelling, isNewArrival });
+    const { products, categories, brands, totalPages, currentPage } = await getData({ category, brand, sort, query, isHot, isTopSelling, isNewArrival, page: pageParam });
 
     // SEO Title
     let pageTitle = "All Products";
@@ -102,7 +112,32 @@ export default async function ProductsPage(props: {
                 {/* Product Grid */}
                 <div className="flex-1">
                     {products.length > 0 ? (
-                        <ProductGrid products={serializedProducts} />
+                        <>
+                            <ProductGrid products={serializedProducts} />
+
+                            {/* Pagination Controls */}
+                            {totalPages > 1 && (
+                                <div className="flex justify-center items-center gap-4 mt-12">
+                                    <a
+                                        href={currentPage > 1 ? `?page=${currentPage - 1}${category ? `&category=${category}` : ''}${brand ? `&brand=${brand}` : ''}${query ? `&query=${query}` : ''}${isHot ? `&isHot=${isHot}` : ''}` : '#'}
+                                        className={`px-4 py-2 border rounded-full text-sm font-bold transition-colors ${currentPage > 1 ? 'bg-white hover:bg-gray-50 text-gray-900 border-gray-300' : 'bg-gray-100 text-gray-400 border-gray-100 cursor-not-allowed pointer-events-none'}`}
+                                    >
+                                        &larr; Previous
+                                    </a>
+
+                                    <span className="text-sm font-medium text-gray-500">
+                                        Page {currentPage} of {totalPages}
+                                    </span>
+
+                                    <a
+                                        href={currentPage < totalPages ? `?page=${currentPage + 1}${category ? `&category=${category}` : ''}${brand ? `&brand=${brand}` : ''}${query ? `&query=${query}` : ''}${isHot ? `&isHot=${isHot}` : ''}` : '#'}
+                                        className={`px-4 py-2 border rounded-full text-sm font-bold transition-colors ${currentPage < totalPages ? 'bg-white hover:bg-gray-50 text-gray-900 border-gray-300' : 'bg-gray-100 text-gray-400 border-gray-100 cursor-not-allowed pointer-events-none'}`}
+                                    >
+                                        Next &rarr;
+                                    </a>
+                                </div>
+                            )}
+                        </>
                     ) : (
                         <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100 text-center">
                             <div className="text-6xl mb-4">🔍</div>
