@@ -41,7 +41,7 @@ export default function WishlistPage() {
     }, [items]);
 
     return (
-        <div className="bg-gray-50 min-h-screen pb-safe">
+        <div className="bg-gray-50 min-h-screen pb-24 md:pb-8">
             <div className="bg-white border-b sticky top-0 z-10">
                 <div className="max-w-7xl mx-auto px-4 h-16 flex items-center gap-4">
                     <Link href="/">
