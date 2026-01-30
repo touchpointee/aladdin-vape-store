@@ -26,7 +26,7 @@ export async function generateMetadata(
     parent: ResolvingMetadata
 ): Promise<Metadata> {
     const id = (await params).id;
-    const product = await getProduct(id);
+    const product = await getProduct(id) as any;
 
     if (!product) {
         return {
@@ -44,19 +44,19 @@ export async function generateMetadata(
             : product.price);
 
     return {
-        title: product.name,
-        description: product.description?.substring(0, 160) || `Buy ${product.name} at Aladdin Vape Store. Best price: INR ${discountedPrice}`,
+        title: product.metaTitle || product.name,
+        description: product.metaDescription || product.description?.substring(0, 160) || `Buy ${product.name} at Aladdin Vape Store. Best price: INR ${discountedPrice}`,
         openGraph: {
-            title: `${product.name} | Aladdin Vape Store`,
-            description: product.description?.substring(0, 160),
+            title: product.metaTitle || `${product.name} | Aladdin Vape Store`,
+            description: product.metaDescription || product.description?.substring(0, 160),
             url: `https://aladdinvapestoreindia.com/product/${id}`,
             images: [productImage, ...previousImages],
             type: 'article',
         },
         twitter: {
             card: 'summary_large_image',
-            title: product.name,
-            description: product.description?.substring(0, 160),
+            title: product.metaTitle || product.name,
+            description: product.metaDescription || product.description?.substring(0, 160),
             images: [productImage],
         },
     };

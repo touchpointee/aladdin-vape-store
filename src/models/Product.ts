@@ -16,6 +16,9 @@ export interface IProduct extends Document {
     isTopSelling: boolean;
     isNewArrival: boolean;
     status: 'active' | 'inactive';
+    slug?: string;
+    metaTitle?: string;
+    metaDescription?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -37,9 +40,37 @@ const ProductSchema = new Schema<IProduct>(
         isTopSelling: { type: Boolean, default: false },
         isNewArrival: { type: Boolean, default: false },
         status: { type: String, enum: ['active', 'inactive'], default: 'active' },
+        slug: { type: String, unique: true, sparse: true, trim: true },
+        metaTitle: { type: String, trim: true },
+        metaDescription: { type: String, trim: true },
     },
     { timestamps: true }
 );
+
+// Pre-save hook for SEO automation
+ProductSchema.pre('save', function (this: any) {
+    // 1. Generate slug if it doesn't exist or name changed
+    if (this.isModified('name') || !this.slug) {
+        this.slug = this.name
+            .toLowerCase()
+            .replace(/[^\w\s-]/g, '') // remove non-word chars
+            .replace(/\s+/g, '-')      // replace spaces with -
+            .replace(/-+/g, '-')       // remove multiple -
+            .trim();
+    }
+
+    // 2. Default Meta Title
+    if (!this.metaTitle || (this.isModified('name') && this.metaTitle === `${this.name} | Aladdin Vape Store`)) {
+        this.metaTitle = `${this.name} | Aladdin Vape Store`;
+    }
+
+    // 3. Default Meta Description
+    if (!this.metaDescription && this.description) {
+        // Strip HTML if any (though currently it's just text) and truncate
+        const plainDesc = this.description.replace(/<[^>]*>/g, '').substring(0, 155);
+        this.metaDescription = plainDesc + (this.description.length > 155 ? '...' : '');
+    }
+});
 
 const Product: Model<IProduct> = mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema);
 
