@@ -74,7 +74,7 @@ export default async function Home() {
       {/* Search Bar - Mobile Visible Only */}
       <MobileSearch />
 
-      <HeroSection settings={bannerSettings} />
+      {/* <HeroSection settings={bannerSettings} /> */}
 
       {/* 2. Categories */}
       <CategorySection categories={categories as any} />
@@ -91,7 +91,7 @@ export default async function Home() {
       </div>
 
       {/* 4. Promo Banner */}
-      <PromoBanner />
+      {/* <PromoBanner /> */}
 
       {/* 5. Brands */}
       <BrandSection brands={brands as any} />

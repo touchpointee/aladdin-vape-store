@@ -13,12 +13,12 @@ export default function CategorySection({ categories }: CategorySectionProps) {
     return (
         <div className="mt-8 px-4">
             <h3 className="text-lg font-bold text-gray-900 uppercase mb-4">Shop by Category</h3>
-            <div className="flex gap-4 overflow-x-auto pb-4 custom-scrollbar scroll-smooth snap-x">
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {categories.map((cat) => (
                     <Link
                         key={cat._id}
                         href={`/products?category=${cat._id}`}
-                        className="flex-none w-[160px] md:w-[200px] h-28 group relative rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all snap-start"
+                        className="w-full h-28 group relative rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all"
                     >
                         {/* Background Image/Color */}
                         <div className="absolute inset-0 bg-gray-100">
