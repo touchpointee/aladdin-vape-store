@@ -30,13 +30,19 @@ export async function generateMetadata(props: { searchParams: Promise<SearchPara
     let description = "Browse our extensive collection of premium vapes, disposable pods, and accessories at Aladdin Vape Store.";
 
     if (searchParams.category) {
-        const cat = await Category.findById(searchParams.category);
+        const cat = searchParams.category.match(/^[0-9a-fA-F]{24}$/)
+            ? await Category.findById(searchParams.category)
+            : await Category.findOne({ slug: searchParams.category });
+
         if (cat) {
             title = `${cat.name} Vapes | Aladdin Vape Store`;
             description = `Shop the best ${cat.name} vapes and accessories in India. Authentic products and fast delivery.`;
         }
     } else if (searchParams.brand) {
-        const brand = await Brand.findById(searchParams.brand);
+        const brand = searchParams.brand.match(/^[0-9a-fA-F]{24}$/)
+            ? await Brand.findById(searchParams.brand)
+            : await Brand.findOne({ slug: searchParams.brand });
+
         if (brand) {
             title = `${brand.name} Vapes | Aladdin Vape Store`;
             description = `Premium ${brand.name} vape products available at Aladdin Vape Store. 100% authentic.`;
@@ -62,9 +68,23 @@ async function getData(searchParams: SearchParams) {
 
     const filter: any = { status: { $regex: '^active$', $options: 'i' } };
 
-    // Apply Filters by ID
-    if (searchParams.category) filter.category = searchParams.category;
-    if (searchParams.brand) filter.brand = searchParams.brand;
+    // Apply Filters by ID or Slug
+    if (searchParams.category) {
+        if (searchParams.category.match(/^[0-9a-fA-F]{24}$/)) {
+            filter.category = searchParams.category;
+        } else {
+            const cat = await Category.findOne({ slug: searchParams.category });
+            if (cat) filter.category = cat._id;
+        }
+    }
+    if (searchParams.brand) {
+        if (searchParams.brand.match(/^[0-9a-fA-F]{24}$/)) {
+            filter.brand = searchParams.brand;
+        } else {
+            const brand = await Brand.findOne({ slug: searchParams.brand });
+            if (brand) filter.brand = brand._id;
+        }
+    }
     if (searchParams.query) filter.name = { $regex: searchParams.query, $options: 'i' };
 
     // Apply Boolean Filters
@@ -90,12 +110,12 @@ async function getData(searchParams: SearchParams) {
         Product.countDocuments(filter)
     ]);
 
-    const categories = await Category.find({ status: { $regex: '^active$', $options: 'i' } }).select("_id name");
-    const brands = await Brand.find({ status: { $regex: '^active$', $options: 'i' } }).select("_id name");
+    const categories = await Category.find({ status: { $regex: '^active$', $options: 'i' } }).select("_id name slug");
+    const brands = await Brand.find({ status: { $regex: '^active$', $options: 'i' } }).select("_id name slug");
 
     let activeCategoryName = "";
     if (searchParams.category) {
-        const cat = categories.find(c => c._id.toString() === searchParams.category);
+        const cat = categories.find(c => c._id.toString() === searchParams.category || (c as any).slug === searchParams.category);
         if (cat) activeCategoryName = cat.name;
     }
 

@@ -6,6 +6,7 @@ export interface ICategory extends Document {
     name: string;
     image: string;
     status: 'active' | 'inactive';
+    slug?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -14,6 +15,7 @@ export interface IBrand extends Document {
     name: string;
     logo: string;
     status: 'active' | 'inactive';
+    slug?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -32,6 +34,9 @@ export interface IProduct extends Document {
     images: string[];
     stock: number;
     status: 'active' | 'inactive';
+    slug?: string;
+    metaTitle?: string;
+    metaDescription?: string;
     isHot?: boolean;
     isTopSelling?: boolean;
     isNewArrival?: boolean;
@@ -91,18 +96,32 @@ const CategorySchema = new Schema<ICategory>(
         name: { type: String, required: true },
         image: { type: String, required: true },
         status: { type: String, enum: ['active', 'inactive'], default: 'active' },
+        slug: { type: String, unique: true, sparse: true, trim: true },
     },
     { timestamps: true }
 );
+
+CategorySchema.pre('save', function (this: any) {
+    if (this.isModified('name') || !this.slug) {
+        this.slug = this.name.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
+    }
+});
 
 const BrandSchema = new Schema<IBrand>(
     {
         name: { type: String, required: true },
         logo: { type: String, required: true },
         status: { type: String, enum: ['active', 'inactive'], default: 'active' },
+        slug: { type: String, unique: true, sparse: true, trim: true },
     },
     { timestamps: true }
 );
+
+BrandSchema.pre('save', function (this: any) {
+    if (this.isModified('name') || !this.slug) {
+        this.slug = this.name.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
+    }
+});
 
 const ProductSchema = new Schema<IProduct>(
     {
@@ -119,6 +138,9 @@ const ProductSchema = new Schema<IProduct>(
         images: [{ type: String }],
         stock: { type: Number, required: true, default: 0 },
         status: { type: String, enum: ['active', 'inactive'], default: 'active' },
+        slug: { type: String, unique: true, sparse: true, trim: true },
+        metaTitle: { type: String, trim: true },
+        metaDescription: { type: String, trim: true },
         isHot: { type: Boolean, default: false },
         isTopSelling: { type: Boolean, default: false },
         isNewArrival: { type: Boolean, default: false },
@@ -126,6 +148,19 @@ const ProductSchema = new Schema<IProduct>(
     },
     { timestamps: true }
 );
+
+ProductSchema.pre('save', function (this: any) {
+    if (this.isModified('name') || !this.slug) {
+        this.slug = this.name.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
+    }
+    if (!this.metaTitle || (this.isModified('name') && this.metaTitle === `${this.name} | Aladdin Vape Store`)) {
+        this.metaTitle = `${this.name} | Aladdin Vape Store`;
+    }
+    if (!this.metaDescription && this.description) {
+        const plainDesc = this.description.replace(/<[^>]*>/g, '').substring(0, 155);
+        this.metaDescription = plainDesc + (this.description.length > 155 ? '...' : '');
+    }
+});
 
 const OrderSchema = new Schema<IOrder>(
     {

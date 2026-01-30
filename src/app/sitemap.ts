@@ -8,21 +8,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     await connectDB();
 
     // Fetch all active products
-    const products = await Product.find({ status: 'active' }).select('_id updatedAt');
+    const products = await Product.find({ status: 'active' }).select('_id slug updatedAt');
     const productEntries = products.map((product) => ({
-        url: `${BASE_URL}/product/${product._id}`,
+        url: `${BASE_URL}/product/${product.slug || product._id}`,
         lastModified: product.updatedAt,
         changeFrequency: 'weekly' as const,
         priority: 0.8,
     }));
 
     // Fetch all active categories
-    const categories = await Category.find({ status: 'active' }).select('_id name updatedAt');
+    const categories = await Category.find({ status: 'active' }).select('_id slug name updatedAt');
     const categoryEntries = categories.map((cat) => ({
-        url: `${BASE_URL}/products?category=${cat._id}`,
+        url: `${BASE_URL}/products?category=${cat.slug || cat._id}`,
         lastModified: cat.updatedAt,
         changeFrequency: 'weekly' as const,
         priority: 0.6,
+    }));
+
+    // Fetch all active brands
+    const brands = await Brand.find({ status: 'active' }).select('_id slug name updatedAt');
+    const brandEntries = brands.map((brand) => ({
+        url: `${BASE_URL}/products?brand=${brand.slug || brand._id}`,
+        lastModified: brand.updatedAt,
+        changeFrequency: 'weekly' as const,
+        priority: 0.5,
     }));
 
     // Static routes
@@ -47,5 +56,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         },
     ];
 
-    return [...staticRoutes, ...productEntries, ...categoryEntries];
+    return [...staticRoutes, ...productEntries, ...categoryEntries, ...brandEntries];
 }

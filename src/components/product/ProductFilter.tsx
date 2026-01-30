@@ -5,8 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { X, Filter } from "lucide-react";
 
 interface FilterProps {
-    categories: { _id: string; name: string }[];
-    brands: { _id: string; name: string }[];
+    categories: { _id: string; name: string; slug?: string }[];
+    brands: { _id: string; name: string; slug?: string }[];
 }
 
 export default function ProductFilter({ categories, brands }: FilterProps) {
@@ -154,18 +154,18 @@ export default function ProductFilter({ categories, brands }: FilterProps) {
                                     <label key={cat._id} className="flex items-center gap-3 cursor-pointer group p-3 rounded-xl hover:bg-gray-50 transition-colors border border-gray-100 hover:border-gray-200 bg-white shadow-sm">
                                         <div className={`
                                         w-5 h-5 rounded-full border flex items-center justify-center transition-all duration-200 flex-shrink-0
-                                        ${localCategory === cat._id ? "bg-black border-black" : "border-gray-300 bg-white group-hover:border-gray-400"}
+                                        ${localCategory === (cat.slug || cat._id) ? "bg-black border-black" : "border-gray-300 bg-white group-hover:border-gray-400"}
                                     `}>
-                                            {localCategory === cat._id && <div className="w-2 h-2 bg-white rounded-full" />}
+                                            {localCategory === (cat.slug || cat._id) && <div className="w-2 h-2 bg-white rounded-full" />}
                                         </div>
                                         <input
                                             type="radio"
                                             name="category"
                                             className="absolute opacity-0 w-0 h-0"
-                                            checked={localCategory === cat._id}
-                                            onChange={() => onFilterChange("category", cat._id)}
+                                            checked={localCategory === (cat.slug || cat._id)}
+                                            onChange={() => onFilterChange("category", cat.slug || cat._id)}
                                         />
-                                        <span className={`text-sm ${localCategory === cat._id ? "text-black font-bold" : "text-gray-600 group-hover:text-gray-900"}`}>
+                                        <span className={`text-sm ${localCategory === (cat.slug || cat._id) ? "text-black font-bold" : "text-gray-600 group-hover:text-gray-900"}`}>
                                             {cat.name}
                                         </span>
                                     </label>
@@ -189,18 +189,18 @@ export default function ProductFilter({ categories, brands }: FilterProps) {
                                     <label key={brand._id} className="flex items-center gap-3 cursor-pointer group p-3 rounded-xl hover:bg-gray-50 transition-colors border border-gray-100 hover:border-gray-200 bg-white shadow-sm">
                                         <div className={`
                                         w-5 h-5 rounded-full border flex items-center justify-center transition-all duration-200 flex-shrink-0
-                                        ${localBrand === brand._id ? "bg-black border-black" : "border-gray-300 bg-white group-hover:border-gray-400"}
+                                        ${localBrand === (brand.slug || brand._id) ? "bg-black border-black" : "border-gray-300 bg-white group-hover:border-gray-400"}
                                     `}>
-                                            {localBrand === brand._id && <div className="w-2 h-2 bg-white rounded-full" />}
+                                            {localBrand === (brand.slug || brand._id) && <div className="w-2 h-2 bg-white rounded-full" />}
                                         </div>
                                         <input
                                             type="radio"
                                             name="brand"
                                             className="absolute opacity-0 w-0 h-0"
-                                            checked={localBrand === brand._id}
-                                            onChange={() => onFilterChange("brand", brand._id)}
+                                            checked={localBrand === (brand.slug || brand._id)}
+                                            onChange={() => onFilterChange("brand", brand.slug || brand._id)}
                                         />
-                                        <span className={`text-sm ${localBrand === brand._id ? "text-black font-bold" : "text-gray-600 group-hover:text-gray-900"}`}>
+                                        <span className={`text-sm ${localBrand === (brand.slug || brand._id) ? "text-black font-bold" : "text-gray-600 group-hover:text-gray-900"}`}>
                                             {brand.name}
                                         </span>
                                     </label>

@@ -17,7 +17,7 @@ export default function CategorySection({ categories }: CategorySectionProps) {
                 {categories.map((cat) => (
                     <Link
                         key={cat._id}
-                        href={`/products?category=${cat._id}`}
+                        href={`/products?category=${(cat as any).slug || cat._id}`}
                         className="w-full h-28 md:h-32 group relative rounded-xl overflow-hidden shadow-sm hover:shadow-md transition-all border border-gray-100"
                     >
                         {/* Background Image/Color */}

@@ -17,7 +17,7 @@ export default function BrandSection({ brands }: BrandSectionProps) {
                 {brands.map((brand) => (
                     <Link
                         key={brand._id}
-                        href={`/products?brand=${brand._id}`}
+                        href={`/products?brand=${(brand as any).slug || brand._id}`}
                         className="flex flex-col items-center justify-center p-4 rounded-xl border border-gray-100 hover:border-blue-500 hover:shadow-md transition-all bg-white group aspect-[4/3] md:aspect-square"
                     >
                         <div className="w-full h-full relative mb-2">

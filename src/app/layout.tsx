@@ -10,6 +10,9 @@ const poppins = Poppins({
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://aladdinvapestoreindia.com'),
+  alternates: {
+    canonical: '/',
+  },
   title: {
     default: 'Aladdin Vape Store | Best Vapes in India',
     template: '%s | Aladdin Vape Store'

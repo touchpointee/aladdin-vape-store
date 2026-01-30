@@ -33,7 +33,7 @@ export default function ProductCard({ product }: ProductCardProps) {
     return (
         <div className="bg-white rounded-lg border border-gray-100 overflow-hidden shadow-sm hover:shadow-md transition-shadow relative group">
             {/* Full Card Link */}
-            <Link href={`/product/${product._id}`} className="absolute inset-0 z-10">
+            <Link href={`/product/${product.slug || product._id}`} className="absolute inset-0 z-10">
                 <span className="sr-only">View Product</span>
             </Link>
 
@@ -67,7 +67,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                    Optional: Keep the search icon if it does something else (like a modal). 
                    If it just goes to the page, it's redundant now, but I'll keep it as a 'quick view' visual 
                 */}
-                <Link href={`/product/${product._id}`} className="bg-white p-1.5 rounded-full shadow-sm hover:text-blue-500 transition-colors relative z-20">
+                <Link href={`/product/${product.slug || product._id}`} className="bg-white p-1.5 rounded-full shadow-sm hover:text-blue-500 transition-colors relative z-20">
                     <Search size={14} />
                 </Link>
             </div>

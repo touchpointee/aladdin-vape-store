@@ -11,9 +11,17 @@ interface Props {
     params: Promise<{ id: string }>;
 }
 
-async function getProduct(id: string) {
+async function getProduct(idOrSlug: string) {
     await connectDB();
-    return await Product.findById(id).populate("category").populate("brand");
+
+    // Try to find by ID first (Mongoose might throw error if not ObjectID format)
+    if (idOrSlug.match(/^[0-9a-fA-F]{24}$/)) {
+        const product = await Product.findById(idOrSlug).populate("category").populate("brand");
+        if (product) return product;
+    }
+
+    // Fallback to slug
+    return await Product.findOne({ slug: idOrSlug, status: 'active' }).populate("category").populate("brand");
 }
 
 async function getSettings(key: string) {
@@ -49,7 +57,7 @@ export async function generateMetadata(
         openGraph: {
             title: product.metaTitle || `${product.name} | Aladdin Vape Store`,
             description: product.metaDescription || product.description?.substring(0, 160),
-            url: `https://aladdinvapestoreindia.com/product/${id}`,
+            url: `https://aladdinvapestoreindia.com/product/${product.slug || product._id}`,
             images: [productImage, ...previousImages],
             type: 'article',
         },
@@ -93,7 +101,7 @@ export default async function ProductDetailPage({ params }: Props) {
         },
         "offers": {
             "@type": "Offer",
-            "url": `https://aladdinvapestoreindia.com/product/${id}`,
+            "url": `https://aladdinvapestoreindia.com/product/${product.slug || product._id}`,
             "priceCurrency": "INR",
             "price": discountedPrice,
             "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",

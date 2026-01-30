@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import Product from '@/models/Product';
+import Category from '@/models/Category';
+import Brand from '@/models/Brand';
 
 export async function GET(req: NextRequest) {
     try {
         await connectDB();
 
         const { searchParams } = new URL(req.url);
-        const categoryId = searchParams.get('category');
-        const brandId = searchParams.get('brand');
+        const categoryIdOrSlug = searchParams.get('category');
+        const brandIdOrSlug = searchParams.get('brand');
         const isHot = searchParams.get('isHot');
         const isTopSelling = searchParams.get('isTopSelling');
         const isNewArrival = searchParams.get('isNewArrival');
@@ -16,8 +18,24 @@ export async function GET(req: NextRequest) {
         const searchQuery = searchParams.get('search');
 
         const query: any = { status: { $regex: '^active$', $options: 'i' } };
-        if (categoryId) query.category = categoryId;
-        if (brandId) query.brand = brandId;
+
+        if (categoryIdOrSlug) {
+            if (categoryIdOrSlug.match(/^[0-9a-fA-F]{24}$/)) {
+                query.category = categoryIdOrSlug;
+            } else {
+                const cat = await Category.findOne({ slug: categoryIdOrSlug });
+                if (cat) query.category = cat._id;
+            }
+        }
+
+        if (brandIdOrSlug) {
+            if (brandIdOrSlug.match(/^[0-9a-fA-F]{24}$/)) {
+                query.brand = brandIdOrSlug;
+            } else {
+                const brand = await Brand.findOne({ slug: brandIdOrSlug });
+                if (brand) query.brand = brand._id;
+            }
+        }
         if (isHot === 'true') query.isHot = true;
         if (isTopSelling === 'true') query.isTopSelling = true;
         if (isNewArrival === 'true') query.isNewArrival = true;
