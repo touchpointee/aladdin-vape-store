@@ -13,10 +13,36 @@ export async function POST(req: NextRequest) {
 
         for (const product of products) {
             try {
-                // Trigger pre-save hook by calling save()
-                // The hook will generate slug, metaTitle, and metaDescription if missing
-                await product.save();
-                updatedCount++;
+                const update: any = {};
+
+                // Manually generate if missing or empty
+                if (!product.slug) {
+                    const generatedSlug = product.name
+                        .toLowerCase()
+                        .replace(/[^\w\s-]/g, '')
+                        .replace(/\s+/g, '-')
+                        .replace(/-+/g, '-')
+                        .trim();
+                    update.slug = generatedSlug;
+                }
+
+                if (!product.metaTitle) {
+                    update.metaTitle = `${product.name} | Aladdin Vape Store`;
+                }
+
+                if (!product.metaDescription && product.description) {
+                    const plainDesc = product.description.replace(/<[^>]*>/g, '').substring(0, 155);
+                    update.metaDescription = plainDesc + (product.description.length > 155 ? '...' : '');
+                }
+
+                if (Object.keys(update).length > 0) {
+                    // Use collection.updateOne to bypass ALL Mongoose logic and ensure it hits the DB
+                    await (Product as any).collection.updateOne(
+                        { _id: product._id },
+                        { $set: update }
+                    );
+                    updatedCount++;
+                }
             } catch (err) {
                 console.error(`Error updating product ${product._id}:`, err);
                 errors++;

@@ -54,6 +54,9 @@ export async function generateMetadata(props: { searchParams: Promise<SearchPara
     return {
         title,
         description,
+        alternates: {
+            canonical: `/products${searchParams.category ? `?category=${searchParams.category}` : searchParams.brand ? `?brand=${searchParams.brand}` : ''}`
+        },
         openGraph: {
             title,
             description,
@@ -180,7 +183,10 @@ export default async function ProductsPage(props: {
             />
             {/* Header / Title Banner */}
             <div className="bg-white border-b border-gray-200 py-8 px-6 mb-8 sticky top-0 md:static z-20">
-                <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-center gap-6">
+                <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+                    <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tighter">
+                        {activeCategoryName || "All Products"}
+                    </h1>
                     <ProductSearchHeader />
                 </div>
             </div>
