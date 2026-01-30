@@ -70,7 +70,7 @@ export default function WishlistPage() {
                     ) : (
                         products.map((product) => (
                             <div key={product._id} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col relative group hover:shadow-md transition-shadow">
-                                <Link href={`/product/${product._id}`} className="absolute inset-0 z-10">
+                                <Link href={`/product/${product.slug || product._id}`} className="absolute inset-0 z-10">
                                     <span className="sr-only">View Product</span>
                                 </Link>
 
