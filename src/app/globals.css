@@ -27,8 +27,8 @@ body {
 @media print {
   @page {
     margin: 0mm;
-    size: auto;
   }
+
 
   /* 1. Hide everything by default (Screen UI) */
   .no-print,
@@ -44,11 +44,7 @@ body {
   /* 2. Reset Layout Containers for Printing */
   html,
   body {
-    height: auto !important;
-    min-height: 0 !important;
-    overflow: visible !important;
     background: #fff !important;
-    padding: 10mm !important;
   }
 
   main {
