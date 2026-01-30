@@ -24,7 +24,14 @@ export default function WishlistPage() {
         fetch(`/api/products?ids=${items.join(',')}`)
             .then(res => res.json())
             .then(data => {
-                setProducts(data);
+                // Handle both old array structure and new paginated object structure
+                const fetchedProducts = Array.isArray(data) ? data : (data.products || []);
+                setProducts(fetchedProducts);
+
+                // Sync store with actual products found on server
+                const validIds = fetchedProducts.map((p: any) => p._id);
+                useWishlistStore.getState().syncItems(validIds);
+
                 setLoading(false);
             })
             .catch(err => {

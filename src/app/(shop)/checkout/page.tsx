@@ -23,7 +23,8 @@ export default function CheckoutPage() {
             fetch(`/api/products?ids=${ids}`)
                 .then(res => res.json())
                 .then(data => {
-                    useCartStore.getState().syncCartWithServer(data);
+                    const fetchedProducts = Array.isArray(data) ? data : (data.products || []);
+                    useCartStore.getState().syncCartWithServer(fetchedProducts);
                 })
                 .catch(err => console.error("Failed to sync cart", err));
         }
@@ -89,7 +90,11 @@ export default function CheckoutPage() {
     };
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
+        let value = e.target.value;
+        if (e.target.name === 'phone') {
+            value = value.replace(/\D/g, '').slice(0, 10);
+        }
+        setFormData({ ...formData, [e.target.name]: value });
     };
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -97,12 +102,20 @@ export default function CheckoutPage() {
         setLoading(true);
 
         try {
-            // 0. Update Address (if in edit mode) or Create New Address (if new)
-            // We do this BEFORE creating the order to ensure correct address details are saved
-            if (showNewAddressForm && isLoggedIn && user?.phone) {
+            // Normalize data for sending
+            const normalizedData = {
+                ...formData,
+                phone: formData.phone.trim(),
+                age: Number(formData.age)
+            };
+
+            // 0. Address Management (Save/Update)
+            if (!isLoggedIn || showNewAddressForm) {
                 const url = '/api/addresses';
-                const method = editingId ? 'PUT' : 'POST';
-                const body = editingId ? { ...formData, _id: editingId } : { ...formData, phone: user.phone };
+                const method = (editingId && isLoggedIn) ? 'PUT' : 'POST';
+                const body = (editingId && isLoggedIn)
+                    ? { ...normalizedData, _id: editingId }
+                    : { ...normalizedData };
 
                 const addrRes = await fetch(url, {
                     method,
@@ -111,19 +124,28 @@ export default function CheckoutPage() {
                 });
 
                 if (addrRes.ok) {
-                    // Refresh addresses to get the latest ID if new, or update list
-                    await fetchAddresses(user.phone);
+                    // Auto-login for guests
+                    if (!isLoggedIn) {
+                        const { login, updateUser } = useAuthStore.getState();
+                        login(normalizedData.phone);
+                        updateUser({ name: normalizedData.name });
+                    }
+                    if (isLoggedIn && user?.phone) {
+                        await fetchAddresses(user.phone);
+                    }
+                } else {
+                    const errData = await addrRes.json();
+                    throw new Error(errData.error || 'Failed to save address');
                 }
             }
 
             // 1. Create Order
             const orderData = {
-                customer: formData,
+                customer: normalizedData,
                 products: items.map(item => ({
                     product: item.id,
                     quantity: item.quantity,
-                    price: item.price,
-                    originalPrice: item.originalPrice
+                    price: item.price
                 })),
                 totalPrice: subtotal() + DELIVERY_CHARGE,
                 paymentMode: 'COD'
@@ -135,12 +157,15 @@ export default function CheckoutPage() {
                 body: JSON.stringify(orderData)
             });
 
-            if (!res.ok) throw new Error('Order failed');
+            if (!res.ok) {
+                const errData = await res.json();
+                throw new Error(errData.error || 'Order failed');
+            }
 
             setSuccess(true);
             clearCart();
-        } catch (error) {
-            alert('Something went wrong. Please try again.');
+        } catch (error: any) {
+            alert(error.message || "Something went wrong");
         } finally {
             setLoading(false);
         }

@@ -22,7 +22,7 @@ export default function MobileSearch() {
                     const res = await fetch(`/api/products?search=${searchQuery}`);
                     if (res.ok) {
                         const data = await res.json();
-                        setSearchResults(data);
+                        setSearchResults(Array.isArray(data) ? data : (data.products || []));
                     }
                 } catch (error) {
                     console.error("Search error:", error);

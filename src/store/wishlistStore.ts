@@ -6,6 +6,7 @@ interface WishlistStore {
     addItem: (id: string) => void;
     removeItem: (id: string) => void;
     hasItem: (id: string) => boolean;
+    syncItems: (validIds: string[]) => void;
 }
 
 export const useWishlistStore = create<WishlistStore>()(
@@ -20,6 +21,13 @@ export const useWishlistStore = create<WishlistStore>()(
             },
             removeItem: (id) => set({ items: get().items.filter((i) => i !== id) }),
             hasItem: (id) => get().items.includes(id),
+            syncItems: (validIds) => {
+                const current = get().items;
+                const filtered = current.filter(id => validIds.includes(id));
+                if (filtered.length !== current.length) {
+                    set({ items: filtered });
+                }
+            }
         }),
         { name: 'wishlist-storage' }
     )

@@ -18,7 +18,8 @@ export default function CartDrawer() {
             fetch(`/api/products?ids=${ids}`)
                 .then(res => res.json())
                 .then(data => {
-                    useCartStore.getState().syncCartWithServer(data);
+                    const fetchedProducts = Array.isArray(data) ? data : (data.products || []);
+                    useCartStore.getState().syncCartWithServer(fetchedProducts);
                 })
                 .catch(err => console.error("Failed to sync cart", err));
         }

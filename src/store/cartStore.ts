@@ -61,11 +61,20 @@ export const useCartStore = create<CartState>()(
                 }),
             clearCart: () => set({ items: [] }),
             totalItems: () => get().items.reduce((acc, item) => acc + item.quantity, 0),
-            syncCartWithServer: (serverProducts: any[]) => {
+            syncCartWithServer: (data: any) => {
+                let serverProducts: any[] = [];
+                if (Array.isArray(data)) {
+                    serverProducts = data;
+                } else if (data && Array.isArray(data.products)) {
+                    serverProducts = data.products;
+                }
+
+                if (serverProducts.length === 0) return;
+
                 const currentItems = get().items;
                 const updatedItems = currentItems.map(item => {
-                    const serverProduct = serverProducts.find(p => p._id === item.id);
-                    if (!serverProduct) return item; // Keep as is if not found (or remove?)
+                    const serverProduct = serverProducts.find((p: any) => p._id === item.id);
+                    if (!serverProduct) return item;
 
                     // Calculate effective price (handle discount)
                     const discountedPrice = (serverProduct.discountPrice && serverProduct.discountPrice < serverProduct.price)

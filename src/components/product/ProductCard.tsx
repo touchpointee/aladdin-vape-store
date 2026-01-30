@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { Heart, Search, Star } from "lucide-react";
+import { Heart, Search, Star, ShoppingBag } from "lucide-react";
 import { IProduct } from "@/models/all";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
@@ -76,7 +76,7 @@ export default function ProductCard({ product }: ProductCardProps) {
             <div className="relative w-full aspect-square bg-gray-50 p-4 pointer-events-none">
                 <Image
                     src={product.images?.[0] || "/product-placeholder.png"}
-                    alt={product.name || "Product"}
+                    alt={product.name ? `Buy ${product.name} - Online Vape Store India` : "Premium Vape Product"}
                     fill
                     className="object-contain group-hover:scale-105 transition-transform duration-300"
                 />
@@ -121,7 +121,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                 )}
 
                 {/* Rating */}
-                <div className="flex gap-0.5">
+                <div className="flex gap-0.5 mb-3">
                     {[1, 2, 3, 4, 5].map((star) => (
                         <Star
                             key={star}
@@ -130,6 +130,27 @@ export default function ProductCard({ product }: ProductCardProps) {
                         />
                     ))}
                 </div>
+
+                {/* Add to Cart Button */}
+                <button
+                    onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        addItem({
+                            id: product._id,
+                            name: product.name || "Product",
+                            price: product.discountPrice || product.price || 0,
+                            image: product.images?.[0] || "",
+                            quantity: 1,
+                            puffCount: product.puffCount,
+                            capacity: product.capacity,
+                            resistance: product.resistance,
+                        });
+                    }}
+                    className="w-full py-2 bg-blue-600 text-white rounded font-bold text-[10px] uppercase hover:bg-blue-700 transition-colors pointer-events-auto cursor-pointer flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
+                >
+                    <ShoppingBag size={12} /> Add to Cart
+                </button>
             </div>
         </div>
     );

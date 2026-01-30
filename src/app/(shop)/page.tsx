@@ -8,7 +8,7 @@ import PromoBanner from "@/components/home/PromoBanner";
 import connectDB from "@/lib/db";
 import { Product, Category, Brand, Settings } from "@/models/all";
 
-export const dynamic = 'force-dynamic';
+export const revalidate = 3600; // revalidate at most every hour
 
 async function getHomeData() {
   try {
@@ -70,6 +70,7 @@ export default async function Home() {
 
   return (
     <div className="pb-24">
+      <h1 className="sr-only">Aladdin Vape Store | Best Premium Vapes and Accessories in India</h1>
       {/* Search Bar - Mobile Visible Only */}
       <MobileSearch />
 

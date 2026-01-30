@@ -3,28 +3,69 @@ import connectDB from "@/lib/db";
 import Product from "@/models/Product";
 import Category from "@/models/Category";
 import Brand from "@/models/Brand";
-import ProductGrid from "@/components/product/ProductGrid";
 import ProductFilter from "@/components/product/ProductFilter";
 import ProductSearchHeader from "@/components/product/ProductSearchHeader";
+import InfiniteProductGrid from "@/components/product/InfiniteProductGrid";
+import { Metadata } from "next";
+import Script from "next/script";
+
+export const revalidate = 3600; // revalidate at most every hour
+
+interface SearchParams {
+    category?: string;
+    brand?: string;
+    sort?: string;
+    query?: string;
+    isHot?: string;
+    isTopSelling?: string;
+    isNewArrival?: string;
+    page?: string;
+}
+
+export async function generateMetadata(props: { searchParams: Promise<SearchParams> }): Promise<Metadata> {
+    const searchParams = await props.searchParams;
+    await connectDB();
+
+    let title = "Vape Products | Aladdin Vape Store India";
+    let description = "Browse our extensive collection of premium vapes, disposable pods, and accessories at Aladdin Vape Store.";
+
+    if (searchParams.category) {
+        const cat = await Category.findById(searchParams.category);
+        if (cat) {
+            title = `${cat.name} Vapes | Aladdin Vape Store`;
+            description = `Shop the best ${cat.name} vapes and accessories in India. Authentic products and fast delivery.`;
+        }
+    } else if (searchParams.brand) {
+        const brand = await Brand.findById(searchParams.brand);
+        if (brand) {
+            title = `${brand.name} Vapes | Aladdin Vape Store`;
+            description = `Premium ${brand.name} vape products available at Aladdin Vape Store. 100% authentic.`;
+        }
+    } else if (searchParams.query) {
+        title = `Search results for "${searchParams.query}" | Aladdin Vape Store`;
+    }
+
+    return {
+        title,
+        description,
+        openGraph: {
+            title,
+            description,
+            url: 'https://aladdinvapestoreindia.com/products',
+        }
+    };
+}
 
 // Helper to fetch data
-async function getData(searchParams: { category?: string; brand?: string; sort?: string; query?: string; isHot?: string; isTopSelling?: string; isNewArrival?: string; page?: string }) {
+async function getData(searchParams: SearchParams) {
     await connectDB();
 
     const filter: any = { status: { $regex: '^active$', $options: 'i' } };
 
-    // Apply Filters by ID (Directly from searchParams)
-    if (searchParams.category) {
-        filter.category = searchParams.category;
-    }
-    if (searchParams.brand) {
-        filter.brand = searchParams.brand;
-    }
-
-    // Apply Search Query
-    if (searchParams.query) {
-        filter.name = { $regex: searchParams.query, $options: 'i' };
-    }
+    // Apply Filters by ID
+    if (searchParams.category) filter.category = searchParams.category;
+    if (searchParams.brand) filter.brand = searchParams.brand;
+    if (searchParams.query) filter.name = { $regex: searchParams.query, $options: 'i' };
 
     // Apply Boolean Filters
     if (searchParams.isHot === 'true') filter.isHot = true;
@@ -32,14 +73,12 @@ async function getData(searchParams: { category?: string; brand?: string; sort?:
     if (searchParams.isNewArrival === 'true') filter.isNewArrival = true;
 
     // Apply Sort
-    let sort: any = { createdAt: -1 }; // Default: Newest
+    let sort: any = { createdAt: -1 };
     if (searchParams.sort === "price_asc") sort = { price: 1 };
     if (searchParams.sort === "price_desc") sort = { price: -1 };
 
-    // Pagination
-    const page = parseInt(searchParams.page || "1", 10) || 1;
-    const limit = 20;
-    const skip = (page - 1) * limit;
+    // Initial limit for Infinite Scroll
+    const limit = 30;
 
     // Fetch
     const [products, totalProducts] = await Promise.all([
@@ -47,7 +86,6 @@ async function getData(searchParams: { category?: string; brand?: string; sort?:
             .populate("category")
             .populate("brand")
             .sort(sort)
-            .skip(skip)
             .limit(limit),
         Product.countDocuments(filter)
     ]);
@@ -55,32 +93,58 @@ async function getData(searchParams: { category?: string; brand?: string; sort?:
     const categories = await Category.find({ status: { $regex: '^active$', $options: 'i' } }).select("_id name");
     const brands = await Brand.find({ status: { $regex: '^active$', $options: 'i' } }).select("_id name");
 
-    return { products, categories, brands, totalProducts, totalPages: Math.ceil(totalProducts / limit), currentPage: page };
+    let activeCategoryName = "";
+    if (searchParams.category) {
+        const cat = categories.find(c => c._id.toString() === searchParams.category);
+        if (cat) activeCategoryName = cat.name;
+    }
+
+    return { products, totalProducts, categories, brands, activeCategoryName };
 }
 
 export default async function ProductsPage(props: {
     searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-    const searchParams = await props.searchParams;
+    const rawSearchParams = await props.searchParams;
+
     // Normalize params
-    const category = Array.isArray(searchParams?.category) ? searchParams.category[0] : searchParams?.category;
-    const brand = Array.isArray(searchParams?.brand) ? searchParams.brand[0] : searchParams?.brand;
-    const sort = Array.isArray(searchParams?.sort) ? searchParams.sort[0] : searchParams?.sort;
-    const query = Array.isArray(searchParams?.query) ? searchParams.query[0] : searchParams?.query;
-    const isHot = Array.isArray(searchParams?.isHot) ? searchParams.isHot[0] : searchParams?.isHot;
-    const isTopSelling = Array.isArray(searchParams?.isTopSelling) ? searchParams.isTopSelling[0] : searchParams?.isTopSelling;
-    const isNewArrival = Array.isArray(searchParams?.isNewArrival) ? searchParams.isNewArrival[0] : searchParams?.isNewArrival;
-    const pageParam = Array.isArray(searchParams?.page) ? searchParams.page[0] : searchParams?.page;
+    const searchParams: SearchParams = {
+        category: Array.isArray(rawSearchParams?.category) ? rawSearchParams.category[0] : rawSearchParams?.category,
+        brand: Array.isArray(rawSearchParams?.brand) ? rawSearchParams.brand[0] : rawSearchParams?.brand,
+        sort: Array.isArray(rawSearchParams?.sort) ? rawSearchParams.sort[0] : rawSearchParams?.sort,
+        query: Array.isArray(rawSearchParams?.query) ? rawSearchParams.query[0] : rawSearchParams?.query,
+        isHot: Array.isArray(rawSearchParams?.isHot) ? rawSearchParams.isHot[0] : rawSearchParams?.isHot,
+        isTopSelling: Array.isArray(rawSearchParams?.isTopSelling) ? rawSearchParams.isTopSelling[0] : rawSearchParams?.isTopSelling,
+        isNewArrival: Array.isArray(rawSearchParams?.isNewArrival) ? rawSearchParams.isNewArrival[0] : rawSearchParams?.isNewArrival,
+    };
 
-    const { products, categories, brands, totalPages, currentPage } = await getData({ category, brand, sort, query, isHot, isTopSelling, isNewArrival, page: pageParam });
+    const { products, categories, brands, activeCategoryName } = await getData(searchParams);
 
-    // SEO Title
-    let pageTitle = "All Products";
-    if (category) pageTitle = `${category} Products`;
-    if (brand) pageTitle = `${brand} Vapes`;
-    if (isHot) pageTitle = "Hot Products";
-    if (isTopSelling) pageTitle = "Top Selling Products";
-    if (isNewArrival) pageTitle = "New Arrivals";
+    // Breadcrumb Schema
+    const breadcrumbLd = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+            {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "Home",
+                "item": "https://aladdinvapestoreindia.com"
+            },
+            {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "Products",
+                "item": "https://aladdinvapestoreindia.com/products"
+            },
+            ...(activeCategoryName ? [{
+                "@type": "ListItem",
+                "position": 3,
+                "name": activeCategoryName,
+                "item": `https://aladdinvapestoreindia.com/products?category=${searchParams.category}`
+            }] : [])
+        ]
+    };
 
     // Serialization for Client Components
     const serializedProducts = JSON.parse(JSON.stringify(products));
@@ -89,19 +153,19 @@ export default async function ProductsPage(props: {
 
     return (
         <div className="min-h-screen bg-gray-50 pb-20">
-            {/* Header / Title */}
+            <Script
+                id="breadcrumb-jsonld"
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }}
+            />
             {/* Header / Title Banner */}
             <div className="bg-white border-b border-gray-200 py-8 px-6 mb-8 sticky top-0 md:static z-20">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-center gap-6">
-
-
-                    {/* Search Bar */}
                     <ProductSearchHeader />
                 </div>
             </div>
 
             <div className="max-w-7xl mx-auto px-4 flex flex-col md:flex-row gap-8">
-
                 {/* Sidebar Filter */}
                 <aside className="w-full md:w-[280px] flex-none">
                     <Suspense fallback={<div>Loading filters...</div>}>
@@ -112,32 +176,7 @@ export default async function ProductsPage(props: {
                 {/* Product Grid */}
                 <div className="flex-1">
                     {products.length > 0 ? (
-                        <>
-                            <ProductGrid products={serializedProducts} />
-
-                            {/* Pagination Controls */}
-                            {totalPages > 1 && (
-                                <div className="flex justify-center items-center gap-4 mt-12">
-                                    <a
-                                        href={currentPage > 1 ? `?page=${currentPage - 1}${category ? `&category=${category}` : ''}${brand ? `&brand=${brand}` : ''}${query ? `&query=${query}` : ''}${isHot ? `&isHot=${isHot}` : ''}` : '#'}
-                                        className={`px-4 py-2 border rounded-full text-sm font-bold transition-colors ${currentPage > 1 ? 'bg-white hover:bg-gray-50 text-gray-900 border-gray-300' : 'bg-gray-100 text-gray-400 border-gray-100 cursor-not-allowed pointer-events-none'}`}
-                                    >
-                                        &larr; Previous
-                                    </a>
-
-                                    <span className="text-sm font-medium text-gray-500">
-                                        Page {currentPage} of {totalPages}
-                                    </span>
-
-                                    <a
-                                        href={currentPage < totalPages ? `?page=${currentPage + 1}${category ? `&category=${category}` : ''}${brand ? `&brand=${brand}` : ''}${query ? `&query=${query}` : ''}${isHot ? `&isHot=${isHot}` : ''}` : '#'}
-                                        className={`px-4 py-2 border rounded-full text-sm font-bold transition-colors ${currentPage < totalPages ? 'bg-white hover:bg-gray-50 text-gray-900 border-gray-300' : 'bg-gray-100 text-gray-400 border-gray-100 cursor-not-allowed pointer-events-none'}`}
-                                    >
-                                        Next &rarr;
-                                    </a>
-                                </div>
-                            )}
-                        </>
+                        <InfiniteProductGrid initialProducts={serializedProducts} searchParams={searchParams} />
                     ) : (
                         <div className="flex flex-col items-center justify-center py-20 bg-white rounded-2xl shadow-sm border border-gray-100 text-center">
                             <div className="text-6xl mb-4">🔍</div>
