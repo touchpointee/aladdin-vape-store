@@ -14,10 +14,12 @@ export default function SettingsPage() {
     });
 
     const [whatsappNumber, setWhatsappNumber] = useState('');
+    const [siteLogo, setSiteLogo] = useState('/logo.jpg');
 
     const [files, setFiles] = useState<{ [key: string]: File | null }>({
         banner1: null,
-        banner2: null
+        banner2: null,
+        siteLogo: null
     });
 
     useEffect(() => {
@@ -37,6 +39,9 @@ export default function SettingsPage() {
                 }
                 if (data.whatsapp_number) {
                     setWhatsappNumber(data.whatsapp_number);
+                }
+                if (data.site_logo) {
+                    setSiteLogo(data.site_logo);
                 }
             }
         } catch (error) {
@@ -67,6 +72,7 @@ export default function SettingsPage() {
 
         // Append General Settings
         formData.append('whatsapp_number', whatsappNumber);
+        if (files.siteLogo) formData.append('site_logo', files.siteLogo);
 
         // Append Banner 1
         if (files.banner1) formData.append('banner1_image', files.banner1);
@@ -91,7 +97,7 @@ export default function SettingsPage() {
             if (res.ok) {
                 alert('Settings Updated Successfully!');
                 fetchSettings(); // Refresh list to get consistent state
-                setFiles({ banner1: null, banner2: null });
+                setFiles({ banner1: null, banner2: null, siteLogo: null });
             } else {
                 alert('Failed to update settings');
             }
@@ -183,16 +189,38 @@ export default function SettingsPage() {
                 {/* General Settings Section */}
                 <div className="bg-white p-6 rounded-lg shadow-sm border border-gray-100 mb-8">
                     <h2 className="text-xl font-bold mb-4 text-gray-800 border-b pb-2">General Settings</h2>
-                    <div>
-                        <label className="block text-sm font-medium mb-1 text-gray-700">WhatsApp Number</label>
-                        <input
-                            type="text"
-                            className="w-full max-w-md border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
-                            placeholder="e.g. 971501234567"
-                            value={whatsappNumber}
-                            onChange={(e) => setWhatsappNumber(e.target.value)}
-                        />
-                        <p className="text-xs text-gray-500 mt-1">Enter number with country code, without '+' or spaces.</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div>
+                            <label className="block text-sm font-medium mb-1 text-gray-700">WhatsApp Number</label>
+                            <input
+                                type="text"
+                                className="w-full border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none"
+                                placeholder="e.g. 971501234567"
+                                value={whatsappNumber}
+                                onChange={(e) => setWhatsappNumber(e.target.value)}
+                            />
+                            <p className="text-xs text-gray-500 mt-1">Enter number with country code, without '+' or spaces.</p>
+                        </div>
+
+                        <div>
+                            <label className="block text-sm font-medium mb-1 text-gray-700">Site Logo</label>
+                            <div className="flex items-center gap-4">
+                                <div className="relative w-16 h-16 bg-gray-50 rounded border flex-shrink-0">
+                                    <Image
+                                        src={files.siteLogo ? URL.createObjectURL(files.siteLogo) : siteLogo}
+                                        alt="Logo Preview"
+                                        fill
+                                        className="object-contain p-1"
+                                    />
+                                </div>
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    onChange={(e) => handleFileChange(e, 'siteLogo')}
+                                    className="text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                                />
+                            </div>
+                        </div>
                     </div>
                 </div>
 

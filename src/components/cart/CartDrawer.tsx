@@ -118,10 +118,7 @@ export default function CartDrawer() {
                         <span className="text-lg font-bold text-gray-900">₹{subtotal().toFixed(2)}</span>
                     </div>
 
-                    <p className="text-xs text-gray-500">Congratulations , you've got free shipping!</p>
-                    <div className="h-1 w-full bg-green-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-green-500 w-full" />
-                    </div>
+
 
                     <div className="grid grid-cols-1 gap-3">
                         <Link href="/checkout" onClick={closeCart} className="block w-full">

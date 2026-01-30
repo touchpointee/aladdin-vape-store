@@ -23,11 +23,13 @@ export async function GET(req: NextRequest) {
         // Default behavior for the settings page: return all relevant settings
         const bannerSettings = await Settings.findOne({ key: 'home_banners' });
         const whatsappSettings = await Settings.findOne({ key: 'whatsapp_number' });
+        const logoSettings = await Settings.findOne({ key: 'site_logo' });
 
         return NextResponse.json({
             banner1: bannerSettings ? JSON.parse(bannerSettings.value).banner1 : null,
             banner2: bannerSettings ? JSON.parse(bannerSettings.value).banner2 : null,
             whatsapp_number: whatsappSettings ? whatsappSettings.value : '',
+            site_logo: logoSettings ? logoSettings.value : '/logo.jpg',
         });
 
     } catch (error) {
@@ -47,6 +49,22 @@ export async function POST(req: NextRequest) {
                 { value: formData.get('whatsapp_number') as string },
                 { upsert: true }
             );
+        }
+
+        // 1b. Handle Site Logo
+        if (formData.has('site_logo')) {
+            const logoFile = formData.get('site_logo') as File;
+            if (logoFile && logoFile.size > 0) {
+                const buffer = Buffer.from(await logoFile.arrayBuffer());
+                const fileName = `settings/logo-${Date.now()}-${logoFile.name}`;
+                const imageUrl = await uploadImage(buffer, fileName, logoFile.type);
+
+                await Settings.findOneAndUpdate(
+                    { key: 'site_logo' },
+                    { value: imageUrl },
+                    { upsert: true }
+                );
+            }
         }
 
         // 2. Handle Banner Settings (only if banner fields are present)

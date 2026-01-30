@@ -93,6 +93,22 @@ const PrintOrderReceipt: React.FC<PrintOrderReceiptProps> = ({ order }) => {
                     </div>
                 </div>
 
+                {/* Order Summary Section */}
+                <div className="border-t border-b py-2 mb-4 px-1 space-y-1">
+                    <div className="flex justify-between text-xs font-bold">
+                        <span>Items Subtotal:</span>
+                        <span>₹{order.products.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0)}</span>
+                    </div>
+                    <div className="flex justify-between text-xs font-bold">
+                        <span>Delivery Charge:</span>
+                        <span>₹100</span>
+                    </div>
+                    <div className="flex justify-between text-sm font-black pt-1 border-t border-dashed">
+                        <span>TOTAL AMOUNT:</span>
+                        <span>₹{order.totalPrice}</span>
+                    </div>
+                </div>
+
                 {/* Footer / Order Number */}
                 <div className="mt-auto pt-2 border-t text-xs font-bold flex justify-between">
                     <span>Order #{order._id.toString().slice(-8).toUpperCase()}</span>

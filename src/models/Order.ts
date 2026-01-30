@@ -19,7 +19,7 @@ export interface IOrder extends Document {
         zip: string;
     };
     items: IOrderItem[];
-    totalAmount: number;
+    totalPrice: number;
     paymentMethod: 'COD'; // Cash on Delivery only
     orderType: 'website' | 'whatsapp';
     status: 'pending' | 'confirmed' | 'shipped' | 'delivered' | 'cancelled';
@@ -47,7 +47,7 @@ const OrderSchema = new Schema<IOrder>(
                 image: { type: String, required: true },
             },
         ],
-        totalAmount: { type: Number, required: true },
+        totalPrice: { type: Number, required: true },
         paymentMethod: { type: String, default: 'COD' },
         orderType: { type: String, enum: ['website', 'whatsapp'], default: 'website' },
         status: {

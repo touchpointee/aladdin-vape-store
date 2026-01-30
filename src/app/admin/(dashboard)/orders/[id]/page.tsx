@@ -143,12 +143,21 @@ export default function AdminOrderDetailPage() {
                                         </div>
                                     ))}
                                 </div>
-                                <div className="mt-6 pt-4 border-t flex justify-between items-center">
-                                    <span className="font-semibold text-gray-600">Total Amount</span>
-                                    {/* Calculate total from items to fix display for old orders with wrong DB totals */}
-                                    <span className="text-2xl font-bold text-blue-600">
-                                        ₹{order.products.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0)}
-                                    </span>
+                                <div className="mt-6 pt-4 border-t space-y-2">
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-gray-600">Items Subtotal</span>
+                                        <span className="font-semibold text-gray-800">₹{order.products.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0)}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center text-sm">
+                                        <span className="text-gray-600">Delivery Charge</span>
+                                        <span className="font-semibold text-gray-800">₹100.00</span>
+                                    </div>
+                                    <div className="flex justify-between items-center pt-2 border-t mt-2">
+                                        <span className="font-bold text-gray-800">Total Amount</span>
+                                        <span className="text-2xl font-bold text-blue-600">
+                                            ₹{order.totalPrice}
+                                        </span>
+                                    </div>
                                 </div>
                             </div>
                         </div>

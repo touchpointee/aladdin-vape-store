@@ -29,7 +29,7 @@ export async function POST(req: NextRequest) {
         // Create order
         const order = await Order.create({
             ...body,
-            totalPrice: calculatedTotal, // Ensure server-side calculation is respected or validated
+            totalPrice: calculatedTotal + 100, // Add flat 100rs delivery fee
             status: 'Pending',
             paymentMode: 'COD'
         });

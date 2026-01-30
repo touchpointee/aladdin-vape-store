@@ -138,12 +138,11 @@ export default async function OrderDetailPage({ params }: { params: Promise<{ id
                         </div>
                         <div className="flex justify-between text-gray-500">
                             <span>Shipping</span>
-                            <span className="text-green-600">Free</span>
+                            <span className="text-gray-900 font-medium">₹100</span>
                         </div>
                         <div className="border-t pt-2 flex justify-between font-bold text-lg text-gray-900 mt-2">
                             <span>Total</span>
-                            {/* Calculate total from items to fix display for old orders with wrong DB totals */}
-                            <span>₹{order.products.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0)}</span>
+                            <span>₹{order.totalPrice}</span>
                         </div>
                     </div>
                     <div className="mt-3 bg-blue-50 text-blue-700 text-xs px-3 py-2 rounded font-semibold text-center uppercase">

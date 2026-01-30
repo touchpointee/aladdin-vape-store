@@ -7,6 +7,8 @@ import { useState, useEffect } from "react";
 import { ArrowLeft, CheckCircle, MapPin, Plus } from "lucide-react";
 import Link from "next/link";
 
+const DELIVERY_CHARGE = 100;
+
 export default function CheckoutPage() {
     const { items, subtotal, clearCart } = useCartStore();
     const { user, isLoggedIn } = useAuthStore();
@@ -123,7 +125,7 @@ export default function CheckoutPage() {
                     price: item.price,
                     originalPrice: item.originalPrice
                 })),
-                totalPrice: subtotal(),
+                totalPrice: subtotal() + DELIVERY_CHARGE,
                 paymentMode: 'COD'
             };
 
@@ -367,9 +369,19 @@ export default function CheckoutPage() {
                                 </div>
                             ))}
                         </div>
-                        <div className="border-t pt-3 flex justify-between items-center">
-                            <span className="text-base font-bold text-gray-900">Total</span>
-                            <span className="text-xl font-bold text-red-500">₹{subtotal().toFixed(2)}</span>
+                        <div className="border-t pt-2 space-y-1">
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="text-gray-600">Subtotal</span>
+                                <span className="font-bold text-gray-900">₹{subtotal().toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between items-center text-sm">
+                                <span className="text-gray-600">Delivery Charge</span>
+                                <span className="font-bold text-gray-900">₹{DELIVERY_CHARGE.toFixed(2)}</span>
+                            </div>
+                            <div className="flex justify-between items-center pt-2 border-t mt-2">
+                                <span className="text-base font-bold text-gray-900">Total</span>
+                                <span className="text-xl font-bold text-red-500">₹{(subtotal() + DELIVERY_CHARGE).toFixed(2)}</span>
+                            </div>
                         </div>
                     </div>
 

@@ -19,6 +19,7 @@ export default function Header({ categories = [] }: HeaderProps) {
     const { items: wishlistItems } = useWishlistStore();
     const [mounted, setMounted] = useState(false);
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+    const [siteLogo, setSiteLogo] = useState("/logo.jpg");
 
     // Search State
     const [searchQuery, setSearchQuery] = useState("");
@@ -52,7 +53,22 @@ export default function Header({ categories = [] }: HeaderProps) {
 
     useEffect(() => {
         setMounted(true);
+        fetchSettings();
     }, []);
+
+    const fetchSettings = async () => {
+        try {
+            const res = await fetch('/api/settings');
+            if (res.ok) {
+                const data = await res.json();
+                if (data.site_logo) {
+                    setSiteLogo(data.site_logo);
+                }
+            }
+        } catch (error) {
+            console.error("Failed to fetch settings:", error);
+        }
+    };
 
     // Prevent scrolling when menu is open
     useEffect(() => {
@@ -83,7 +99,7 @@ export default function Header({ categories = [] }: HeaderProps) {
                         <Link href="/" className="flex flex-col items-center group">
                             <div className="relative w-32 h-16 transform group-hover:scale-105 transition-transform duration-200">
                                 <Image
-                                    src="/logo.jpg"
+                                    src={siteLogo}
                                     alt="Aladdin Store"
                                     fill
                                     className="object-contain"

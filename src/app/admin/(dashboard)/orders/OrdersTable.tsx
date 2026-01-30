@@ -56,8 +56,7 @@ export default function OrdersTable({ initialOrders }: { initialOrders: any[] })
                                     </td>
                                     <td className="p-4 font-bold">
                                         <div className="flex flex-col">
-                                            {/* Calculate total from items to fix display for old orders with wrong DB totals */}
-                                            <span>₹{order.products?.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0)}</span>
+                                            <span>₹{order.totalPrice}</span>
                                             {(() => {
                                                 const currentTotal = order.products?.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
                                                 const originalTotal = order.products?.reduce((acc: number, item: any) => {
@@ -109,6 +108,6 @@ export default function OrdersTable({ initialOrders }: { initialOrders: any[] })
                     </div>
                 )}
             </div>
-        </div>
+        </div >
     );
 }
