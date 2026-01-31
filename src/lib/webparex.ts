@@ -29,7 +29,7 @@ export async function pushOrderToWebparex(order: IOrder, extraData: {
         consignee_city: order.customer.city,
         consignee_state: extraData.state,
         product_detail: order.products.map((item: any) => ({
-            name: item.product?.name || "Product",
+            name: "Alladin Store Products",
             sku_number: item.product?._id.toString(),
             quantity: item.quantity,
             discount: "",
