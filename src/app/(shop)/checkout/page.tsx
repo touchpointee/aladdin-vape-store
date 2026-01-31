@@ -21,9 +21,10 @@ export default function CheckoutPage() {
     const [paymentMethod, setPaymentMethod] = useState<'COD' | 'PREPAID'>('COD');
     const [utrNumber, setUtrNumber] = useState('');
     const [paymentQrCode, setPaymentQrCode] = useState('');
+    const [onlinePaymentEnabled, setOnlinePaymentEnabled] = useState(true);
     const [showUtrModal, setShowUtrModal] = useState(false);
 
-    // Fetch QR code from settings
+    // Fetch QR code and settings
     useEffect(() => {
         fetch('/api/settings?key=payment_qr_code')
             .then(res => res.json())
@@ -33,6 +34,19 @@ export default function CheckoutPage() {
                 }
             })
             .catch(err => console.error("Failed to fetch QR code", err));
+
+        fetch('/api/settings?key=payment_settings')
+            .then(res => res.json())
+            .then(data => {
+                if (data.value && data.value.online_enabled !== undefined) {
+                    setOnlinePaymentEnabled(data.value.online_enabled);
+                    // If online payment is disabled, ensure COD is selected
+                    if (!data.value.online_enabled) {
+                        setPaymentMethod('COD');
+                    }
+                }
+            })
+            .catch(err => console.error("Failed to fetch payment settings", err));
     }, []);
 
     // Sync prices on mount
@@ -428,16 +442,18 @@ export default function CheckoutPage() {
                             </div>
 
                             {/* Prepaid/Online Option */}
-                            <div
-                                onClick={() => setPaymentMethod('PREPAID')}
-                                className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${paymentMethod === 'PREPAID' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}
-                            >
-                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'PREPAID' ? 'border-green-500' : 'border-gray-300'}`}>
-                                    {paymentMethod === 'PREPAID' && <div className="w-3 h-3 rounded-full bg-green-500"></div>}
+                            {onlinePaymentEnabled && (
+                                <div
+                                    onClick={() => setPaymentMethod('PREPAID')}
+                                    className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${paymentMethod === 'PREPAID' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}
+                                >
+                                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'PREPAID' ? 'border-green-500' : 'border-gray-300'}`}>
+                                        {paymentMethod === 'PREPAID' && <div className="w-3 h-3 rounded-full bg-green-500"></div>}
+                                    </div>
+                                    <CreditCard size={20} className={paymentMethod === 'PREPAID' ? 'text-green-600' : 'text-gray-400'} />
+                                    <span className={`text-sm font-bold ${paymentMethod === 'PREPAID' ? 'text-gray-900' : 'text-gray-600'}`}>Pay Online (UPI)</span>
                                 </div>
-                                <CreditCard size={20} className={paymentMethod === 'PREPAID' ? 'text-green-600' : 'text-gray-400'} />
-                                <span className={`text-sm font-bold ${paymentMethod === 'PREPAID' ? 'text-gray-900' : 'text-gray-600'}`}>Pay Online (UPI)</span>
-                            </div>
+                            )}
                         </div>
 
                         {/* QR Code and UTR Input for Prepaid */}
@@ -532,8 +548,8 @@ export default function CheckoutPage() {
                                         onClick={() => setShowUtrModal(false)}
                                         disabled={utrNumber.length !== 12}
                                         className={`w-full py-3 rounded-lg font-bold transition ${utrNumber.length === 12
-                                                ? 'bg-green-600 hover:bg-green-700 text-white'
-                                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                            ? 'bg-green-600 hover:bg-green-700 text-white'
+                                            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
                                             }`}
                                     >
                                         {utrNumber.length === 12 ? '✓ Confirm UTR' : 'Enter 12-digit UTR'}

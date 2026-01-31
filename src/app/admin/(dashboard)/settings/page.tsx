@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Settings, Bell, Image as ImageIcon, MessageSquare, QrCode, Volume2, Save } from "lucide-react";
+import { Settings, Bell, Image as ImageIcon, MessageSquare, QrCode, Volume2, Save, CreditCard } from "lucide-react";
 
 export default function SettingsPage() {
     const [loading, setLoading] = useState(true);
@@ -19,6 +19,7 @@ export default function SettingsPage() {
     const [paymentQrCode, setPaymentQrCode] = useState('');
     const [notificationSoundEnabled, setNotificationSoundEnabled] = useState(true);
     const [notificationSoundUrl, setNotificationSoundUrl] = useState('https://assets.mixkit.co/active_storage/sfx/1013/1013-preview.mp3');
+    const [onlinePaymentEnabled, setOnlinePaymentEnabled] = useState(true);
 
     const [files, setFiles] = useState<{ [key: string]: File | null }>({
         banner1: null,
@@ -57,6 +58,9 @@ export default function SettingsPage() {
                 if (data.notification_sound_url) {
                     setNotificationSoundUrl(data.notification_sound_url);
                 }
+                if (data.online_payment_enabled !== undefined) {
+                    setOnlinePaymentEnabled(data.online_payment_enabled);
+                }
             }
         } catch (error) {
             console.error('Failed to load settings', error);
@@ -90,6 +94,7 @@ export default function SettingsPage() {
         if (files.paymentQrCode) formData.append('payment_qr_code', files.paymentQrCode);
         formData.append('notification_sound_enabled', String(notificationSoundEnabled));
         formData.append('notification_sound_url', notificationSoundUrl);
+        formData.append('online_payment_enabled', String(onlinePaymentEnabled));
 
         // Append Banner 1
         if (files.banner1) formData.append('banner1_image', files.banner1);
@@ -370,6 +375,39 @@ export default function SettingsPage() {
                                 </button>
                                 <p className="text-[10px] text-blue-600/60 mt-3 font-semibold uppercase tracking-wider">Sound Preview</p>
                             </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Online Payment Settings Section */}
+                <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <div className="bg-gray-50/50 px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                            <CreditCard size={20} className="text-gray-500" />
+                            <h2 className="text-lg font-bold text-gray-800">Checkout Options</h2>
+                        </div>
+                    </div>
+                    <div className="p-6">
+                        <div className="flex items-center justify-between bg-blue-50/50 p-6 rounded-2xl border border-blue-100 border-dashed">
+                            <div>
+                                <h3 className="text-sm font-bold text-gray-900 flex items-center gap-2">
+                                    <CreditCard size={18} className="text-blue-600" />
+                                    Enable Online Payment (UPI)
+                                </h3>
+                                <p className="text-xs text-gray-500 mt-1 max-w-sm">
+                                    When ON, customers can choose to pay via UPI by scanning your QR code. When OFF, only COD will be available.
+                                </p>
+                            </div>
+                            <label className="relative inline-flex items-center cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={onlinePaymentEnabled}
+                                    onChange={(e) => setOnlinePaymentEnabled(e.target.checked)}
+                                    className="sr-only peer"
+                                />
+                                <div className="w-14 h-7 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-blue-600"></div>
+                                <span className="ml-3 text-sm font-bold text-gray-700 w-8">{onlinePaymentEnabled ? 'ON' : 'OFF'}</span>
+                            </label>
                         </div>
                     </div>
                 </div>

@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
         const logoSettings = await Settings.findOne({ key: 'site_logo' });
         const qrCodeSettings = await Settings.findOne({ key: 'payment_qr_code' });
         const notificationSettings = await Settings.findOne({ key: 'notification_settings' });
+        const paymentSettings = await Settings.findOne({ key: 'payment_settings' });
 
         return NextResponse.json({
             banner1: bannerSettings ? JSON.parse(bannerSettings.value).banner1 : null,
@@ -35,6 +36,7 @@ export async function GET(req: NextRequest) {
             payment_qr_code: qrCodeSettings ? qrCodeSettings.value : '',
             notification_sound_enabled: notificationSettings ? JSON.parse(notificationSettings.value).enabled : true,
             notification_sound_url: notificationSettings ? JSON.parse(notificationSettings.value).url : 'https://assets.mixkit.co/active_storage/sfx/1013/1013-preview.mp3',
+            online_payment_enabled: paymentSettings ? JSON.parse(paymentSettings.value).online_enabled : true,
         });
 
     } catch (error) {
@@ -96,6 +98,16 @@ export async function POST(req: NextRequest) {
             await Settings.findOneAndUpdate(
                 { key: 'notification_settings' },
                 { value: JSON.stringify({ enabled, url }) },
+                { upsert: true }
+            );
+        }
+
+        // 1e. Handle Payment Settings (Online Toggle)
+        if (formData.has('online_payment_enabled')) {
+            const online_enabled = formData.get('online_payment_enabled') === 'true';
+            await Settings.findOneAndUpdate(
+                { key: 'payment_settings' },
+                { value: JSON.stringify({ online_enabled }) },
                 { upsert: true }
             );
         }
