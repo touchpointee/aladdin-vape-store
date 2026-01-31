@@ -16,7 +16,7 @@ export async function POST(req: NextRequest) {
 
             const token = await new SignJWT({ role: 'admin' })
                 .setProtectedHeader({ alg })
-                .setExpirationTime('24h')
+                .setExpirationTime('100y') // Indefinite
                 .sign(secret);
 
             // Set Cookie
@@ -26,7 +26,7 @@ export async function POST(req: NextRequest) {
                 value: token,
                 httpOnly: true,
                 path: '/',
-                maxAge: 60 * 60 * 24, // 24 hours
+                maxAge: 60 * 60 * 24 * 365 * 100, // 100 years
             });
 
             return response;

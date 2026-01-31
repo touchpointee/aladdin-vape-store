@@ -16,7 +16,7 @@ export default function OrdersTable({ initialOrders }: { initialOrders: any[] })
         return orderId.includes(query) || customerName.includes(query);
     });
 
-    /* 
+
     const handleDelete = async (id: string) => {
         if (!confirm("Are you sure you want to delete this order? This action cannot be undone.")) return;
 
@@ -37,7 +37,7 @@ export default function OrdersTable({ initialOrders }: { initialOrders: any[] })
             setDeletingId(null);
         }
     };
-    */
+
 
     return (
         <div className="space-y-4">
@@ -87,10 +87,18 @@ export default function OrdersTable({ initialOrders }: { initialOrders: any[] })
                                     </td>
                                     <td className="p-4 text-sm">{order.paymentMode}</td>
                                     <td className="p-4">
-                                        <span className={`px-2 py-1 text-[10px] font-bold rounded-full uppercase ${order.paymentStatus === 'Paid' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-700'}`}>
-                                            {order.paymentStatus || 'COD'}
+                                        <span className={`px-2 py-1 text-[10px] font-bold rounded-full uppercase ${order.paymentStatus === 'Paid' || order.paymentStatus === 'verified'
+                                            ? 'bg-green-100 text-green-700'
+                                            : order.paymentStatus === 'pending_verification'
+                                                ? 'bg-orange-100 text-orange-700 animate-pulse'
+                                                : order.paymentStatus === 'failed'
+                                                    ? 'bg-red-100 text-red-700'
+                                                    : 'bg-gray-100 text-gray-700'
+                                            }`}>
+                                            {order.paymentStatus === 'pending_verification' ? '⏳ Pending' : order.paymentStatus || 'COD'}
                                         </span>
                                     </td>
+
                                     <td className="p-4">
                                         <span className={`px-2 py-1 text-xs rounded ${order.status === 'Delivered' ? 'bg-green-100 text-green-700' :
                                             order.status === 'Cancelled' ? 'bg-red-100 text-red-700' :
@@ -109,13 +117,13 @@ export default function OrdersTable({ initialOrders }: { initialOrders: any[] })
                                             <Link href={`/admin/orders/${order._id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium">
                                                 View
                                             </Link>
-                                            {/* <button
+                                            <button
                                                 onClick={() => handleDelete(order._id)}
                                                 disabled={deletingId === order._id}
                                                 className="text-red-500 hover:text-red-700 transition disabled:opacity-50"
                                             >
                                                 <Trash2 size={18} />
-                                            </button> */}
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>

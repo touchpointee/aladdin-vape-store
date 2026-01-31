@@ -63,13 +63,15 @@ export interface IOrder extends Document {
         price: number;
     }[];
     totalPrice: number;
-    paymentMode: 'COD';
-    paymentStatus: 'COD' | 'Paid';
-    status: 'Pending' | 'Packed' | 'In Transit' | 'Delivered' | 'Cancelled';
+    paymentMode: 'COD' | 'PREPAID';
+    paymentStatus: 'COD' | 'Paid' | 'pending_verification' | 'verified' | 'failed';
+    utrNumber?: string;
+    status: 'Pending' | 'Pickup Pending' | 'Pickup Scheduled' | 'Picked Up' | 'In Transit' | 'Out For Delivery' | 'Delivered' | 'Cancelled';
     orderType: 'website' | 'whatsapp';
     shipmentStatus: 'Pending' | 'Created' | 'Failed';
     shipmentResponse?: any;
     shipmentOrderId?: string;
+    awbNumber?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -91,6 +93,13 @@ export interface IAddress extends Document {
     state: string;
     pincode: string;
     age: number;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
+export interface IPushSubscription extends Document {
+    subscription: any; // The full subscription object from browser
+    isAdmin: boolean;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -189,17 +198,19 @@ const OrderSchema = new Schema<IOrder>(
             },
         ],
         totalPrice: { type: Number, required: true },
-        paymentMode: { type: String, enum: ['COD'], default: 'COD' },
-        paymentStatus: { type: String, enum: ['COD', 'Paid'], default: 'COD' },
+        paymentMode: { type: String, enum: ['COD', 'PREPAID'], default: 'COD' },
+        paymentStatus: { type: String, enum: ['COD', 'Paid', 'pending_verification', 'verified', 'failed'], default: 'COD' },
+        utrNumber: { type: String, trim: true },
         status: {
             type: String,
-            enum: ['Pending', 'Packed', 'In Transit', 'Delivered', 'Cancelled'],
+            enum: ['Pending', 'Pickup Pending', 'Pickup Scheduled', 'Picked Up', 'In Transit', 'Out For Delivery', 'Delivered', 'Cancelled'],
             default: 'Pending',
         },
         orderType: { type: String, enum: ['website', 'whatsapp'], default: 'website' },
         shipmentStatus: { type: String, enum: ['Pending', 'Created', 'Failed'], default: 'Pending' },
         shipmentResponse: { type: Schema.Types.Mixed },
         shipmentOrderId: { type: String },
+        awbNumber: { type: String },
     },
     { timestamps: true }
 );
@@ -227,17 +238,26 @@ const AddressSchema = new Schema<IAddress>(
     { timestamps: true }
 );
 
+const PushSubscriptionSchema = new Schema<IPushSubscription>(
+    {
+        subscription: { type: Schema.Types.Mixed, required: true },
+        isAdmin: { type: Boolean, default: true },
+    },
+    { timestamps: true }
+);
+
 // --- Models ---
 // Check if models exist to prevent overwrite error during hot reload
 export const Category: Model<ICategory> = mongoose.models.Category || mongoose.model<ICategory>('Category', CategorySchema);
 export const Brand: Model<IBrand> = mongoose.models.Brand || mongoose.model<IBrand>('Brand', BrandSchema);
 export const Product: Model<IProduct> = mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema);
 
-// Force re-registration of Order if it doesn't have shipmentStatus or state in schema paths
+// Force re-registration of Order if schema doesn't have required fields
 if (mongoose.models.Order && (
     !mongoose.models.Order.schema.path('paymentStatus') ||
     !mongoose.models.Order.schema.path('shipmentStatus') ||
-    !mongoose.models.Order.schema.path('customer.state')
+    !mongoose.models.Order.schema.path('customer.state') ||
+    !mongoose.models.Order.schema.path('utrNumber')
 )) {
     delete mongoose.models.Order;
 }
@@ -249,3 +269,4 @@ export const Order: Model<IOrder> = mongoose.models.Order || mongoose.model<IOrd
 
 export const Settings: Model<ISettings> = mongoose.models.Settings || mongoose.model<ISettings>('Settings', SettingsSchema);
 export const Address: Model<IAddress> = mongoose.models.Address || mongoose.model<IAddress>('Address', AddressSchema);
+export const PushSubscription: Model<IPushSubscription> = mongoose.models.PushSubscription || mongoose.model<IPushSubscription>('PushSubscription', PushSubscriptionSchema);

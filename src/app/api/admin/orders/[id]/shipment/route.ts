@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import { Order } from '@/models/all';
-import { pushOrderToWebparex } from '@/lib/webparex';
+import { pushOrderToWebparex, trackOrder } from '@/lib/webparex';
 
 export async function POST(
     req: Request,
@@ -25,7 +25,7 @@ export async function POST(
         try {
             console.log("Pushing order to Webparex:", id, extraData);
             const result = await pushOrderToWebparex(order, extraData);
-            console.log("Webparex API Result:", result);
+            console.log("Webparex API Result:", JSON.stringify(result, null, 2));
 
             // Update order with shipment info
             order.shipmentStatus = result.result === "1" ? 'Created' : 'Failed';
@@ -33,6 +33,35 @@ export async function POST(
             if (result.data?.refrence_id) {
                 order.shipmentOrderId = result.data.refrence_id;
             }
+            // Store AWB number if available - check multiple possible fields
+            const awb = result.data?.awb_number || result.data?.awb || result.data?.tracking_number;
+            if (awb) {
+                order.awbNumber = awb;
+            }
+
+            // If shipment created successfully, set initial status and try tracking
+            if (result.result === "1") {
+                // Set initial status to Pickup Pending when shipment is created
+                order.status = 'Pickup Pending';
+
+                // Try to get tracking status if we have AWB
+                if (order.awbNumber) {
+                    try {
+                        const trackingResult = await trackOrder(order.awbNumber);
+                        console.log("Initial tracking result:", trackingResult);
+
+                        // Update order status if we got a mapped status
+                        if (trackingResult.mappedStatus) {
+                            order.status = trackingResult.mappedStatus;
+                        }
+                    } catch (trackError) {
+                        console.log("Initial tracking failed (non-critical):", trackError);
+                        // Non-critical: keep status as Pickup Pending
+                    }
+                }
+            }
+
+
             console.log("Saving order with shipment info...");
             await order.save();
             console.log("Order saved successfully");
@@ -46,7 +75,8 @@ export async function POST(
 
             return NextResponse.json({
                 message: 'Shipment created successfully',
-                data: result
+                data: result,
+                awbNumber: order.awbNumber
             });
 
         } catch (apiError: any) {

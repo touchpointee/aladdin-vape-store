@@ -33,15 +33,16 @@ export async function PATCH(
 
         const updateData: any = {};
         if (status) {
-            const validStatuses = ['Pending', 'Packed', 'In Transit', 'Delivered', 'Cancelled'];
+            const validStatuses = ['Pending', 'Pickup Pending', 'Pickup Scheduled', 'Picked Up', 'In Transit', 'Out For Delivery', 'Delivered', 'Cancelled'];
             if (!validStatuses.includes(status)) {
                 return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
             }
             updateData.status = status;
         }
 
+
         if (paymentStatus) {
-            const validPaymentStatuses = ['COD', 'Paid'];
+            const validPaymentStatuses = ['COD', 'Paid', 'pending_verification', 'verified', 'failed'];
             if (!validPaymentStatuses.includes(paymentStatus)) {
                 return NextResponse.json({ error: 'Invalid payment status' }, { status: 400 });
             }

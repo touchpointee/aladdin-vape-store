@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { ArrowLeft, Package, User, MapPin, Truck, CheckCircle, XCircle, Clock, Printer, CreditCard, Trash2 } from "lucide-react";
+import { ArrowLeft, Package, User, MapPin, Truck, CheckCircle, XCircle, Clock, Printer, CreditCard, Trash2, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { IOrder } from "@/models/all";
 import PrintOrderReceipt from "@/components/admin/PrintOrderReceipt";
@@ -25,6 +25,7 @@ export default function AdminOrderDetailPage() {
         width: 10,
         height: 10
     });
+    const [verifyUtr, setVerifyUtr] = useState('');
 
     useEffect(() => {
         fetchOrder();
@@ -69,10 +70,33 @@ export default function AdminOrderDetailPage() {
             if (!res.ok) throw new Error("Failed");
             const data = await res.json();
             setOrder(data);
+
+            // Auto-refresh tracking if applicable
+            if (data.awbNumber && data.shipmentStatus === 'Created' && data.status !== 'Cancelled' && data.status !== 'Delivered') {
+                refreshTracking(data._id);
+            }
         } catch (error) {
             console.error("Error fetching order", error);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const refreshTracking = async (orderId?: string) => {
+        const oid = orderId || id;
+        try {
+            const res = await fetch(`/api/admin/orders/${oid}/track`);
+            if (res.ok) {
+                // If it's an auto-refresh, we just update the order state silently
+                // fetchOrder will be called again or we can just update local state
+                const data = await res.json();
+                if (data.currentStatus) {
+                    // Update order locally to avoid extra fetch if possible
+                    setOrder((prev: any) => ({ ...prev, status: data.currentStatus }));
+                }
+            }
+        } catch (err) {
+            console.error('Auto-refresh tracking failed', err);
         }
     };
 
@@ -295,7 +319,111 @@ export default function AdminOrderDetailPage() {
                             {/* Payment Status Actions */}
                             <div className="no-print bg-white rounded-lg shadow-sm border p-6">
                                 <h2 className="font-bold text-gray-800 mb-4">Payment Status</h2>
+
+                                {/* UTR Display for Prepaid Orders */}
+                                {order.paymentMode === 'PREPAID' && order.utrNumber && (
+                                    <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                        <div className="flex items-center justify-between mb-1">
+                                            <span className="text-xs font-bold text-amber-700 uppercase">UTR Number</span>
+                                            <button
+                                                onClick={() => {
+                                                    navigator.clipboard.writeText(order.utrNumber);
+                                                    alert('UTR copied to clipboard!');
+                                                }}
+                                                className="text-xs bg-amber-100 hover:bg-amber-200 text-amber-800 px-2 py-1 rounded font-bold flex items-center gap-1"
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="14" x="8" y="8" rx="2" ry="2" /><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" /></svg>
+                                                Copy
+                                            </button>
+                                        </div>
+                                        <p className="font-mono text-lg font-bold text-amber-900 break-all">{order.utrNumber}</p>
+                                        <p className="text-[10px] text-amber-600 mt-1">Verify this UTR in your payment app before approving.</p>
+                                    </div>
+                                )}
+
+                                {/* Pending Verification Alert */}
+                                {order.paymentStatus === 'pending_verification' && (
+                                    <div className="mb-4 p-3 bg-orange-50 border border-orange-300 rounded-lg">
+                                        <p className="text-sm font-bold text-orange-700 flex items-center gap-2">
+                                            <Clock size={16} /> Pending Payment Verification
+                                        </p>
+                                        <p className="text-xs text-orange-600 mt-1">Customer has submitted UTR. Please verify the payment in your bank/UPI app.</p>
+                                    </div>
+                                )}
+
+                                {/* UTR Verification Box */}
+                                {order.paymentMode === 'PREPAID' && order.paymentStatus === 'pending_verification' && order.utrNumber && (
+                                    <div className="mb-4 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                                        <label className="block text-xs font-bold text-gray-600 uppercase mb-2">
+                                            🔍 Paste UTR from your payment app to verify
+                                        </label>
+                                        <input
+                                            type="text"
+                                            value={verifyUtr}
+                                            onChange={(e) => setVerifyUtr(e.target.value.replace(/\D/g, '').slice(0, 12))}
+                                            className="w-full border-2 border-gray-300 rounded-lg p-3 text-lg font-mono tracking-wider focus:border-blue-500 outline-none text-center"
+                                            placeholder="Paste 12-digit UTR here"
+                                            maxLength={12}
+                                        />
+                                        {verifyUtr.length === 12 && (
+                                            <div className={`mt-3 p-3 rounded-lg text-center font-bold ${verifyUtr === order.utrNumber
+                                                ? 'bg-green-100 text-green-700 border border-green-300'
+                                                : 'bg-red-100 text-red-700 border border-red-300'
+                                                }`}>
+                                                {verifyUtr === order.utrNumber ? (
+                                                    <span className="flex items-center justify-center gap-2">
+                                                        <CheckCircle size={18} /> UTR Matched! Payment is valid.
+                                                    </span>
+                                                ) : (
+                                                    <span className="flex items-center justify-center gap-2">
+                                                        <XCircle size={18} /> UTR does NOT match! Be careful.
+                                                    </span>
+                                                )}
+                                            </div>
+                                        )}
+                                        <p className="text-[10px] text-gray-500 mt-2 text-center">
+                                            Copy the UTR from GPay/PhonePe/Paytm transaction details and paste here
+                                        </p>
+                                    </div>
+                                )}
+
                                 <div className="space-y-4">
+                                    {/* Verification Buttons for Prepaid */}
+                                    {order.paymentMode === 'PREPAID' && order.paymentStatus === 'pending_verification' && (
+                                        <div className="flex gap-2 mb-3">
+                                            <button
+                                                onClick={() => handlePaymentUpdate('Paid')}
+                                                disabled={updating}
+                                                className="flex-1 flex items-center justify-center gap-2 p-3 rounded-lg bg-green-600 hover:bg-green-700 text-white font-bold text-sm transition disabled:opacity-50"
+                                            >
+                                                <CheckCircle size={16} /> Verify Payment
+                                            </button>
+                                            <button
+                                                onClick={() => handlePaymentUpdate('failed')}
+                                                disabled={updating}
+                                                className="flex-1 flex items-center justify-center gap-2 p-3 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 font-bold text-sm border border-red-200 transition disabled:opacity-50"
+                                            >
+                                                <XCircle size={16} /> Reject
+                                            </button>
+                                        </div>
+                                    )}
+
+                                    {/* Status Display for Paid (Verified Prepaid) */}
+                                    {order.paymentMode === 'PREPAID' && order.paymentStatus === 'Paid' && (
+                                        <div className="p-3 bg-green-50 border border-green-200 rounded-lg mb-3">
+                                            <p className="text-sm font-bold text-green-700 flex items-center gap-2">
+                                                <CheckCircle size={16} /> Payment Verified & Paid
+                                            </p>
+                                        </div>
+                                    )}
+                                    {order.paymentStatus === 'failed' && (
+                                        <div className="p-3 bg-red-50 border border-red-200 rounded-lg mb-3">
+                                            <p className="text-sm font-bold text-red-700 flex items-center gap-2">
+                                                <XCircle size={16} /> Payment Rejected
+                                            </p>
+                                        </div>
+                                    )}
+
                                     <div className="flex gap-2">
                                         <button
                                             onClick={() => handlePaymentUpdate('Paid')}
@@ -325,52 +453,106 @@ export default function AdminOrderDetailPage() {
                                 </div>
                             </div>
 
-                            {/* Status Actions */}
+
+                            {/* Fulfillment Status - Tracking Based */}
                             <div className="no-print bg-white rounded-lg shadow-sm border p-6">
-                                <h2 className="font-bold text-gray-800 mb-4">Update Fulfillment Status</h2>
-                                <div className="space-y-2">
-                                    <button
-                                        onClick={() => handleStatusUpdate('Pending')}
-                                        disabled={updating || order.status === 'Pending'}
-                                        className="w-full flex items-center justify-between p-3 rounded border hover:bg-gray-50 disabled:opacity-50"
-                                    >
-                                        <span className="flex items-center gap-2"><Clock size={16} className="text-yellow-500" /> Pending</span>
-                                        {order.status === 'Pending' && <CheckCircle size={16} className="text-green-500" />}
-                                    </button>
-                                    <button
-                                        onClick={() => handleStatusUpdate('Packed')}
-                                        disabled={updating || order.status === 'Packed'}
-                                        className="w-full flex items-center justify-between p-3 rounded border hover:bg-gray-50 disabled:opacity-50"
-                                    >
-                                        <span className="flex items-center gap-2"><Package size={16} className="text-blue-500" /> Packed</span>
-                                        {order.status === 'Packed' && <CheckCircle size={16} className="text-green-500" />}
-                                    </button>
-                                    <button
-                                        onClick={() => handleStatusUpdate('In Transit')}
-                                        disabled={updating || order.status === 'In Transit'}
-                                        className="w-full flex items-center justify-between p-3 rounded border hover:bg-gray-50 disabled:opacity-50"
-                                    >
-                                        <span className="flex items-center gap-2"><Truck size={16} className="text-purple-500" /> In Transit</span>
-                                        {order.status === 'In Transit' && <CheckCircle size={16} className="text-green-500" />}
-                                    </button>
-                                    <button
-                                        onClick={() => handleStatusUpdate('Delivered')}
-                                        disabled={updating || order.status === 'Delivered'}
-                                        className="w-full flex items-center justify-between p-3 rounded border hover:bg-gray-50 disabled:opacity-50"
-                                    >
-                                        <span className="flex items-center gap-2"><CheckCircle size={16} className="text-green-500" /> Delivered</span>
-                                        {order.status === 'Delivered' && <CheckCircle size={16} className="text-green-500" />}
-                                    </button>
-                                    <button
-                                        onClick={() => handleStatusUpdate('Cancelled')}
-                                        disabled={updating || order.status === 'Cancelled'}
-                                        className="w-full flex items-center justify-between p-3 rounded border hover:bg-gray-50 disabled:opacity-50"
-                                    >
-                                        <span className="flex items-center gap-2"><XCircle size={16} className="text-red-500" /> Cancelled</span>
-                                        {order.status === 'Cancelled' && <CheckCircle size={16} className="text-green-500" />}
-                                    </button>
+                                <h2 className="font-bold text-gray-800 mb-4">Fulfillment Status</h2>
+
+                                {/* Current Status Display */}
+                                <div className="mb-4 p-4 bg-gray-50 rounded-lg">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <span className="text-xs font-bold text-gray-500 uppercase">Current Status</span>
+                                        <span className={`px-3 py-1 text-xs font-bold rounded-full ${order.status === 'Delivered' ? 'bg-green-100 text-green-700' :
+                                            order.status === 'Cancelled' ? 'bg-red-100 text-red-700' :
+                                                order.status === 'In Transit' || order.status === 'Out For Delivery' ? 'bg-purple-100 text-purple-700' :
+                                                    order.status === 'Picked Up' ? 'bg-blue-100 text-blue-700' :
+                                                        order.status === 'Pickup Pending' || order.status === 'Pickup Scheduled' ? 'bg-yellow-100 text-yellow-700' :
+                                                            'bg-gray-100 text-gray-700'
+                                            }`}>
+                                            {order.status}
+                                        </span>
+                                    </div>
+                                    {order.awbNumber && (
+                                        <div className="flex items-center justify-between text-sm mt-2 pt-2 border-t border-gray-200">
+                                            <span className="text-gray-600">AWB Number:</span>
+                                            <span className="font-mono font-bold text-gray-800">{order.awbNumber}</span>
+                                        </div>
+                                    )}
+                                </div>
+
+                                <div className="space-y-3">
+                                    {/* Refresh Tracking Button - Show if shipment created */}
+                                    {order.shipmentStatus === 'Created' && order.status !== 'Cancelled' && order.status !== 'Delivered' && (
+                                        <>
+                                            {order.awbNumber ? (
+                                                <button
+                                                    onClick={async () => {
+                                                        setUpdating(true);
+                                                        await refreshTracking();
+                                                        setUpdating(false);
+                                                        alert("Tracking status updated!");
+                                                    }}
+                                                    disabled={updating}
+                                                    className="w-full flex items-center justify-center gap-2 p-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold transition disabled:opacity-50"
+                                                >
+                                                    <RefreshCw size={16} className={updating ? 'animate-spin' : ''} />
+                                                    Refresh Tracking Status
+                                                </button>
+                                            ) : (
+                                                // No AWB yet - show sync button to set to Pickup Pending
+                                                <button
+                                                    onClick={() => handleStatusUpdate('Pickup Pending')}
+                                                    disabled={updating || order.status === 'Pickup Pending'}
+                                                    className="w-full flex items-center justify-center gap-2 p-3 rounded-lg bg-yellow-500 hover:bg-yellow-600 text-white font-bold transition disabled:opacity-50"
+                                                >
+                                                    <Package size={16} />
+                                                    {order.status === 'Pickup Pending' ? 'Status: Pickup Pending' : 'Sync to Pickup Pending'}
+                                                </button>
+                                            )}
+                                        </>
+                                    )}
+
+
+                                    {/* Cancel Order Button - Always available unless already cancelled/delivered */}
+                                    {order.status !== 'Cancelled' && order.status !== 'Delivered' && (
+                                        <button
+                                            onClick={() => handleStatusUpdate('Cancelled')}
+                                            disabled={updating}
+                                            className="w-full flex items-center justify-center gap-2 p-3 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 font-bold border border-red-200 transition disabled:opacity-50"
+                                        >
+                                            <XCircle size={16} /> Cancel Order
+                                        </button>
+                                    )}
+
+                                    {/* Show cancelled status */}
+                                    {order.status === 'Cancelled' && (
+                                        <div className="p-3 bg-red-50 border border-red-200 rounded-lg text-center">
+                                            <p className="text-sm font-bold text-red-700 flex items-center justify-center gap-2">
+                                                <XCircle size={16} /> Order Cancelled
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {/* Show delivered status */}
+                                    {order.status === 'Delivered' && (
+                                        <div className="p-3 bg-green-50 border border-green-200 rounded-lg text-center">
+                                            <p className="text-sm font-bold text-green-700 flex items-center justify-center gap-2">
+                                                <CheckCircle size={16} /> Order Delivered
+                                            </p>
+                                        </div>
+                                    )}
+
+                                    {/* Info message if no shipment yet */}
+                                    {order.shipmentStatus !== 'Created' && order.status !== 'Cancelled' && (
+                                        <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-center">
+                                            <p className="text-xs text-yellow-700">
+                                                Create shipment to enable tracking updates
+                                            </p>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
+
 
                             {/* Shipment Actions */}
                             <div className="no-print bg-white rounded-lg shadow-sm border p-6">

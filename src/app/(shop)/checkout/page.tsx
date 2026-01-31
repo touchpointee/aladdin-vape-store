@@ -4,8 +4,9 @@ import { useCartStore } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { ArrowLeft, CheckCircle, MapPin, Plus } from "lucide-react";
+import { ArrowLeft, CheckCircle, MapPin, Plus, CreditCard, Banknote, Copy, Check } from "lucide-react";
 import Link from "next/link";
+import Image from "next/image";
 
 const DELIVERY_CHARGE = 100;
 
@@ -15,6 +16,24 @@ export default function CheckoutPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
     const [success, setSuccess] = useState(false);
+
+    // Payment method state
+    const [paymentMethod, setPaymentMethod] = useState<'COD' | 'PREPAID'>('COD');
+    const [utrNumber, setUtrNumber] = useState('');
+    const [paymentQrCode, setPaymentQrCode] = useState('');
+    const [showUtrModal, setShowUtrModal] = useState(false);
+
+    // Fetch QR code from settings
+    useEffect(() => {
+        fetch('/api/settings?key=payment_qr_code')
+            .then(res => res.json())
+            .then(data => {
+                if (data.value) {
+                    setPaymentQrCode(data.value);
+                }
+            })
+            .catch(err => console.error("Failed to fetch QR code", err));
+    }, []);
 
     // Sync prices on mount
     useEffect(() => {
@@ -101,6 +120,17 @@ export default function CheckoutPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+
+        // Validate UTR for prepaid
+        if (paymentMethod === 'PREPAID') {
+            if (!utrNumber.trim() || utrNumber.trim().length !== 12) {
+                alert('Please enter a valid 12-digit UTR number');
+                setShowUtrModal(true);
+                return;
+            }
+        }
+
+
         setLoading(true);
 
         try {
@@ -142,7 +172,7 @@ export default function CheckoutPage() {
             }
 
             // 1. Create Order
-            const orderData = {
+            const orderData: any = {
                 customer: normalizedData,
                 products: items.map(item => ({
                     product: item.id,
@@ -150,8 +180,13 @@ export default function CheckoutPage() {
                     price: item.price
                 })),
                 totalPrice: subtotal() + DELIVERY_CHARGE,
-                paymentMode: 'COD'
+                paymentMode: paymentMethod
             };
+
+            // Add UTR for prepaid orders
+            if (paymentMethod === 'PREPAID') {
+                orderData.utrNumber = utrNumber.trim();
+            }
 
             const res = await fetch('/api/orders', {
                 method: 'POST',
@@ -180,7 +215,11 @@ export default function CheckoutPage() {
                     <CheckCircle size={40} className="text-green-500" />
                 </div>
                 <h1 className="text-2xl font-bold text-gray-900 mb-2">Order Placed Successfully!</h1>
-                <p className="text-gray-500 mb-8">Thank you for your purchase. We will ship your order soon.</p>
+                <p className="text-gray-500 mb-8">
+                    {paymentMethod === 'PREPAID'
+                        ? 'Your payment is pending verification. We will confirm your order shortly.'
+                        : 'Thank you for your purchase. We will ship your order soon.'}
+                </p>
                 <Link href="/" className="bg-blue-500 text-white px-8 py-3 rounded-full font-bold uppercase hover:bg-blue-600">
                     Continue Shopping
                 </Link>
@@ -372,13 +411,137 @@ export default function CheckoutPage() {
                         </div>
                     )}
 
-                    {/* Payment Method */}
+                    {/* Payment Method Selection */}
                     <div className="bg-white p-4 rounded-lg shadow-sm">
                         <h2 className="text-sm font-bold text-gray-900 uppercase mb-4">Payment Method</h2>
-                        <div className="flex items-center gap-3 p-3 border border-blue-500 bg-blue-50 rounded">
-                            <div className="w-4 h-4 rounded-full border-4 border-blue-500"></div>
-                            <span className="text-sm font-bold text-gray-900">Cash on Delivery (COD)</span>
+                        <div className="space-y-3">
+                            {/* COD Option */}
+                            <div
+                                onClick={() => setPaymentMethod('COD')}
+                                className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${paymentMethod === 'COD' ? 'border-blue-500 bg-blue-50' : 'border-gray-200 hover:border-gray-300'}`}
+                            >
+                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'COD' ? 'border-blue-500' : 'border-gray-300'}`}>
+                                    {paymentMethod === 'COD' && <div className="w-3 h-3 rounded-full bg-blue-500"></div>}
+                                </div>
+                                <Banknote size={20} className={paymentMethod === 'COD' ? 'text-blue-600' : 'text-gray-400'} />
+                                <span className={`text-sm font-bold ${paymentMethod === 'COD' ? 'text-gray-900' : 'text-gray-600'}`}>Cash on Delivery (COD)</span>
+                            </div>
+
+                            {/* Prepaid/Online Option */}
+                            <div
+                                onClick={() => setPaymentMethod('PREPAID')}
+                                className={`flex items-center gap-3 p-3 border rounded-lg cursor-pointer transition-colors ${paymentMethod === 'PREPAID' ? 'border-green-500 bg-green-50' : 'border-gray-200 hover:border-gray-300'}`}
+                            >
+                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${paymentMethod === 'PREPAID' ? 'border-green-500' : 'border-gray-300'}`}>
+                                    {paymentMethod === 'PREPAID' && <div className="w-3 h-3 rounded-full bg-green-500"></div>}
+                                </div>
+                                <CreditCard size={20} className={paymentMethod === 'PREPAID' ? 'text-green-600' : 'text-gray-400'} />
+                                <span className={`text-sm font-bold ${paymentMethod === 'PREPAID' ? 'text-gray-900' : 'text-gray-600'}`}>Pay Online (UPI)</span>
+                            </div>
                         </div>
+
+                        {/* QR Code and UTR Input for Prepaid */}
+                        {paymentMethod === 'PREPAID' && (
+                            <div className="mt-4 pt-4 border-t border-gray-100">
+                                <div className="text-center mb-4">
+                                    <p className="text-sm text-gray-600 mb-3">Scan QR code to pay ₹{(subtotal() + DELIVERY_CHARGE).toFixed(2)}</p>
+                                    {paymentQrCode ? (
+                                        <div className="relative w-48 h-48 mx-auto bg-white border-2 border-gray-200 rounded-lg overflow-hidden">
+                                            <Image
+                                                src={paymentQrCode}
+                                                alt="Payment QR Code"
+                                                fill
+                                                className="object-contain p-2"
+                                            />
+                                        </div>
+                                    ) : (
+                                        <div className="w-48 h-48 mx-auto bg-gray-100 rounded-lg flex items-center justify-center text-gray-400 text-sm">
+                                            QR Code not available
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* I've Paid Button */}
+                                <button
+                                    type="button"
+                                    onClick={() => setShowUtrModal(true)}
+                                    className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition"
+                                >
+                                    <CheckCircle size={20} />
+                                    I've Paid - Enter UTR
+                                </button>
+
+                                {utrNumber.length === 12 && (
+                                    <div className="mt-3 bg-green-50 border border-green-200 rounded-lg p-2 text-center">
+                                        <p className="text-sm text-green-700 font-bold">✓ UTR: {utrNumber}</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+
+                        {/* UTR Popup Modal */}
+                        {showUtrModal && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                                {/* Backdrop */}
+                                <div
+                                    className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+                                    onClick={() => setShowUtrModal(false)}
+                                ></div>
+
+                                {/* Modal Content */}
+                                <div className="relative bg-white rounded-xl shadow-2xl w-full max-w-md p-6 space-y-4 animate-in fade-in zoom-in duration-200">
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-lg font-bold text-gray-900">Enter Payment Details</h3>
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowUtrModal(false)}
+                                            className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-gray-600 transition"
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+
+                                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                                        <p className="text-sm font-bold text-blue-800 mb-2">📱 Where to find UTR Number:</p>
+                                        <ul className="text-xs text-blue-700 space-y-1.5">
+                                            <li>• <strong>Google Pay:</strong> Payment history → Select transaction → "UPI transaction ID"</li>
+                                            <li>• <strong>PhonePe:</strong> History → Select transaction → "Transaction ID"</li>
+                                            <li>• <strong>Paytm:</strong> Passbook → Transaction → "UTR/Reference ID"</li>
+                                            <li>• <strong>Bank SMS:</strong> Check the 12-digit number in payment confirmation SMS</li>
+                                        </ul>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-600 uppercase mb-2">UTR / Transaction ID (12 digits)</label>
+                                        <input
+                                            type="text"
+                                            value={utrNumber}
+                                            onChange={(e) => setUtrNumber(e.target.value.replace(/\D/g, '').slice(0, 12))}
+                                            className="w-full border-2 border-gray-300 rounded-lg p-4 text-xl font-mono tracking-widest focus:border-green-500 outline-none text-center"
+                                            placeholder="000000000000"
+                                            maxLength={12}
+                                            autoFocus
+                                        />
+                                        <p className="text-xs text-gray-500 mt-2 text-center">
+                                            {utrNumber.length}/12 digits entered
+                                        </p>
+                                    </div>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowUtrModal(false)}
+                                        disabled={utrNumber.length !== 12}
+                                        className={`w-full py-3 rounded-lg font-bold transition ${utrNumber.length === 12
+                                                ? 'bg-green-600 hover:bg-green-700 text-white'
+                                                : 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                                            }`}
+                                    >
+                                        {utrNumber.length === 12 ? '✓ Confirm UTR' : 'Enter 12-digit UTR'}
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
                     </div>
 
                     {/* Order Summary */}
@@ -426,12 +589,16 @@ export default function CheckoutPage() {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full bg-blue-500 text-white font-bold uppercase py-4 rounded shadow-lg hover:bg-blue-600 disabled:opacity-50"
+                        className={`w-full font-bold uppercase py-4 rounded shadow-lg disabled:opacity-50 ${paymentMethod === 'PREPAID'
+                            ? 'bg-green-500 text-white hover:bg-green-600'
+                            : 'bg-blue-500 text-white hover:bg-blue-600'
+                            }`}
                     >
-                        {loading ? 'Processing...' : 'Confirm Order'}
+                        {loading ? 'Processing...' : paymentMethod === 'PREPAID' ? 'Submit Order for Verification' : 'Confirm Order'}
                     </button>
                 </form>
             </div >
         </div >
     );
 }
+

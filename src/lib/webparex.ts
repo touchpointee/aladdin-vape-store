@@ -104,3 +104,59 @@ export async function getWarehouses() {
 
     return data;
 }
+
+// Map courier status - now returns exact courier status
+function mapCourierStatus(courierStatus: string): string | null {
+    const validStatuses = [
+        'Pickup Pending',
+        'Pickup Scheduled',
+        'Picked Up',
+        'In Transit',
+        'Out For Delivery',
+        'Delivered'
+    ];
+    return validStatuses.includes(courierStatus) ? courierStatus : null;
+}
+
+
+export async function trackOrder(awbNumber: string) {
+    const publicKey = process.env.WEBPAREX_PUBLIC_KEY;
+    const privateKey = process.env.WEBPAREX_PRIVATE_KEY;
+
+    if (!publicKey || !privateKey) {
+        throw new Error("Webparex API keys are not configured");
+    }
+
+    const response = await fetch(`https://shipping-api.com/app/api/v1/track-order?awb_number=${awbNumber}`, {
+        method: "GET",
+        headers: {
+            "public-key": publicKey,
+            "private-key": privateKey
+        }
+    });
+
+    let data;
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+        data = await response.json();
+    } else {
+        const text = await response.text();
+        throw new Error(`Unexpected non-JSON response from Webparex: ${text.substring(0, 200)}`);
+    }
+
+    if (!response.ok || data.result !== "1") {
+        throw new Error(data.message || `Webparex tracking API error (${response.status})`);
+    }
+
+    // Map courier status to our status
+    const mappedStatus = mapCourierStatus(data.data?.current_status);
+
+    return {
+        ...data,
+        mappedStatus,
+        awbNumber: data.data?.awb_number,
+        currentStatus: data.data?.current_status,
+        expectedDelivery: data.data?.expected_delivery_date,
+        courier: data.data?.courier
+    };
+}

@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import { Order, Product } from '@/models/all';
+import UTR from '@/models/UTR';
+import { sendPushNotificationToAdmins } from '@/lib/push';
 
 export async function POST(req: NextRequest) {
     try {
         await connectDB();
         const body = await req.json();
-        const { products } = body;
+        const { products, paymentMode, utrNumber } = body;
 
         // Validate stock and calculate total price on server side
         let calculatedTotal = 0;
@@ -25,13 +27,42 @@ export async function POST(req: NextRequest) {
             calculatedTotal += effectivePrice * item.quantity;
         }
 
+        // Handle prepaid payment with UTR validation
+        let orderPaymentStatus = 'COD';
+        let orderPaymentMode = 'COD';
+
+        if (paymentMode === 'PREPAID') {
+            if (!utrNumber || utrNumber.trim().length < 6) {
+                return NextResponse.json({ error: 'Valid UTR number is required for prepaid payment' }, { status: 400 });
+            }
+
+            // Check if UTR already exists (duplicate prevention)
+            const existingUTR = await UTR.findOne({ utr: utrNumber.trim() });
+            if (existingUTR) {
+                return NextResponse.json({ error: 'This UTR has already been used. Please enter a valid UTR.' }, { status: 400 });
+            }
+
+            orderPaymentStatus = 'pending_verification';
+            orderPaymentMode = 'PREPAID';
+        }
+
         // Create order
         const order = await Order.create({
             ...body,
             totalPrice: calculatedTotal + 100, // Add flat 100rs delivery fee
             status: 'Pending',
-            paymentMode: 'COD'
+            paymentMode: orderPaymentMode,
+            paymentStatus: orderPaymentStatus,
+            utrNumber: paymentMode === 'PREPAID' ? utrNumber.trim() : undefined
         });
+
+        // Save UTR to prevent reuse (only for prepaid)
+        if (paymentMode === 'PREPAID') {
+            await UTR.create({
+                utr: utrNumber.trim(),
+                orderId: order._id
+            });
+        }
 
         // Reduce stock
         for (const item of products) {
@@ -39,6 +70,13 @@ export async function POST(req: NextRequest) {
                 $inc: { stock: -item.quantity }
             });
         }
+
+        // Trigger background push notifications for admins
+        sendPushNotificationToAdmins({
+            title: '🎉 New Order Received!',
+            body: `Order from ${body.customer.name} for ₹${calculatedTotal + 100}`,
+            url: '/admin/orders' // This will open the admin orders page
+        }).catch(err => console.error('Delayed push error:', err));
 
         return NextResponse.json(order, { status: 201 });
     } catch (error: any) {
@@ -56,14 +94,10 @@ export async function GET(req: NextRequest) {
         query['customer.phone'] = phone;
     } else {
         // Security: Don't allow listing all orders without admin access or specific phone
-        // Or if this is for admin usage, it should check auth. 
-        // For this simple task, we'll return empty if no phone is provided for the "Shop" side API.
-        // Assuming this endpoint is shared? 
-        // Wait, admin API is different (/api/admin/orders). This is /api/orders.
-        // So public API should NOT return all orders.
         return NextResponse.json([]);
     }
 
     const orders = await Order.find(query).populate('products.product').sort({ createdAt: -1 });
     return NextResponse.json(orders);
 }
+

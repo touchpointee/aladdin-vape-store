@@ -24,12 +24,17 @@ export async function GET(req: NextRequest) {
         const bannerSettings = await Settings.findOne({ key: 'home_banners' });
         const whatsappSettings = await Settings.findOne({ key: 'whatsapp_number' });
         const logoSettings = await Settings.findOne({ key: 'site_logo' });
+        const qrCodeSettings = await Settings.findOne({ key: 'payment_qr_code' });
+        const notificationSettings = await Settings.findOne({ key: 'notification_settings' });
 
         return NextResponse.json({
             banner1: bannerSettings ? JSON.parse(bannerSettings.value).banner1 : null,
             banner2: bannerSettings ? JSON.parse(bannerSettings.value).banner2 : null,
             whatsapp_number: whatsappSettings ? whatsappSettings.value : '',
             site_logo: logoSettings ? logoSettings.value : '/logo.jpg',
+            payment_qr_code: qrCodeSettings ? qrCodeSettings.value : '',
+            notification_sound_enabled: notificationSettings ? JSON.parse(notificationSettings.value).enabled : true,
+            notification_sound_url: notificationSettings ? JSON.parse(notificationSettings.value).url : 'https://assets.mixkit.co/active_storage/sfx/1013/1013-preview.mp3',
         });
 
     } catch (error) {
@@ -65,6 +70,34 @@ export async function POST(req: NextRequest) {
                     { upsert: true }
                 );
             }
+        }
+
+        // 1c. Handle Payment QR Code
+        if (formData.has('payment_qr_code')) {
+            const qrFile = formData.get('payment_qr_code') as File;
+            if (qrFile && qrFile.size > 0) {
+                const buffer = Buffer.from(await qrFile.arrayBuffer());
+                const fileName = `settings/payment-qr-${Date.now()}-${qrFile.name}`;
+                const imageUrl = await uploadImage(buffer, fileName, qrFile.type);
+
+                await Settings.findOneAndUpdate(
+                    { key: 'payment_qr_code' },
+                    { value: imageUrl },
+                    { upsert: true }
+                );
+            }
+        }
+
+        // 1d. Handle Notification Settings
+        if (formData.has('notification_sound_enabled')) {
+            const enabled = formData.get('notification_sound_enabled') === 'true';
+            const url = formData.get('notification_sound_url') as string || 'https://assets.mixkit.co/active_storage/sfx/1013/1013-preview.mp3';
+
+            await Settings.findOneAndUpdate(
+                { key: 'notification_settings' },
+                { value: JSON.stringify({ enabled, url }) },
+                { upsert: true }
+            );
         }
 
         // 2. Handle Banner Settings (only if banner fields are present)

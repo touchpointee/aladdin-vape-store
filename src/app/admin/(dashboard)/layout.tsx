@@ -29,6 +29,141 @@ export default function AdminLayout({
         setIsMobileMenuOpen(false);
     }, [pathname]);
 
+    // Register Service Worker and Setup Web Push
+    useEffect(() => {
+        if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+            console.log("Push notifications not supported");
+            return;
+        }
+
+        const registerAndSubscribe = async () => {
+            try {
+                // Register Service Worker
+                const registration = await navigator.serviceWorker.register("/sw.js");
+                console.log("Service Worker registered");
+
+                // Request permission
+                const permission = await Notification.requestPermission();
+                if (permission !== "granted") return;
+
+                // Subscribe to Push
+                const subscribeOptions = {
+                    userVisibleOnly: true,
+                    applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!)
+                };
+
+                let subscription = await registration.pushManager.getSubscription();
+
+                if (!subscription) {
+                    subscription = await registration.pushManager.subscribe(subscribeOptions);
+                }
+
+                // Send subscription to server
+                await fetch("/api/admin/notifications/subscribe", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ subscription })
+                });
+
+            } catch (error) {
+                console.error("Push registration failed:", error);
+            }
+        };
+
+        registerAndSubscribe();
+    }, []);
+
+    function urlBase64ToUint8Array(base64String: string) {
+        const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+        const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    }
+
+    // Admin Notifications Polling (Keep for foreground sound/instant UI)
+    useEffect(() => {
+        // Request notification permission if not already granted
+        if ("Notification" in window) {
+            if (Notification.permission !== "granted" && Notification.permission !== "denied") {
+                Notification.requestPermission();
+            }
+        }
+
+        let lastOrderId = localStorage.getItem('last_seen_order_id');
+
+        const checkNewOrders = async () => {
+            try {
+                const res = await fetch('/api/admin/orders/latest');
+                if (res.ok) {
+                    const data = await res.json();
+
+                    if (data.latestOrderId && data.latestOrderId !== lastOrderId) {
+                        // NEW ORDER DETECTED!
+
+                        // If it's the very first load, just store the ID and don't notify
+                        if (!lastOrderId) {
+                            lastOrderId = data.latestOrderId;
+                            localStorage.setItem('last_seen_order_id', data.latestOrderId);
+                            return;
+                        }
+
+                        // Update local ref and storage
+                        lastOrderId = data.latestOrderId;
+                        localStorage.setItem('last_seen_order_id', data.latestOrderId);
+
+                        // Trigger notification
+                        if (Notification.permission === "granted") {
+                            const notification = new Notification("🏪 New Order Received!", {
+                                body: `A new order has been placed. Check the orders dashboard.`,
+                                icon: "/favicon.ico",
+                                tag: "new-order",
+                                requireInteraction: true
+                            });
+
+                            notification.onclick = () => {
+                                window.focus();
+                                router.push('/admin/orders');
+                                notification.close();
+                            };
+
+                            // Play configured sound if enabled
+                            try {
+                                const settingsRes = await fetch('/api/admin/settings');
+                                if (settingsRes.ok) {
+                                    const settings = await settingsRes.json();
+                                    if (settings.notification_sound_enabled !== false) {
+                                        const audio = new Audio(settings.notification_sound_url || "https://assets.mixkit.co/active_storage/sfx/1013/1013-preview.mp3");
+                                        audio.play();
+                                    }
+                                }
+                            } catch (e) {
+                                console.log("Audio play failed:", e);
+                            }
+                        }
+                    } else if (data.latestOrderId) {
+                        // Update storage even if same, just to be sure
+                        localStorage.setItem('last_seen_order_id', data.latestOrderId);
+                        lastOrderId = data.latestOrderId;
+                    }
+                }
+            } catch (error) {
+                console.error("Failed to check for new orders", error);
+            }
+        };
+
+        // Check immediately on load
+        checkNewOrders();
+
+        // Then poll every 30 seconds
+        const interval = setInterval(checkNewOrders, 30000);
+
+        return () => clearInterval(interval);
+    }, [router]);
+
     return (
         <div className="min-h-screen w-full bg-gray-100 flex flex-col md:flex-row font-sans">
 

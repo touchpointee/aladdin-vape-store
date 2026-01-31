@@ -20,12 +20,14 @@
     "react-dom": "19.2.3",
     "tailwind-merge": "^3.4.0",
     "uuid": "^13.0.0",
+    "web-push": "^3.6.7",
     "zustand": "^5.0.10"
   },
   "devDependencies": {
     "@types/node": "^20.19.30",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "@types/web-push": "^3.6.4",
     "autoprefixer": "^10.4.23",
     "eslint": "^9",
     "eslint-config-next": "16.1.6",

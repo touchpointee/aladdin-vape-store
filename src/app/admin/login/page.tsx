@@ -23,6 +23,10 @@ export default function AdminLoginPage() {
             const data = await res.json();
 
             if (res.ok) {
+                // Request notification permission on successful login
+                if ("Notification" in window) {
+                    await Notification.requestPermission();
+                }
                 router.push("/admin/dashboard");
             } else {
                 alert(data.error || "Login Failed");
