@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { ArrowLeft, Package, User, MapPin, Truck, CheckCircle, XCircle, Clock, Printer, CreditCard, Trash2, RefreshCw } from "lucide-react";
+import { ArrowLeft, Package, User, MapPin, Truck, CheckCircle, XCircle, Clock, Printer, CreditCard, RefreshCw } from "lucide-react";
 import Link from "next/link";
 import { IOrder } from "@/models/all";
 import PrintOrderReceipt from "@/components/admin/PrintOrderReceipt";
