@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { ArrowLeft, Package, User, MapPin, Truck, CheckCircle, XCircle, Clock, Printer, CreditCard } from "lucide-react";
+import { ArrowLeft, Package, User, MapPin, Truck, CheckCircle, XCircle, Clock, Printer, CreditCard, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { IOrder } from "@/models/all";
 import PrintOrderReceipt from "@/components/admin/PrintOrderReceipt";
@@ -14,10 +14,54 @@ export default function AdminOrderDetailPage() {
     const [order, setOrder] = useState<any>(null);
     const [loading, setLoading] = useState(true);
     const [updating, setUpdating] = useState(false);
+    const [isShipmentModalOpen, setIsShipmentModalOpen] = useState(false);
+    const [warehouses, setWarehouses] = useState<any[]>([]);
+    const [loadingWarehouses, setLoadingWarehouses] = useState(false);
+    const [shipmentData, setShipmentData] = useState({
+        state: "",
+        warehouse_id: "",
+        weight: 200,
+        length: 10,
+        width: 10,
+        height: 10
+    });
 
     useEffect(() => {
         fetchOrder();
     }, [id]);
+
+    useEffect(() => {
+        if (isShipmentModalOpen && warehouses.length === 0) {
+            fetchWarehouses();
+        }
+    }, [isShipmentModalOpen]);
+
+    const fetchWarehouses = async () => {
+        setLoadingWarehouses(true);
+        try {
+            const res = await fetch('/api/admin/shipment/warehouses');
+            const data = await res.json();
+            if (res.ok && data.result === "1") {
+                setWarehouses(data.data || []);
+                if (data.data && data.data.length > 0) {
+                    setShipmentData(prev => ({ ...prev, warehouse_id: data.data[0].id.toString() }));
+                }
+            }
+        } catch (error) {
+            console.error("Error fetching warehouses", error);
+        } finally {
+            setLoadingWarehouses(false);
+        }
+    };
+
+    useEffect(() => {
+        if (order) {
+            setShipmentData(prev => ({
+                ...prev,
+                state: order.customer.state || order.customer.city || ""
+            }));
+        }
+    }, [order]);
 
     const fetchOrder = async () => {
         try {
@@ -60,6 +104,33 @@ export default function AdminOrderDetailPage() {
         }
     };
 
+    const handleCreateShipment = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        setUpdating(true);
+        try {
+            const res = await fetch(`/api/admin/orders/${id}/shipment`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(shipmentData)
+            });
+
+            const result = await res.json();
+            if (res.ok) {
+                alert("Shipment created successfully!");
+                setIsShipmentModalOpen(false);
+                fetchOrder();
+            } else {
+                alert(result.error || "Failed to create shipment");
+            }
+        } catch (error) {
+            console.error("Error creating shipment", error);
+            alert("An error occurred while creating shipment");
+        } finally {
+            setUpdating(false);
+        }
+    };
+
     const handleStatusUpdate = async (newStatus: string) => {
         if (!confirm(`Are you sure you want to change status to ${newStatus}?`)) return;
 
@@ -83,6 +154,29 @@ export default function AdminOrderDetailPage() {
             setUpdating(false);
         }
     };
+
+    /* 
+    const handleDelete = async () => {
+        if (!confirm("Are you sure you want to delete this order? This action cannot be undone.")) return;
+
+        setUpdating(true);
+        try {
+            const res = await fetch(`/api/admin/orders/${id}`, {
+                method: 'DELETE',
+            });
+            if (res.ok) {
+                router.push("/admin/orders");
+            } else {
+                const data = await res.json();
+                alert(data.error || "Failed to delete order");
+            }
+        } catch (error) {
+            alert("Something went wrong");
+        } finally {
+            setUpdating(false);
+        }
+    };
+    */
 
     if (loading) return <div className="p-8 text-center text-gray-500">Loading order details...</div>;
     if (!order) return <div className="p-8 text-center text-red-500">Order not found</div>;
@@ -118,13 +212,23 @@ export default function AdminOrderDetailPage() {
                                 <p className="text-gray-500 text-xs sm:text-sm">Placed on {new Date(order.createdAt).toLocaleString()}</p>
                             </div>
                         </div>
-                        <button
-                            onClick={handlePrint}
-                            className="no-print flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition font-bold text-sm sm:text-base shrink-0 shadow-md"
-                        >
-                            <Printer size={18} />
-                            Print Invoice
-                        </button>
+                        <div className="flex items-center gap-2 shrink-0">
+                            <button
+                                onClick={handlePrint}
+                                className="no-print flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 transition font-bold text-sm sm:text-base shadow-md"
+                            >
+                                <Printer size={18} />
+                                Print
+                            </button>
+                            {/* <button
+                                onClick={handleDelete}
+                                disabled={updating}
+                                className="no-print flex items-center justify-center gap-2 bg-red-50 text-red-600 px-4 py-2.5 rounded-lg hover:bg-red-100 transition font-bold text-sm sm:text-base border border-red-200 disabled:opacity-50"
+                            >
+                                <Trash2 size={18} />
+                                Delete
+                            </button> */}
+                        </div>
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -268,6 +372,50 @@ export default function AdminOrderDetailPage() {
                                 </div>
                             </div>
 
+                            {/* Shipment Actions */}
+                            <div className="no-print bg-white rounded-lg shadow-sm border p-6">
+                                <h2 className="font-bold text-gray-800 mb-4 flex items-center justify-between">
+                                    <span>Webparex Shipment</span>
+                                    {order.shipmentStatus === 'Created' && (
+                                        <span className="text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded">Created</span>
+                                    )}
+                                </h2>
+                                <div className="space-y-3">
+                                    {order.shipmentStatus === 'Created' ? (
+                                        <div className="space-y-2">
+                                            <div className="p-3 bg-green-50 rounded-lg border border-green-200">
+                                                <div className="text-xs text-green-800 font-bold mb-1">Shipment Already Created</div>
+                                                <div className="text-[10px] text-green-600 font-mono break-all line-clamp-1">ID: {order.shipmentOrderId}</div>
+                                            </div>
+                                            <button
+                                                disabled
+                                                className="w-full flex items-center justify-center gap-2 p-3 rounded-lg bg-gray-100 text-gray-400 font-bold text-sm cursor-not-allowed"
+                                            >
+                                                <Package size={16} /> Created on Webparex
+                                            </button>
+                                        </div>
+                                    ) : (
+                                        <div className="space-y-2">
+                                            <button
+                                                onClick={() => setIsShipmentModalOpen(true)}
+                                                disabled={updating || order.status === 'Cancelled'}
+                                                className="w-full flex items-center justify-center gap-2 p-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-sm transition shadow-sm disabled:opacity-50"
+                                            >
+                                                <Truck size={18} /> Create Shipment
+                                            </button>
+                                            {order.shipmentStatus === 'Failed' && (
+                                                <div className="text-[10px] text-red-500 bg-red-50 p-2 rounded border border-red-100">
+                                                    <strong>Last Attempt Failed:</strong> {order.shipmentResponse?.error || 'Unknown error'}
+                                                </div>
+                                            )}
+                                            <p className="text-[10px] text-gray-400 text-center">
+                                                Pushes order details to Webparex pickup system
+                                            </p>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
                             {/* Customer Info */}
                             <div className="bg-white rounded-lg shadow-sm border p-6">
                                 <h2 className="font-bold text-gray-800 mb-4 flex items-center gap-2">
@@ -309,7 +457,7 @@ export default function AdminOrderDetailPage() {
                                         <p className="text-gray-600 leading-relaxed">
                                             {order.customer.address}<br />
                                             {order.customer.landmark && <>{order.customer.landmark}<br /></>}
-                                            {order.customer.city}<br />
+                                            {order.customer.city}, {order.customer.state}<br />
                                             {order.customer.pincode}
                                         </p>
                                     </div>
@@ -322,6 +470,113 @@ export default function AdminOrderDetailPage() {
             </div >
 
             <PrintOrderReceipt order={order} />
+
+            {/* Shipment Modal */}
+            {isShipmentModalOpen && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl shadow-2xl border w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+                        <div className="bg-indigo-600 p-6 text-white">
+                            <h3 className="text-xl font-bold flex items-center gap-2">
+                                <Truck /> Create Shipment
+                            </h3>
+                            <p className="text-sm text-indigo-100 mt-1">Fill in the dimensions and logistics details</p>
+                        </div>
+
+                        <form onSubmit={handleCreateShipment} className="p-6 space-y-4">
+                            <div className="grid grid-cols-2 gap-4">
+                                <div className="col-span-2">
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Customer State</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        className="w-full p-2.5 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        value={shipmentData.state}
+                                        onChange={(e) => setShipmentData({ ...shipmentData, state: e.target.value })}
+                                        placeholder="e.g. Kerala"
+                                    />
+                                    <p className="text-[10px] text-gray-400 mt-1 italic">Mandatory field for Shipmozo: Pre-filled from order details.</p>
+                                </div>
+                                <div className="col-span-2">
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Pickup Warehouse</label>
+                                    <select
+                                        required
+                                        className="w-full p-2.5 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none bg-white disabled:bg-gray-50 text-sm truncate"
+                                        value={shipmentData.warehouse_id}
+                                        onChange={(e) => setShipmentData({ ...shipmentData, warehouse_id: e.target.value })}
+                                        disabled={loadingWarehouses}
+                                    >
+                                        <option value="" disabled>Select a Warehouse</option>
+                                        {warehouses.map((w) => (
+                                            <option key={w.id} value={w.id}>
+                                                {w.name} ({w.city})
+                                            </option>
+                                        ))}
+                                    </select>
+                                    <p className="text-[10px] text-gray-400 mt-1 italic">Selecting a warehouse will use its registered pickup address.</p>
+                                    {loadingWarehouses && <p className="text-[10px] text-indigo-500 mt-1 animate-pulse">Fetching warehouses...</p>}
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Weight (gm)</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        className="w-full p-2.5 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        value={shipmentData.weight}
+                                        onChange={(e) => setShipmentData({ ...shipmentData, weight: Number(e.target.value) })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Length (cm)</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        className="w-full p-2.5 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        value={shipmentData.length}
+                                        onChange={(e) => setShipmentData({ ...shipmentData, length: Number(e.target.value) })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Width (cm)</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        className="w-full p-2.5 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        value={shipmentData.width}
+                                        onChange={(e) => setShipmentData({ ...shipmentData, width: Number(e.target.value) })}
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Height (cm)</label>
+                                    <input
+                                        type="number"
+                                        required
+                                        className="w-full p-2.5 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none"
+                                        value={shipmentData.height}
+                                        onChange={(e) => setShipmentData({ ...shipmentData, height: Number(e.target.value) })}
+                                    />
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3 pt-6 border-t border-gray-100">
+                                <button
+                                    type="button"
+                                    onClick={() => setIsShipmentModalOpen(false)}
+                                    className="flex-1 p-3 rounded-xl border border-gray-200 font-bold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-[0.98]"
+                                >
+                                    Cancel
+                                </button>
+                                <button
+                                    type="submit"
+                                    disabled={updating}
+                                    className="flex-1 p-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
+                                >
+                                    {updating ? "Processing..." : "Submit Shipment"}
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            )}
         </>
     );
 }

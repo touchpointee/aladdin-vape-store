@@ -25,7 +25,7 @@ export async function POST(req: NextRequest) {
         const body = await req.json();
 
         // Simple validation
-        if (!body.phone || !body.address || !body.city || !body.pincode || !body.email || body.age === undefined) {
+        if (!body.phone || !body.address || !body.city || !body.state || !body.pincode || !body.email || body.age === undefined) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
 

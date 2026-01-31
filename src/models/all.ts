@@ -53,6 +53,7 @@ export interface IOrder extends Document {
         address: string;
         landmark?: string;
         city: string;
+        state: string;
         pincode: string;
         age: number;
     };
@@ -66,6 +67,9 @@ export interface IOrder extends Document {
     paymentStatus: 'COD' | 'Paid';
     status: 'Pending' | 'Packed' | 'In Transit' | 'Delivered' | 'Cancelled';
     orderType: 'website' | 'whatsapp';
+    shipmentStatus: 'Pending' | 'Created' | 'Failed';
+    shipmentResponse?: any;
+    shipmentOrderId?: string;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -84,6 +88,7 @@ export interface IAddress extends Document {
     address: string;
     landmark?: string;
     city: string;
+    state: string;
     pincode: string;
     age: number;
     createdAt: Date;
@@ -172,6 +177,7 @@ const OrderSchema = new Schema<IOrder>(
             address: { type: String, required: true },
             landmark: { type: String },
             city: { type: String, required: true },
+            state: { type: String, required: true },
             pincode: { type: String, required: true },
             age: { type: Number, required: true },
         },
@@ -191,6 +197,9 @@ const OrderSchema = new Schema<IOrder>(
             default: 'Pending',
         },
         orderType: { type: String, enum: ['website', 'whatsapp'], default: 'website' },
+        shipmentStatus: { type: String, enum: ['Pending', 'Created', 'Failed'], default: 'Pending' },
+        shipmentResponse: { type: Schema.Types.Mixed },
+        shipmentOrderId: { type: String },
     },
     { timestamps: true }
 );
@@ -211,6 +220,7 @@ const AddressSchema = new Schema<IAddress>(
         address: { type: String, required: true },
         landmark: { type: String },
         city: { type: String, required: true },
+        state: { type: String, required: true },
         pincode: { type: String, required: true },
         age: { type: Number, required: true },
     },
@@ -223,9 +233,17 @@ export const Category: Model<ICategory> = mongoose.models.Category || mongoose.m
 export const Brand: Model<IBrand> = mongoose.models.Brand || mongoose.model<IBrand>('Brand', BrandSchema);
 export const Product: Model<IProduct> = mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema);
 
-// Force re-registration of Order if it doesn't have paymentStatus in schema paths
-if (mongoose.models.Order && !mongoose.models.Order.schema.path('paymentStatus')) {
+// Force re-registration of Order if it doesn't have shipmentStatus or state in schema paths
+if (mongoose.models.Order && (
+    !mongoose.models.Order.schema.path('paymentStatus') ||
+    !mongoose.models.Order.schema.path('shipmentStatus') ||
+    !mongoose.models.Order.schema.path('customer.state')
+)) {
     delete mongoose.models.Order;
+}
+
+if (mongoose.models.Address && !mongoose.models.Address.schema.path('state')) {
+    delete mongoose.models.Address;
 }
 export const Order: Model<IOrder> = mongoose.models.Order || mongoose.model<IOrder>('Order', OrderSchema);
 

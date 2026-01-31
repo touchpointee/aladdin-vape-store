@@ -43,6 +43,7 @@ export default function CheckoutPage() {
         address: '',
         landmark: '',
         city: '',
+        state: '',
         pincode: '',
         age: ''
     });
@@ -81,6 +82,7 @@ export default function CheckoutPage() {
             address: addr.address,
             landmark: addr.landmark || '',
             city: addr.city,
+            state: addr.state || '',
             pincode: addr.pincode,
             age: addr.age || ''
         });
@@ -239,6 +241,7 @@ export default function CheckoutPage() {
                                                     address: addr.address,
                                                     landmark: addr.landmark || '',
                                                     city: addr.city,
+                                                    state: addr.state || '',
                                                     pincode: addr.pincode,
                                                     age: addr.age,
                                                 });
@@ -345,6 +348,16 @@ export default function CheckoutPage() {
                                         />
                                     </div>
                                     <div className="flex-1">
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">State</label>
+                                        <input
+                                            name="state" required
+                                            value={formData.state}
+                                            onChange={handleChange}
+                                            className="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 outline-none"
+                                            placeholder="Kerala"
+                                        />
+                                    </div>
+                                    <div className="w-24">
                                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Pincode</label>
                                         <input
                                             name="pincode" required

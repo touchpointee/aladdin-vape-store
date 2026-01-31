@@ -2,17 +2,42 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Search, Trash2 } from "lucide-react";
 
 export default function OrdersTable({ initialOrders }: { initialOrders: any[] }) {
+    const [orders, setOrders] = useState(initialOrders);
     const [searchQuery, setSearchQuery] = useState("");
+    const [deletingId, setDeletingId] = useState<string | null>(null);
 
-    const filteredOrders = initialOrders.filter((order) => {
+    const filteredOrders = orders.filter((order) => {
         const query = searchQuery.toLowerCase();
         const orderId = order._id.toString().toLowerCase();
         const customerName = order.customer.name.toLowerCase();
         return orderId.includes(query) || customerName.includes(query);
     });
+
+    /* 
+    const handleDelete = async (id: string) => {
+        if (!confirm("Are you sure you want to delete this order? This action cannot be undone.")) return;
+
+        setDeletingId(id);
+        try {
+            const res = await fetch(`/api/admin/orders/${id}`, {
+                method: 'DELETE',
+            });
+            if (res.ok) {
+                setOrders(orders.filter(o => o._id !== id));
+            } else {
+                const data = await res.json();
+                alert(data.error || "Failed to delete order");
+            }
+        } catch (error) {
+            alert("Something went wrong");
+        } finally {
+            setDeletingId(null);
+        }
+    };
+    */
 
     return (
         <div className="space-y-4">
@@ -42,7 +67,7 @@ export default function OrdersTable({ initialOrders }: { initialOrders: any[] })
                                 <th className="p-4 text-sm font-medium text-gray-500">Pay Status</th>
                                 <th className="p-4 text-sm font-medium text-gray-500">Status</th>
                                 <th className="p-4 text-sm font-medium text-gray-500">Date</th>
-                                <th className="p-4 text-sm font-medium text-gray-500">Actions</th>
+                                <th className="p-4 text-sm font-medium text-gray-500 text-right">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -58,26 +83,6 @@ export default function OrdersTable({ initialOrders }: { initialOrders: any[] })
                                     <td className="p-4 font-bold">
                                         <div className="flex flex-col">
                                             <span>₹{order.totalPrice}</span>
-                                            {(() => {
-                                                const currentTotal = order.products?.reduce((acc: number, item: any) => acc + (item.price * item.quantity), 0);
-                                                const originalTotal = order.products?.reduce((acc: number, item: any) => {
-                                                    // item.originalPrice might be undefined if no discount or old order.
-                                                    // If originalPrice exists and is > price, use it. Else use price.
-                                                    const itemOriginalPrice = (item.originalPrice && item.originalPrice > item.price)
-                                                        ? item.originalPrice
-                                                        : item.price;
-                                                    return acc + (itemOriginalPrice * item.quantity);
-                                                }, 0);
-
-                                                if (originalTotal > currentTotal) {
-                                                    return (
-                                                        <span className="text-xs text-gray-400 line-through">
-                                                            ₹{originalTotal}
-                                                        </span>
-                                                    );
-                                                }
-                                                return null;
-                                            })()}
                                         </div>
                                     </td>
                                     <td className="p-4 text-sm">{order.paymentMode}</td>
@@ -99,10 +104,19 @@ export default function OrdersTable({ initialOrders }: { initialOrders: any[] })
                                     <td className="p-4 text-xs text-gray-500">
                                         {new Date(order.createdAt).toLocaleDateString()}
                                     </td>
-                                    <td className="p-4">
-                                        <Link href={`/admin/orders/${order._id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium">
-                                            View
-                                        </Link>
+                                    <td className="p-4 text-right">
+                                        <div className="flex justify-end items-center gap-3">
+                                            <Link href={`/admin/orders/${order._id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium">
+                                                View
+                                            </Link>
+                                            {/* <button
+                                                onClick={() => handleDelete(order._id)}
+                                                disabled={deletingId === order._id}
+                                                className="text-red-500 hover:text-red-700 transition disabled:opacity-50"
+                                            >
+                                                <Trash2 size={18} />
+                                            </button> */}
+                                        </div>
                                     </td>
                                 </tr>
                             ))}
