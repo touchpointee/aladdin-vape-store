@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import HeroSection from "@/components/home/HeroSection";
 import CategorySection from "@/components/home/CategorySection";
 import BrandSection from "@/components/home/BrandSection";
@@ -74,10 +75,36 @@ export default async function Home() {
       {/* Search Bar - Mobile Visible Only */}
       <MobileSearch />
 
-      {/* <HeroSection settings={bannerSettings} /> */}
+      {/* Top Main Section: Banner Left, Categories Right (PC) */}
+      <div className="px-4 max-w-7xl mx-auto mt-6">
+        <div className="flex flex-col md:grid md:grid-cols-12 gap-6 lg:gap-10">
 
-      {/* 2. Categories */}
-      <CategorySection categories={categories as any} />
+          {/* Brand Banner - Left Column */}
+          <div className="md:col-span-5 lg:col-span-4">
+            <Link
+              href="/products"
+              className="relative aspect-[3/4] w-full rounded-2xl overflow-hidden shadow-2xl border bg-black block group hover:opacity-90 transition-opacity"
+            >
+              <Image
+                src="/brand-banner.png"
+                alt="Aladdin Store"
+                fill
+                className="object-cover object-center"
+                priority
+              />
+            </Link>
+          </div>
+
+          {/* Categories - Right Column */}
+          <div className="md:col-span-7 lg:col-span-8">
+            <h3 className="text-xl font-black text-gray-900 uppercase mb-6 tracking-tight flex items-center gap-2">
+              <span className="w-8 h-[2px] bg-blue-600"></span> Shop by Category
+            </h3>
+            <CategorySection categories={categories as any} />
+          </div>
+
+        </div>
+      </div>
 
       {/* 3. New Arrivals Section */}
       <div className="mt-12 px-4 max-w-7xl mx-auto">
