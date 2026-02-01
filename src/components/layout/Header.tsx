@@ -247,12 +247,12 @@ export default function Header({ categories = [] }: HeaderProps) {
             </div>
 
             {/* ROW 3: Promo Banner */}
-            <div className="bg-[#4a044e] text-white py-2 px-6">
-                <div className="w-full max-w-7xl mx-auto text-center text-[10px] md:text-sm font-bold tracking-wide flex flex-wrap items-center justify-center gap-2 md:gap-4 uppercase">
-                    <span>Cash on Delivery</span>
-                    <span className="hidden md:inline text-purple-300">|</span>
-                    <span>Free Prepaid Shipping</span>
-                    <span className="hidden md:inline text-purple-300">|</span>
+            <div className="bg-[#3b003c] text-white py-3 px-4 flex items-center justify-center border-t border-purple-900/20">
+                <div className="w-full max-w-7xl mx-auto flex flex-col items-center justify-center text-center text-[10px] md:text-xs font-black tracking-widest uppercase gap-1.5 leading-none">
+                    <div className="flex flex-wrap items-center justify-center gap-x-5 md:gap-x-12">
+                        <span>Cash on Delivery</span>
+                        <span>Free Prepaid Shipping</span>
+                    </div>
                     <span>Chat with Us on WhatsApp</span>
                 </div>
             </div>
