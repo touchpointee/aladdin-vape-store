@@ -4,6 +4,7 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 
 export interface ICategory extends Document {
     name: string;
+    description?: string;
     image: string;
     status: 'active' | 'inactive';
     slug?: string;
@@ -124,6 +125,7 @@ export interface IUTR extends Document {
 const CategorySchema = new Schema<ICategory>(
     {
         name: { type: String, required: true },
+        description: { type: String },
         image: { type: String, required: true },
         status: { type: String, enum: ['active', 'inactive'], default: 'active' },
         slug: { type: String, unique: true, sparse: true, trim: true },
