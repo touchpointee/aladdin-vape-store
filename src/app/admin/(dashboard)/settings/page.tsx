@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Settings, Bell, Image as ImageIcon, MessageSquare, QrCode, Volume2, Save, CreditCard } from "lucide-react";
+import { Settings, Bell, Image as ImageIcon, MessageSquare, QrCode, Volume2, Save, CreditCard, ShieldCheck, ShieldAlert } from "lucide-react";
+import { urlBase64ToUint8Array } from "@/lib/notifications";
 
 export default function SettingsPage() {
     const [loading, setLoading] = useState(true);
@@ -20,6 +21,7 @@ export default function SettingsPage() {
     const [notificationSoundEnabled, setNotificationSoundEnabled] = useState(true);
     const [notificationSoundUrl, setNotificationSoundUrl] = useState('https://assets.mixkit.co/active_storage/sfx/1013/1013-preview.mp3');
     const [onlinePaymentEnabled, setOnlinePaymentEnabled] = useState(true);
+    const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
 
     const [files, setFiles] = useState<{ [key: string]: File | null }>({
         banner1: null,
@@ -30,6 +32,9 @@ export default function SettingsPage() {
 
     useEffect(() => {
         fetchSettings();
+        if ("Notification" in window) {
+            setNotificationPermission(Notification.permission);
+        }
     }, []);
 
     const fetchSettings = async () => {
@@ -127,6 +132,56 @@ export default function SettingsPage() {
             alert('Error saving settings');
         } finally {
             setSaving(false);
+        }
+    };
+
+    const handleEnableNotifications = async () => {
+        if (!("serviceWorker" in navigator) || !("PushManager" in window)) {
+            alert("Push notifications are not supported in this browser.");
+            return;
+        }
+
+        try {
+            // Register Service Worker
+            const registration = await navigator.serviceWorker.register("/sw.js");
+
+            // Request permission
+            const permission = await Notification.requestPermission();
+            setNotificationPermission(permission);
+
+            if (permission !== "granted") {
+                alert("Notification permission denied.");
+                return;
+            }
+
+            // Subscribe to Push
+            const subscribeOptions = {
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!)
+            };
+
+            let subscription = await registration.pushManager.getSubscription();
+
+            if (!subscription) {
+                subscription = await registration.pushManager.subscribe(subscribeOptions);
+            }
+
+            // Send subscription to server
+            const res = await fetch("/api/admin/notifications/subscribe", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ subscription })
+            });
+
+            if (res.ok) {
+                alert("Browser notifications enabled successfully!");
+            } else {
+                alert("Failed to subscribe to notifications on server.");
+            }
+
+        } catch (error) {
+            console.error("Failed to enable notifications:", error);
+            alert("An error occurred while enabling notifications.");
         }
     };
 
@@ -370,12 +425,45 @@ export default function SettingsPage() {
                                         const audio = new Audio(notificationSoundUrl);
                                         audio.play().catch(console.error);
                                     }}
-                                    className="flex items-center gap-2 px-6 py-3 bg-white text-blue-700 rounded-full font-bold shadow-sm hover:shadow-md transition-all transform hover:scale-105 active:scale-95 border border-blue-100"
+                                    className="flex items-center gap-2 px-6 py-3 bg-white text-blue-700 rounded-full font-bold shadow-sm hover:shadow-md transition-all transform hover:scale-105 active:scale-95 border border-blue-100 mb-4"
                                 >
                                     <Volume2 size={18} />
                                     Test Alert Sound
                                 </button>
-                                <p className="text-[10px] text-blue-600/60 mt-3 font-semibold uppercase tracking-wider">Sound Preview</p>
+
+                                <div className="w-full border-t border-blue-100 pt-4 mt-2">
+                                    <div className="flex items-center justify-between mb-3">
+                                        <span className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Browser Permission</span>
+                                        <div className="flex items-center gap-1">
+                                            {notificationPermission === 'granted' ? (
+                                                <span className="flex items-center gap-1 text-[10px] font-bold text-green-600 bg-green-50 px-2 py-0.5 rounded-full">
+                                                    <ShieldCheck size={10} /> GRANTED
+                                                </span>
+                                            ) : notificationPermission === 'denied' ? (
+                                                <span className="flex items-center gap-1 text-[10px] font-bold text-red-600 bg-red-50 px-2 py-0.5 rounded-full">
+                                                    <ShieldAlert size={10} /> DENIED
+                                                </span>
+                                            ) : (
+                                                <span className="text-[10px] font-bold text-gray-400 bg-gray-50 px-2 py-0.5 rounded-full">DEFAULT</span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={handleEnableNotifications}
+                                        disabled={notificationPermission === 'granted'}
+                                        className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-bold transition-all transform active:scale-95 shadow-sm ${notificationPermission === 'granted'
+                                            ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-default'
+                                            : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/20'
+                                            }`}
+                                    >
+                                        <Bell size={18} />
+                                        {notificationPermission === 'granted' ? 'Notifications Active' : 'Enable Browser Notifications'}
+                                    </button>
+                                    <p className="text-[10px] text-blue-600/60 mt-2 text-center">
+                                        Required for desktop & tray notifications.
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>

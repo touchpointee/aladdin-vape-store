@@ -1,6 +1,6 @@
 "use client";
 
-import { IProduct } from "@/models/all";
+import { IProduct } from "@/models/unified";
 import ProductCard from "./ProductCard";
 
 interface ProductGridProps {

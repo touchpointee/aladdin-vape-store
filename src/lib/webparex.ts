@@ -1,4 +1,4 @@
-import { IOrder } from "@/models/all";
+import { IOrder } from "@/models/unified";
 
 export async function pushOrderToWebparex(order: IOrder, extraData: {
     state: string,

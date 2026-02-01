@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft, MessageCircle, Phone, Mail, ChevronDown } from "lucide-react";
 import connectDB from "@/lib/db";
-import { Settings } from "@/models/all";
+import { Settings } from "@/models/unified";
 
 async function getWaNumber() {
     try {
@@ -23,7 +23,7 @@ export default async function HelpPage() {
                 <Link href="/account">
                     <ArrowLeft size={24} className="text-gray-600" />
                 </Link>
-                <h1 className="text-lg font-bold text-gray-900">Help & Support</h1>
+                <h1 className="text-lg font-bold text-gray-900">Help &amp; Support</h1>
             </div>
 
             <div className="p-4 space-y-6">

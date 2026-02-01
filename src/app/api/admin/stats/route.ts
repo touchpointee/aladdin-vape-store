@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
-import { Order, Product } from '@/models/all';
+import { Order, Product } from '@/models/unified';
 
 export async function GET() {
     try {

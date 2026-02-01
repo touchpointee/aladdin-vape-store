@@ -12,13 +12,21 @@ interface ProductDetailClientProps {
 
 export default function ProductDetailClient({ product, whatsappNumber }: ProductDetailClientProps) {
     const [quantity, setQuantity] = useState(1);
+    const [selectedFlavour, setSelectedFlavour] = useState(product.flavours?.[0] || "");
+    const [selectedNicotine, setSelectedNicotine] = useState(product.variants?.[0]?.nicotine || "");
     const { addItem, openCart } = useCartStore();
 
-    const discountedPrice = (product.discountPrice && product.discountPrice < product.price)
-        ? product.discountPrice
+    // Find current variant based on selection
+    const currentVariant = product.variants?.find((v: any) => v.nicotine === selectedNicotine);
+
+    const basePrice = currentVariant ? currentVariant.price : (product.price || 0);
+    const baseDiscountPrice = currentVariant ? (currentVariant.discountPrice || currentVariant.price) : (product.discountPrice || product.price || 0);
+
+    const discountedPrice = (baseDiscountPrice && baseDiscountPrice < basePrice)
+        ? baseDiscountPrice
         : (product.discountPercent
-            ? (product.price - (product.price * product.discountPercent / 100))
-            : product.price);
+            ? (basePrice - (basePrice * product.discountPercent / 100))
+            : basePrice);
 
     const handleAddToCart = () => {
         addItem({
@@ -29,7 +37,9 @@ export default function ProductDetailClient({ product, whatsappNumber }: Product
             quantity: quantity,
             puffCount: product.puffCount,
             capacity: product.capacity,
-            resistance: product.resistance
+            resistance: product.resistance,
+            selectedFlavour: selectedFlavour,
+            selectedNicotine: selectedNicotine,
         });
         openCart();
     };
@@ -37,6 +47,8 @@ export default function ProductDetailClient({ product, whatsappNumber }: Product
     const handleBuyViaWhatsApp = () => {
         const message = `Hi, I want to buy:
 Product: ${product.name}
+${selectedFlavour ? `Flavour: ${selectedFlavour}` : ''}
+${selectedNicotine ? `Nicotine: ${selectedNicotine}` : ''}
 Quantity: ${quantity}
 Price: ₹${discountedPrice * quantity}
 Link: ${window.location.href}`;
@@ -54,10 +66,10 @@ Link: ${window.location.href}`;
                 <div className="relative w-full h-[350px] md:h-[600px] bg-gray-50 flex items-center justify-center border-b md:border md:rounded-lg overflow-hidden">
                     {/* Badges */}
                     <div className="absolute top-4 left-4 z-10 flex flex-col gap-2">
-                        {product.isHot && <span className="bg-blue-500 text-white text-xs font-bold px-2 py-1 rounded">HOT</span>}
-                        {(product.discountPrice && product.discountPrice < product.price) && (
-                            <span className="bg-orange-500 text-white text-xs font-bold px-2 py-1 rounded">
-                                -{Math.round(((product.price - product.discountPrice) / product.price) * 100)}%
+                        {product.isHot && <span className="bg-blue-500 text-white text-[10px] font-black px-3 py-1 rounded shadow-lg uppercase tracking-tight">Hot Product</span>}
+                        {(basePrice > discountedPrice) && (
+                            <span className="bg-orange-500 text-white text-[10px] font-black px-3 py-1 rounded shadow-lg uppercase tracking-tight">
+                                Save {Math.round(((basePrice - discountedPrice) / basePrice) * 100)}%
                             </span>
                         )}
                     </div>
@@ -83,12 +95,68 @@ Link: ${window.location.href}`;
                     </div>
 
                     {/* Price */}
-                    <div className="flex items-baseline gap-3 mb-6">
-                        <span className="text-2xl md:text-4xl font-bold text-red-500">INR {discountedPrice.toFixed(2)}</span>
-                        {discountedPrice < product.price && (
-                            <span className="text-sm md:text-lg text-gray-400 line-through">INR {product.price}</span>
-                        )}
+                    <div className="flex items-baseline gap-3 mb-8 bg-gray-50 p-4 rounded-xl border border-gray-100 w-fit">
+                        <div className="flex flex-col">
+                            <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Current Price</span>
+                            <div className="flex items-baseline gap-3">
+                                <span className="text-3xl md:text-5xl font-black text-blue-600">INR {discountedPrice.toFixed(0)}</span>
+                                {(basePrice > discountedPrice) && (
+                                    <span className="text-sm md:text-xl text-gray-400 line-through font-bold">INR {basePrice}</span>
+                                )}
+                            </div>
+                        </div>
                     </div>
+
+                    {/* Flavor Selection */}
+                    {product.flavours && product.flavours.length > 0 && (
+                        <div className="mb-8">
+                            <div className="flex items-center justify-between mb-3">
+                                <span className="text-sm font-black text-gray-900 uppercase tracking-widest">1. Select Flavour</span>
+                                {selectedFlavour && <span className="text-xs font-bold text-blue-500 bg-blue-50 px-2 py-0.5 rounded">Selected: {selectedFlavour}</span>}
+                            </div>
+                            <div className="flex flex-wrap gap-2">
+                                {product.flavours.map((f: string) => (
+                                    <button
+                                        key={f}
+                                        onClick={() => setSelectedFlavour(f)}
+                                        className={`px-5 py-3 rounded-xl border-2 text-sm font-bold transition-all duration-200 ${selectedFlavour === f
+                                            ? 'border-blue-600 bg-blue-600 text-white shadow-lg shadow-blue-100 scale-[1.02]'
+                                            : 'border-gray-200 hover:border-blue-200 bg-white text-gray-600'
+                                            }`}
+                                    >
+                                        {f}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+
+                    {/* Nicotine/Capacity Selection */}
+                    {product.variants && product.variants.length > 0 && (
+                        <div className="mb-8">
+                            <div className="flex items-center justify-between mb-3">
+                                <span className="text-sm font-black text-gray-900 uppercase tracking-widest">2. Select Nicotine / Version</span>
+                                {selectedNicotine && <span className="text-xs font-bold text-purple-500 bg-purple-50 px-2 py-0.5 rounded">Selected: {selectedNicotine}</span>}
+                            </div>
+                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                                {product.variants.map((v: any) => (
+                                    <button
+                                        key={v.nicotine}
+                                        onClick={() => setSelectedNicotine(v.nicotine)}
+                                        className={`p-3 rounded-xl border-2 text-left transition-all duration-200 ${selectedNicotine === v.nicotine
+                                            ? 'border-purple-600 bg-purple-50 shadow-lg shadow-purple-50 scale-[1.02]'
+                                            : 'border-gray-100 hover:border-purple-200 bg-white'
+                                            }`}
+                                    >
+                                        <div className="flex flex-col">
+                                            <span className={`text-sm font-black uppercase ${selectedNicotine === v.nicotine ? 'text-purple-700' : 'text-gray-900'}`}>{v.nicotine}</span>
+                                            <span className="text-xs font-bold text-gray-400 mt-1">₹{v.discountPrice || v.price}</span>
+                                        </div>
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                    )}
 
                     {/* Puff Count & Tags */}
                     <div className="flex flex-wrap gap-2 mb-6">

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
-import Category from '@/models/Category';
-import { ICategory } from '@/models/all';
+import { Category } from '@/models/unified';
+import { ICategory } from '@/models/unified';
 
 export async function GET() {
     await connectDB();

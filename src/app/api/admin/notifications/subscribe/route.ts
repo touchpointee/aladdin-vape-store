@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
-import { PushSubscription } from '@/models/all';
+import { PushSubscription } from '@/models/unified';
 
 export async function POST(req: NextRequest) {
     try {

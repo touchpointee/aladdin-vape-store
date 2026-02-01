@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
-import Category from '@/models/Category';
+import { Category } from '@/models/unified';
 
 export async function PUT(req: NextRequest, props: { params: Promise<{ id: string }> }) {
     try {

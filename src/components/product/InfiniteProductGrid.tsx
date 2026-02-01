@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef, useCallback } from "react";
-import { IProduct } from "@/models/all";
+import { IProduct } from "@/models/unified";
 import ProductCard from "./ProductCard";
 import { Loader2 } from "lucide-react";
 

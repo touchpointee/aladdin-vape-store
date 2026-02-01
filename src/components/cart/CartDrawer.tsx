@@ -61,55 +61,64 @@ export default function CartDrawer() {
                     {items.length === 0 ? (
                         <div className="text-center text-gray-500 mt-10">Your cart is empty</div>
                     ) : (
-                        items.map((item) => (
-                            <div key={item.id} className="flex gap-4">
-                                {/* Image */}
-                                <div className="w-20 h-20 relative border rounded-md overflow-hidden shrink-0">
-                                    <Image
-                                        src={item.image || "/placeholder.png"}
-                                        alt={item.name}
-                                        fill
-                                        className="object-cover"
-                                        unoptimized
-                                    />
-                                </div>
-
-                                {/* Details */}
-                                <div className="flex-1 flex flex-col justify-between">
-                                    <h3 className="text-sm font-medium text-gray-800 line-clamp-2">{item.name}</h3>
-                                    <div className="flex justify-between items-center mt-2">
-                                        {/* Quantity */}
-                                        <div className="flex items-center border border-gray-200 rounded-sm">
-                                            <button
-                                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-50"
-                                            >
-                                                -
-                                            </button>
-                                            <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
-                                            <button
-                                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-50"
-                                            >
-                                                +
-                                            </button>
-                                        </div>
-
-                                        {/* Price */}
-                                        <div className="text-blue-500 font-bold text-sm">
-                                            ₹{(item.price * item.quantity).toFixed(2)}
-                                        </div>
+                        items.map((item) => {
+                            const uniqueKey = `${item.id}-${item.selectedFlavour || 'none'}-${item.selectedNicotine || 'none'}`;
+                            return (
+                                <div key={uniqueKey} className="flex gap-4">
+                                    {/* Image */}
+                                    <div className="w-20 h-20 relative border rounded-md overflow-hidden shrink-0">
+                                        <Image
+                                            src={item.image || "/placeholder.png"}
+                                            alt={item.name}
+                                            fill
+                                            className="object-cover"
+                                            unoptimized
+                                        />
                                     </div>
-                                    {/* Delete */}
-                                    <button
-                                        onClick={() => removeItem(item.id)}
-                                        className="self-start mt-2 text-gray-400 hover:text-red-500"
-                                    >
-                                        <Trash2 size={16} />
-                                    </button>
+
+                                    {/* Details */}
+                                    <div className="flex-1 flex flex-col justify-between">
+                                        <h3 className="text-sm font-medium text-gray-800 line-clamp-1">{item.name}</h3>
+                                        {(item.selectedFlavour || item.selectedNicotine) && (
+                                            <div className="flex flex-col gap-0.5 mt-1">
+                                                {item.selectedFlavour && <span className="text-[10px] text-gray-400 font-bold uppercase">Flavour: {item.selectedFlavour}</span>}
+                                                {item.selectedNicotine && <span className="text-[10px] text-gray-400 font-bold uppercase">Nicotine: {item.selectedNicotine}</span>}
+                                            </div>
+                                        )}
+                                        <div className="flex justify-between items-center mt-2">
+                                            {/* Quantity */}
+                                            <div className="flex items-center border border-gray-200 rounded-sm">
+                                                <button
+                                                    onClick={() => updateQuantity(uniqueKey, item.quantity - 1)}
+                                                    className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-50"
+                                                >
+                                                    -
+                                                </button>
+                                                <span className="w-8 text-center text-sm font-medium">{item.quantity}</span>
+                                                <button
+                                                    onClick={() => updateQuantity(uniqueKey, item.quantity + 1)}
+                                                    className="w-8 h-8 flex items-center justify-center text-gray-500 hover:bg-gray-50"
+                                                >
+                                                    +
+                                                </button>
+                                            </div>
+
+                                            {/* Price */}
+                                            <div className="text-blue-500 font-bold text-sm">
+                                                ₹{(item.price * item.quantity).toFixed(2)}
+                                            </div>
+                                        </div>
+                                        {/* Delete */}
+                                        <button
+                                            onClick={() => removeItem(uniqueKey)}
+                                            className="self-start mt-2 text-gray-400 hover:text-red-500"
+                                        >
+                                            <Trash2 size={16} />
+                                        </button>
+                                    </div>
                                 </div>
-                            </div>
-                        ))
+                            );
+                        })
                     )}
                 </div>
 

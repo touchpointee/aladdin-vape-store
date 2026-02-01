@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
-import { Order } from '@/models/all';
+import { Order } from '@/models/unified';
 import { trackOrder } from '@/lib/webparex';
 
 // Public API to get order tracking status

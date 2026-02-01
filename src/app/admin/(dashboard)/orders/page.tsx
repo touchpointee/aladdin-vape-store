@@ -1,5 +1,5 @@
 import connectDB from "@/lib/db";
-import { Order as OrderModel } from "@/models/all";
+import { Order as OrderModel } from "@/models/unified";
 import OrdersTable from "./OrdersTable";
 
 export const dynamic = 'force-dynamic';

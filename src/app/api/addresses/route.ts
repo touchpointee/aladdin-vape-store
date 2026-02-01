@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
-import { Address } from '@/models/all';
+import { Address } from '@/models/unified';
 
 export async function GET(req: NextRequest) {
     try {

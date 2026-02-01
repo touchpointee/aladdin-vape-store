@@ -7,7 +7,7 @@ import ProductGrid from "@/components/product/ProductGrid";
 import MobileSearch from "@/components/home/MobileSearch";
 import PromoBanner from "@/components/home/PromoBanner";
 import connectDB from "@/lib/db";
-import { Product, Category, Brand, Settings } from "@/models/all";
+import { Product, Category, Brand, Settings } from "@/models/unified";
 
 export const revalidate = 3600; // revalidate at most every hour
 

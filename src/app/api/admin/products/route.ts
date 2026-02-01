@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
-import { Product } from '@/models/all';
+import { Product } from '@/models/unified';
 import { uploadImage } from '@/lib/minio';
 
 // GET: List all products (with optional filters)
@@ -37,9 +37,13 @@ export async function POST(req: NextRequest) {
 
         // Extract basic fields
         const name = formData.get('name') as string;
-        const price = parseFloat(formData.get('price') as string);
-        const stock = parseInt(formData.get('stock') as string);
         const category = formData.get('category') as string;
+
+        // Base Pricing (Optional if variants exist)
+        const priceStr = formData.get('price') as string;
+        const stockStr = formData.get('stock') as string;
+        const price = priceStr ? parseFloat(priceStr) : undefined;
+        const stock = stockStr ? parseInt(stockStr) : 0;
 
         // Optional fields
         const description = formData.get('description') as string || '';
@@ -54,8 +58,25 @@ export async function POST(req: NextRequest) {
         const status = formData.get('status') as 'active' | 'inactive' || 'active';
 
         // Validation
-        if (!name || !price || !category || !stock) {
-            return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+        if (!name || !category) {
+            return NextResponse.json({ error: 'Name and Category are required' }, { status: 400 });
+        }
+
+        // Flavours and Variants
+        const flavours = formData.getAll('flavours') as string[];
+        const variantsRaw = formData.get('variants') as string;
+        let variants = [];
+        if (variantsRaw) {
+            try {
+                variants = JSON.parse(variantsRaw);
+            } catch (e) {
+                console.error("Failed to parse variants", e);
+            }
+        }
+
+        // Ensure at least one pricing method is provided
+        if (!price && variants.length === 0) {
+            return NextResponse.json({ error: 'Either Price or at least one Variant is required' }, { status: 400 });
         }
 
         // Handle Image Uploads (images[0], images[1], etc.)
@@ -89,6 +110,8 @@ export async function POST(req: NextRequest) {
             isNewArrival,
             status,
             images: imageUrls,
+            flavours,
+            variants,
         });
 
         return NextResponse.json(product, { status: 201 });
@@ -136,6 +159,17 @@ export async function PUT(req: NextRequest) {
         if (formData.has('isTopSelling')) updateData.isTopSelling = formData.get('isTopSelling') === 'true';
         if (formData.has('isNewArrival')) updateData.isNewArrival = formData.get('isNewArrival') === 'true';
         if (formData.has('status')) updateData.status = formData.get('status');
+
+        if (formData.has('flavours')) {
+            updateData.flavours = formData.getAll('flavours');
+        }
+        if (formData.has('variants')) {
+            try {
+                updateData.variants = JSON.parse(formData.get('variants') as string);
+            } catch (e) {
+                console.error("Failed to parse variants in PUT", e);
+            }
+        }
 
         // Handle Images
         // 1. Get kept existing images

@@ -166,7 +166,15 @@ export default function OrderDetailPage() {
                                 </div>
                                 <div className="flex-1">
                                     <h4 className="text-sm font-medium text-gray-800 line-clamp-1">{item.product?.name}</h4>
-                                    <p className="text-xs text-gray-500">Qty: {item.quantity}</p>
+                                    <div className="flex flex-col gap-0.5 mt-1">
+                                        <span className="text-[10px] text-gray-400 font-bold uppercase">Qty: {item.quantity}</span>
+                                        {item.flavour && (
+                                            <span className="text-[10px] text-gray-400 font-bold uppercase">Flavour: {item.flavour}</span>
+                                        )}
+                                        {item.nicotine && (
+                                            <span className="text-[10px] text-gray-400 font-bold uppercase">Nicotine: {item.nicotine}</span>
+                                        )}
+                                    </div>
                                     <div className="flex flex-col items-start mt-1">
                                         <span className="text-sm font-bold text-gray-900">₹{item.price * item.quantity}</span>
                                         {item.originalPrice && item.originalPrice > item.price && (

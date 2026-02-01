@@ -4,6 +4,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import Link from "next/link";
+import { urlBase64ToUint8Array } from "@/lib/notifications";
 
 export default function AdminLayout({
     children,
@@ -73,16 +74,6 @@ export default function AdminLayout({
         registerAndSubscribe();
     }, []);
 
-    function urlBase64ToUint8Array(base64String: string) {
-        const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-        const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-        const rawData = window.atob(base64);
-        const outputArray = new Uint8Array(rawData.length);
-        for (let i = 0; i < rawData.length; ++i) {
-            outputArray[i] = rawData.charCodeAt(i);
-        }
-        return outputArray;
-    }
 
     // Admin Notifications Polling (Keep for foreground sound/instant UI)
     useEffect(() => {
@@ -137,7 +128,9 @@ export default function AdminLayout({
                                     const settings = await settingsRes.json();
                                     if (settings.notification_sound_enabled !== false) {
                                         const audio = new Audio(settings.notification_sound_url || "https://assets.mixkit.co/active_storage/sfx/1013/1013-preview.mp3");
-                                        audio.play();
+                                        audio.play().catch(e => {
+                                            console.warn("Autoplay blocked by browser. Sound will play after user interaction.", e);
+                                        });
                                     }
                                 }
                             } catch (e) {

@@ -191,7 +191,9 @@ export default function CheckoutPage() {
                 products: items.map(item => ({
                     product: item.id,
                     quantity: item.quantity,
-                    price: item.price
+                    price: item.price,
+                    flavour: item.selectedFlavour,
+                    nicotine: item.selectedNicotine
                 })),
                 totalPrice: subtotal() + DELIVERY_CHARGE,
                 paymentMode: paymentMethod
@@ -574,6 +576,8 @@ export default function CheckoutPage() {
                                             {item.puffCount && <span>{item.puffCount} Puffs</span>}
                                             {item.capacity && <span>{item.capacity}</span>}
                                             {item.resistance && <span>{item.resistance}</span>}
+                                            {item.selectedFlavour && <span className="text-blue-500 font-bold uppercase">Flavour: {item.selectedFlavour}</span>}
+                                            {item.selectedNicotine && <span className="text-blue-500 font-bold uppercase">Nicotine: {item.selectedNicotine}</span>}
                                         </div>
                                     </div>
                                     <div className="flex flex-col items-end">

@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { ArrowLeft, Package, User, MapPin, Truck, CheckCircle, XCircle, Clock, Printer, CreditCard, RefreshCw } from "lucide-react";
 import Link from "next/link";
-import { IOrder } from "@/models/all";
+import { IOrder } from "@/models/unified";
 import PrintOrderReceipt from "@/components/admin/PrintOrderReceipt";
 
 export default function AdminOrderDetailPage() {
@@ -279,8 +279,19 @@ export default function AdminOrderDetailPage() {
                                             </div>
                                             <div className="flex-1">
                                                 <h3 className="font-medium text-gray-900">{item.product?.name || "Unknown Product"}</h3>
-                                                <div className="text-sm text-gray-500">
-                                                    {item.product?.puffCount && `${item.product.puffCount} Puffs`} · {item.product?.brand?.name}
+                                                <div className="text-sm text-gray-500 flex flex-col gap-0.5 mt-1">
+                                                    {item.product?.puffCount && <span className="text-[10px] text-gray-400 font-bold uppercase">{item.product.puffCount} Puffs</span>}
+                                                    {item.product?.brand?.name && <span className="text-[10px] text-gray-400 font-bold uppercase">{item.product.brand.name}</span>}
+                                                    {item.flavour && (
+                                                        <span className="text-[10px] text-gray-400 font-bold uppercase">
+                                                            Flavour: {item.flavour}
+                                                        </span>
+                                                    )}
+                                                    {item.nicotine && (
+                                                        <span className="text-[10px] text-gray-400 font-bold uppercase">
+                                                            Nicotine: {item.nicotine}
+                                                        </span>
+                                                    )}
                                                 </div>
                                                 <div className="mt-2 flex justify-between items-center text-sm">
                                                     <span className="text-gray-600">Qty: {item.quantity}</span>

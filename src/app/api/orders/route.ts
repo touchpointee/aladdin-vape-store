@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
-import { Order, Product } from '@/models/all';
-import UTR from '@/models/UTR';
+import { Order, Product, UTR } from '@/models/unified';
 import { sendPushNotificationToAdmins } from '@/lib/push';
 
 export async function POST(req: NextRequest) {
@@ -18,12 +17,34 @@ export async function POST(req: NextRequest) {
             if (!product) {
                 throw new Error(`Product not found: ${item.product}`);
             }
-            if (product.stock < item.quantity) {
-                throw new Error(`Insufficient stock for product: ${product.name}`);
+
+            // Find variant price if nicotine is selected
+            let effectivePrice = 0;
+
+            if (item.nicotine && product.variants && product.variants.length > 0) {
+                const variant = product.variants.find((v: any) => v.nicotine === item.nicotine);
+                if (variant) {
+                    effectivePrice = (variant.discountPrice && variant.discountPrice < variant.price)
+                        ? variant.discountPrice
+                        : variant.price;
+
+                    if (variant.stock < item.quantity) {
+                        throw new Error(`Insufficient stock for variant ${item.nicotine} of ${product.name}`);
+                    }
+                } else {
+                    throw new Error(`Variant ${item.nicotine} not found for ${product.name}`);
+                }
+            } else {
+                // Base pricing
+                effectivePrice = (product.discountPrice && product.discountPrice < (product.price || 0))
+                    ? product.discountPrice
+                    : (product.price || 0);
+
+                if ((product.stock || 0) < item.quantity) {
+                    throw new Error(`Insufficient stock for product: ${product.name}`);
+                }
             }
-            const effectivePrice = (product.discountPrice && product.discountPrice < product.price)
-                ? product.discountPrice
-                : product.price;
+
             calculatedTotal += effectivePrice * item.quantity;
         }
 
@@ -66,9 +87,16 @@ export async function POST(req: NextRequest) {
 
         // Reduce stock
         for (const item of products) {
-            await Product.findByIdAndUpdate(item.product, {
-                $inc: { stock: -item.quantity }
-            });
+            if (item.nicotine) {
+                await Product.updateOne(
+                    { _id: item.product, "variants.nicotine": item.nicotine },
+                    { $inc: { "variants.$.stock": -item.quantity } }
+                );
+            } else {
+                await Product.findByIdAndUpdate(item.product, {
+                    $inc: { stock: -item.quantity }
+                });
+            }
         }
 
         // Trigger background push notifications for admins
@@ -100,4 +128,3 @@ export async function GET(req: NextRequest) {
     const orders = await Order.find(query).populate('products.product').sort({ createdAt: -1 });
     return NextResponse.json(orders);
 }
-

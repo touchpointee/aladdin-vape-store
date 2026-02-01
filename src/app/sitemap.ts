@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next';
 import connectDB from '@/lib/db';
-import { Product, Category, Brand } from '@/models/all';
+import { Product, Category, Brand } from '@/models/unified';
 
 const BASE_URL = 'https://aladdinvapestoreindia.com';
 

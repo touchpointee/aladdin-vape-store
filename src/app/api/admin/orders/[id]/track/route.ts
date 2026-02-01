@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
-import { Order } from '@/models/all';
+import { Order } from '@/models/unified';
 import { trackOrder } from '@/lib/webparex';
 
 // GET: Fetch tracking status from courier and update order

@@ -1,8 +1,6 @@
 import { Suspense } from "react";
 import connectDB from "@/lib/db";
-import Product from "@/models/Product";
-import Category from "@/models/Category";
-import Brand from "@/models/Brand";
+import { Product, Category, Brand } from "@/models/unified";
 import ProductFilter from "@/components/product/ProductFilter";
 import ProductSearchHeader from "@/components/product/ProductSearchHeader";
 import InfiniteProductGrid from "@/components/product/InfiniteProductGrid";

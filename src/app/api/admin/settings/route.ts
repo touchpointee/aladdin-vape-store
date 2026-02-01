@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
-import { Settings } from '@/models/all';
+import { Settings } from '@/models/unified';
 import { uploadImage } from '@/lib/minio';
 
 export async function GET(req: NextRequest) {

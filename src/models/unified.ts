@@ -41,6 +41,13 @@ export interface IProduct extends Document {
     isTopSelling?: boolean;
     isNewArrival?: boolean;
     rating?: number;
+    flavours?: string[];
+    variants?: {
+        nicotine: string;
+        price: number;
+        discountPrice?: number;
+        stock: number;
+    }[];
     createdAt: Date;
     updatedAt: Date;
 }
@@ -61,6 +68,8 @@ export interface IOrder extends Document {
         product: mongoose.Types.ObjectId | IProduct;
         quantity: number;
         price: number;
+        flavour?: string;
+        nicotine?: string;
     }[];
     totalPrice: number;
     paymentMode: 'COD' | 'PREPAID';
@@ -102,6 +111,12 @@ export interface IPushSubscription extends Document {
     isAdmin: boolean;
     createdAt: Date;
     updatedAt: Date;
+}
+
+export interface IUTR extends Document {
+    utr: string;
+    orderId: mongoose.Types.ObjectId;
+    createdAt: Date;
 }
 
 // --- Schemas ---
@@ -147,19 +162,24 @@ const ProductSchema = new Schema<IProduct>(
         capacity: { type: String },
         resistance: { type: String },
         description: { type: String, required: true },
-        price: { type: Number, required: true },
+        price: { type: Number },
         discountPrice: { type: Number },
         discountPercent: { type: Number, default: 0 },
         images: [{ type: String }],
-        stock: { type: Number, required: true, default: 0 },
+        stock: { type: Number, default: 0 },
         status: { type: String, enum: ['active', 'inactive'], default: 'active' },
         slug: { type: String, unique: true, sparse: true, trim: true },
         metaTitle: { type: String, trim: true },
         metaDescription: { type: String, trim: true },
-        isHot: { type: Boolean, default: false },
-        isTopSelling: { type: Boolean, default: false },
         isNewArrival: { type: Boolean, default: false },
         rating: { type: Number, default: 5 },
+        flavours: [{ type: String }],
+        variants: [{
+            nicotine: { type: String, required: true },
+            price: { type: Number, required: true },
+            discountPrice: { type: Number },
+            stock: { type: Number, required: true, default: 0 },
+        }],
     },
     { timestamps: true }
 );
@@ -195,6 +215,8 @@ const OrderSchema = new Schema<IOrder>(
                 product: { type: Schema.Types.ObjectId, ref: 'Product', required: true },
                 quantity: { type: Number, required: true },
                 price: { type: Number, required: true },
+                flavour: { type: String },
+                nicotine: { type: String },
             },
         ],
         totalPrice: { type: Number, required: true },
@@ -246,18 +268,42 @@ const PushSubscriptionSchema = new Schema<IPushSubscription>(
     { timestamps: true }
 );
 
-// --- Models ---
-// Check if models exist to prevent overwrite error during hot reload
-export const Category: Model<ICategory> = mongoose.models.Category || mongoose.model<ICategory>('Category', CategorySchema);
-export const Brand: Model<IBrand> = mongoose.models.Brand || mongoose.model<IBrand>('Brand', BrandSchema);
-export const Product: Model<IProduct> = mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema);
+const UTRSchema = new Schema<IUTR>(
+    {
+        utr: {
+            type: String,
+            required: true,
+            unique: true,
+            trim: true
+        },
+        orderId: {
+            type: Schema.Types.ObjectId,
+            ref: 'Order',
+            required: true
+        },
+    },
+    { timestamps: true }
+);
 
-// Force re-registration of Order if schema doesn't have required fields
+// Index for fast lookup
+UTRSchema.index({ utr: 1 });
+
+// Force re-registration of Product if schema doesn't match new requirements (variants, optional price)
+if (mongoose.models.Product && (
+    !mongoose.models.Product.schema.path('variants') ||
+    mongoose.models.Product.schema.path('price').isRequired
+)) {
+    delete mongoose.models.Product;
+}
+
+// Force re-registration of Order if schema doesn't have required fields or new flavour/nicotine paths
 if (mongoose.models.Order && (
     !mongoose.models.Order.schema.path('paymentStatus') ||
     !mongoose.models.Order.schema.path('shipmentStatus') ||
     !mongoose.models.Order.schema.path('customer.state') ||
-    !mongoose.models.Order.schema.path('utrNumber')
+    !mongoose.models.Order.schema.path('utrNumber') ||
+    !mongoose.models.Order.schema.path('products.flavour') ||
+    !mongoose.models.Order.schema.path('products.nicotine')
 )) {
     delete mongoose.models.Order;
 }
@@ -265,8 +311,14 @@ if (mongoose.models.Order && (
 if (mongoose.models.Address && !mongoose.models.Address.schema.path('state')) {
     delete mongoose.models.Address;
 }
-export const Order: Model<IOrder> = mongoose.models.Order || mongoose.model<IOrder>('Order', OrderSchema);
 
+// --- Models ---
+// Check if models exist to prevent overwrite error during hot reload
+export const Category: Model<ICategory> = mongoose.models.Category || mongoose.model<ICategory>('Category', CategorySchema);
+export const Brand: Model<IBrand> = mongoose.models.Brand || mongoose.model<IBrand>('Brand', BrandSchema);
+export const Product: Model<IProduct> = mongoose.models.Product || mongoose.model<IProduct>('Product', ProductSchema);
+export const Order: Model<IOrder> = mongoose.models.Order || mongoose.model<IOrder>('Order', OrderSchema);
 export const Settings: Model<ISettings> = mongoose.models.Settings || mongoose.model<ISettings>('Settings', SettingsSchema);
 export const Address: Model<IAddress> = mongoose.models.Address || mongoose.model<IAddress>('Address', AddressSchema);
 export const PushSubscription: Model<IPushSubscription> = mongoose.models.PushSubscription || mongoose.model<IPushSubscription>('PushSubscription', PushSubscriptionSchema);
+export const UTR: Model<IUTR> = mongoose.models.UTR || mongoose.model<IUTR>('UTR', UTRSchema);

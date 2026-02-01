@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
-import Brand from '@/models/Brand';
+import { Brand } from '@/models/unified';
 import { uploadImage } from '@/lib/minio';
 
 // Re-written to fix build error

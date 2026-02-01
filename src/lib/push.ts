@@ -1,5 +1,5 @@
 import webpush from 'web-push';
-import { PushSubscription } from '@/models/all';
+import { PushSubscription } from '@/models/unified';
 
 // Configure Web Push with VAPID keys
 if (process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY && process.env.VAPID_PRIVATE_KEY) {

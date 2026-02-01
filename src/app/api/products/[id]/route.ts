@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
-import Product from '@/models/Product';
+import { Product } from '@/models/unified';
 
 export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
     await connectDB();

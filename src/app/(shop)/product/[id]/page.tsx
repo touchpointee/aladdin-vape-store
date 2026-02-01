@@ -1,6 +1,6 @@
 import { Metadata, ResolvingMetadata } from 'next';
 import connectDB from "@/lib/db";
-import { Product, Settings } from "@/models/all";
+import { Product, Settings } from "@/models/unified";
 import ProductDetailClient from "./ProductDetailClient";
 import Script from "next/script";
 import { notFound } from "next/navigation";

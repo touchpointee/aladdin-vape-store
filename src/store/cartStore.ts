@@ -11,6 +11,8 @@ export interface CartItem {
     capacity?: string;
     resistance?: string;
     originalPrice?: number;
+    selectedFlavour?: string;
+    selectedNicotine?: string;
 }
 
 interface CartState {
@@ -19,8 +21,8 @@ interface CartState {
     openCart: () => void;
     closeCart: () => void;
     addItem: (item: CartItem) => void;
-    removeItem: (id: string) => void;
-    updateQuantity: (id: string, quantity: number) => void;
+    removeItem: (uniqueKey: string) => void;
+    updateQuantity: (uniqueKey: string, quantity: number) => void;
     clearCart: () => void;
     totalItems: () => number;
     subtotal: () => number;
@@ -36,13 +38,16 @@ export const useCartStore = create<CartState>()(
             closeCart: () => set({ isOpen: false }),
             addItem: (item) => {
                 const currentItems = get().items;
-                const existingItem = currentItems.find((i) => i.id === item.id);
+                const uniqueKey = `${item.id}-${item.selectedFlavour || 'none'}-${item.selectedNicotine || 'none'}`;
+                const existingItem = currentItems.find((i) =>
+                    `${i.id}-${i.selectedFlavour || 'none'}-${i.selectedNicotine || 'none'}` === uniqueKey
+                );
 
                 if (existingItem) {
                     set({
                         items: currentItems.map((i) =>
-                            i.id === item.id
-                                ? { ...i, ...item, quantity: i.quantity + item.quantity } // Update item details (price) and sum quantity
+                            `${i.id}-${i.selectedFlavour || 'none'}-${i.selectedNicotine || 'none'}` === uniqueKey
+                                ? { ...i, ...item, quantity: i.quantity + item.quantity }
                                 : i
                         ),
                         isOpen: true,
@@ -51,12 +56,18 @@ export const useCartStore = create<CartState>()(
                     set({ items: [...currentItems, item], isOpen: true });
                 }
             },
-            removeItem: (id) =>
-                set({ items: get().items.filter((i) => i.id !== id) }),
-            updateQuantity: (id, quantity) =>
+            removeItem: (uniqueKey) =>
+                set({
+                    items: get().items.filter((i) =>
+                        `${i.id}-${i.selectedFlavour || 'none'}-${i.selectedNicotine || 'none'}` !== uniqueKey
+                    )
+                }),
+            updateQuantity: (uniqueKey, quantity) =>
                 set({
                     items: get().items.map((i) =>
-                        i.id === id ? { ...i, quantity: Math.max(1, quantity) } : i
+                        `${i.id}-${i.selectedFlavour || 'none'}-${i.selectedNicotine || 'none'}` === uniqueKey
+                            ? { ...i, quantity: Math.max(1, quantity) }
+                            : i
                     ),
                 }),
             clearCart: () => set({ items: [] }),
@@ -76,22 +87,33 @@ export const useCartStore = create<CartState>()(
                     const serverProduct = serverProducts.find((p: any) => p._id === item.id);
                     if (!serverProduct) return item;
 
-                    // Calculate effective price (handle discount)
-                    const discountedPrice = (serverProduct.discountPrice && serverProduct.discountPrice < serverProduct.price)
+                    // Calculate effective price (handle variants first)
+                    let basePrice = serverProduct.price || 0;
+                    let discountedPrice = (serverProduct.discountPrice && serverProduct.discountPrice < basePrice)
                         ? serverProduct.discountPrice
                         : (serverProduct.discountPercent
-                            ? (serverProduct.price - (serverProduct.price * serverProduct.discountPercent / 100))
-                            : serverProduct.price);
+                            ? (basePrice - (basePrice * serverProduct.discountPercent / 100))
+                            : (serverProduct.discountPrice || basePrice));
+
+                    if (item.selectedNicotine && serverProduct.variants?.length > 0) {
+                        const variant = serverProduct.variants.find((v: any) => v.nicotine === item.selectedNicotine);
+                        if (variant) {
+                            basePrice = variant.price;
+                            discountedPrice = (variant.discountPrice && variant.discountPrice < variant.price)
+                                ? variant.discountPrice
+                                : variant.price;
+                        }
+                    }
 
                     return {
                         ...item,
                         price: discountedPrice,
-                        name: serverProduct.name, // Update name just in case
+                        name: serverProduct.name,
                         image: serverProduct.images?.[0] || item.image,
                         puffCount: serverProduct.puffCount,
                         capacity: serverProduct.capacity,
                         resistance: serverProduct.resistance,
-                        originalPrice: discountedPrice < serverProduct.price ? serverProduct.price : undefined
+                        originalPrice: (discountedPrice < basePrice) ? basePrice : undefined
                     };
                 });
 

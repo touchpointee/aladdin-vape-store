@@ -2,7 +2,7 @@ import Header from '@/components/layout/Header';
 import BottomNav from '@/components/layout/BottomNav';
 import CartDrawer from '@/components/cart/CartDrawer';
 import connectDB from "@/lib/db";
-import { Category } from "@/models/all";
+import { Category } from "@/models/unified";
 import FloatingWhatsApp from '@/components/common/FloatingWhatsApp';
 
 export default async function ShopLayout({

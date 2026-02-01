@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Trash2 } from "lucide-react";
 
 interface Product {
     _id: string;
@@ -21,6 +21,13 @@ interface Product {
     puffCount?: number;
     capacity?: string;
     resistance?: string;
+    flavours?: string[];
+    variants?: {
+        nicotine: string;
+        price: number;
+        discountPrice?: number;
+        stock: number;
+    }[];
 }
 
 interface Option {
@@ -52,6 +59,9 @@ export default function ProductsPage() {
         isTopSelling: false,
         isNewArrival: false,
         status: 'active',
+        flavours: [] as string[],
+        variants: [] as { nicotine: string; price: string; discountPrice: string; stock: string }[],
+        pricingMode: "single" as "single" | "variant", // Added pricingMode
     });
     const [imageFiles, setImageFiles] = useState<File[]>([]);
     const [existingImages, setExistingImages] = useState<string[]>([]);
@@ -79,21 +89,30 @@ export default function ProductsPage() {
 
     const handleEdit = (product: Product) => {
         setEditingId(product._id);
+        const hasVariants = product.variants && product.variants.length > 0;
         setFormData({
             name: product.name,
-            price: product.price.toString(),
+            price: product.price?.toString() || '', // Ensure price is string
             discountPrice: product.discountPrice?.toString() || '',
-            stock: product.stock.toString(),
+            stock: product.stock?.toString() || '', // Ensure stock is string
             puffCount: product.puffCount?.toString() || '',
             capacity: product.capacity || '',
             resistance: product.resistance || '',
-            category: product.category?._id || '', // Safe access
-            brand: product.brand?._id || '',       // Safe access
+            category: product.category?._id || '',
+            brand: product.brand?._id || '',
             description: product.description || '',
             isHot: product.isHot || false,
             isTopSelling: product.isTopSelling || false,
             isNewArrival: product.isNewArrival || false,
             status: product.status || 'active',
+            flavours: product.flavours || [],
+            variants: (product.variants || []).map(v => ({
+                nicotine: v.nicotine,
+                price: v.price.toString(),
+                discountPrice: v.discountPrice?.toString() || '',
+                stock: v.stock.toString()
+            })),
+            pricingMode: hasVariants ? "variant" : "single", // Set pricingMode based on variants
         });
         setExistingImages(product.images || []);
         setShowForm(true);
@@ -102,13 +121,39 @@ export default function ProductsPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!formData.name || !formData.category || !formData.price) return alert('Missing required fields');
+        if (!formData.name || !formData.category) return alert('Missing required fields');
+
+        // Validate pricing based on mode
+        if (formData.pricingMode === 'single') {
+            if (!formData.price || !formData.stock) return alert('Price and Stock are required for single pricing mode.');
+        } else { // variant mode
+            if (formData.variants.length === 0) return alert('At least one variant is required for variant pricing mode.');
+            for (const variant of formData.variants) {
+                if (!variant.nicotine || !variant.price || !variant.stock) {
+                    return alert('All variant fields (nicotine, price, stock) are required.');
+                }
+            }
+        }
 
         const data = new FormData();
         if (editingId) data.append('_id', editingId);
 
         Object.entries(formData).forEach(([key, value]) => {
-            data.append(key, value.toString());
+            if (key === 'flavours') {
+                (value as string[]).forEach(f => data.append('flavours', f));
+            } else if (key === 'variants') {
+                // Only append variants if pricingMode is 'variant'
+                if (formData.pricingMode === 'variant') {
+                    data.append('variants', JSON.stringify(value));
+                }
+            } else if (key === 'price' || key === 'discountPrice' || key === 'stock') {
+                // Only append single price/stock if pricingMode is 'single'
+                if (formData.pricingMode === 'single') {
+                    data.append(key, value.toString());
+                }
+            } else if (key !== 'pricingMode') { // Don't send pricingMode to backend
+                data.append(key, value.toString());
+            }
         });
 
         // Append existing images (for deletion/reordering context)
@@ -132,7 +177,8 @@ export default function ProductsPage() {
                 setShowForm(false);
                 setEditingId(null); // Reset edit mode
                 setFormData({
-                    name: '', price: '', discountPrice: '', stock: '', puffCount: '', capacity: '', resistance: '', category: '', brand: '', description: '', isHot: false, isTopSelling: false, isNewArrival: false, status: 'active'
+                    name: '', price: '', discountPrice: '', stock: '', puffCount: '', capacity: '', resistance: '', category: '', brand: '', description: '', isHot: false, isTopSelling: false, isNewArrival: false, status: 'active',
+                    flavours: [], variants: [], pricingMode: 'single' // Reset pricingMode
                 });
                 setImageFiles([]);
                 setExistingImages([]);
@@ -290,7 +336,8 @@ export default function ProductsPage() {
                         setEditingId(null);
                         if (!showForm) {
                             setFormData({
-                                name: '', price: '', discountPrice: '', stock: '', puffCount: '', capacity: '', resistance: '', category: '', brand: '', description: '', isHot: false, isTopSelling: false, isNewArrival: false, status: 'active'
+                                name: '', price: '', discountPrice: '', stock: '', puffCount: '', capacity: '', resistance: '', category: '', brand: '', description: '', isHot: false, isTopSelling: false, isNewArrival: false, status: 'active',
+                                flavours: [], variants: [], pricingMode: 'single' // Reset pricingMode
                             });
                             setExistingImages([]);
                         }
@@ -391,20 +438,141 @@ export default function ProductsPage() {
                             <input type="text" className="w-full border p-2 rounded" required value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
                         </div>
 
-                        {/* Pricing & Stock */}
-                        <div className="mt-4"><h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">Pricing & Inventory</h3></div>
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Price (INR) *</label>
-                            <input type="number" className="w-full border p-2 rounded" required value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} />
+                        {/* Pricing Mode Selection */}
+                        <div className="mt-4">
+                            <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Pricing Strategy</label>
+                            <div className="flex p-1 bg-gray-100 rounded-lg w-fit">
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, pricingMode: 'single' })}
+                                    className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${formData.pricingMode === 'single'
+                                        ? 'bg-white text-blue-600 shadow-sm'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                        }`}
+                                >
+                                    Single Price (Default)
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setFormData({
+                                            ...formData,
+                                            pricingMode: 'variant',
+                                            variants: formData.variants.length > 0 ? formData.variants : [{ nicotine: '', price: '', discountPrice: '', stock: '' }]
+                                        });
+                                    }}
+                                    className={`px-4 py-2 rounded-md text-sm font-bold transition-all ${formData.pricingMode === 'variant'
+                                        ? 'bg-white text-purple-600 shadow-sm'
+                                        : 'text-gray-500 hover:text-gray-700'
+                                        }`}
+                                >
+                                    Multiple Variants (Nicotine/Sizes)
+                                </button>
+                            </div>
                         </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Discount Price</label>
-                            <input type="number" className="w-full border p-2 rounded" value={formData.discountPrice} onChange={e => setFormData({ ...formData, discountPrice: e.target.value })} />
-                        </div>
-                        <div>
-                            <label className="block text-sm font-medium mb-1">Stock *</label>
-                            <input type="number" className="w-full border p-2 rounded" required value={formData.stock} onChange={e => setFormData({ ...formData, stock: e.target.value })} />
-                        </div>
+
+                        {formData.pricingMode === 'single' ? (
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 bg-blue-50/30 p-4 rounded-xl border border-blue-100">
+                                <div className="md:col-span-3">
+                                    <h3 className="text-[10px] font-bold text-blue-500 uppercase">Standard Pricing</h3>
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Base Price (INR) *</label>
+                                    <input type="number" className="w-full border p-2 rounded-lg" required value={formData.price} onChange={e => setFormData({ ...formData, price: e.target.value })} />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Discount Price (Optional)</label>
+                                    <input type="number" className="w-full border p-2 rounded-lg" value={formData.discountPrice} onChange={e => setFormData({ ...formData, discountPrice: e.target.value })} />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium mb-1">Total Stock *</label>
+                                    <input type="number" className="w-full border p-2 rounded-lg" required value={formData.stock} onChange={e => setFormData({ ...formData, stock: e.target.value })} />
+                                </div>
+                            </div>
+                        ) : (
+                            /* Nicotine Variants Section */
+                            <div className="bg-purple-50/50 p-4 rounded-lg border border-purple-100">
+                                <h3 className="text-xs font-bold text-purple-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                    <Plus size={14} /> Nicotine/Capacity Variants
+                                </h3>
+                                <div className="space-y-4 mb-4">
+                                    {formData.variants.map((v, i) => (
+                                        <div key={i} className="relative p-4 rounded-xl bg-white border border-purple-100 shadow-sm space-y-3">
+                                            <button
+                                                type="button"
+                                                onClick={() => setFormData({ ...formData, variants: formData.variants.filter((_, idx) => idx !== i) })}
+                                                className="absolute -top-2 -right-2 bg-red-100 text-red-600 p-1.5 rounded-full hover:bg-red-200 transition shadow-sm z-10"
+                                            >
+                                                <Trash2 size={14} />
+                                            </button>
+
+                                            <div className="grid grid-cols-2 gap-3">
+                                                <div className="col-span-2">
+                                                    <label className="block text-[10px] uppercase text-gray-400 font-bold mb-1">Variant Name (e.g. 50mg / 10ml)</label>
+                                                    <input
+                                                        type="text"
+                                                        className="w-full border p-2 rounded-lg text-sm bg-gray-50"
+                                                        value={v.nicotine}
+                                                        placeholder="e.g. 20mg Nicotine"
+                                                        onChange={(e) => {
+                                                            const newVariants = [...formData.variants];
+                                                            newVariants[i].nicotine = e.target.value;
+                                                            setFormData({ ...formData, variants: newVariants });
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] uppercase text-gray-400 font-bold mb-1">Price</label>
+                                                    <input
+                                                        type="number"
+                                                        className="w-full border p-2 rounded-lg text-sm bg-gray-50"
+                                                        value={v.price}
+                                                        onChange={(e) => {
+                                                            const newVariants = [...formData.variants];
+                                                            newVariants[i].price = e.target.value;
+                                                            setFormData({ ...formData, variants: newVariants });
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] uppercase text-gray-400 font-bold mb-1">Discount Price</label>
+                                                    <input
+                                                        type="number"
+                                                        className="w-full border p-2 rounded-lg text-sm bg-gray-50"
+                                                        value={v.discountPrice}
+                                                        onChange={(e) => {
+                                                            const newVariants = [...formData.variants];
+                                                            newVariants[i].discountPrice = e.target.value;
+                                                            setFormData({ ...formData, variants: newVariants });
+                                                        }}
+                                                    />
+                                                </div>
+                                                <div className="col-span-2">
+                                                    <label className="block text-[10px] uppercase text-gray-400 font-bold mb-1">Stock Level</label>
+                                                    <input
+                                                        type="number"
+                                                        className="w-full border p-2 rounded-lg text-sm bg-gray-50"
+                                                        value={v.stock}
+                                                        onChange={(e) => {
+                                                            const newVariants = [...formData.variants];
+                                                            newVariants[i].stock = e.target.value;
+                                                            setFormData({ ...formData, variants: newVariants });
+                                                        }}
+                                                    />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                                <button
+                                    type="button"
+                                    onClick={() => setFormData({ ...formData, variants: [...formData.variants, { nicotine: '', price: '', discountPrice: '', stock: '' }] })}
+                                    className="w-full border-2 border-dashed border-purple-200 p-3 rounded-lg text-purple-400 hover:border-purple-400 hover:text-purple-600 transition-all font-bold text-sm uppercase flex items-center justify-center gap-2"
+                                >
+                                    <Plus size={16} /> Add Another Variant
+                                </button>
+                            </div>
+                        )}
                         <div className="grid grid-cols-2 gap-4">
                             <div>
                                 <label className="block text-sm font-medium mb-1">Puff Count</label>
@@ -419,6 +587,57 @@ export default function ProductsPage() {
                                 <input type="text" className="w-full border p-2 rounded" value={formData.resistance} placeholder="e.g. 0.8ohm" onChange={e => setFormData({ ...formData, resistance: e.target.value })} />
                             </div>
                         </div>
+
+                        {/* Flavours Section */}
+                        <div className="bg-blue-50/50 p-4 rounded-lg border border-blue-100">
+                            <h3 className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                <Plus size={14} /> Flavours
+                            </h3>
+                            <div className="flex flex-wrap gap-2 mb-3">
+                                {formData.flavours.map((f, i) => (
+                                    <div key={i} className="flex items-center gap-1 bg-white px-3 py-1 rounded-full border border-blue-200">
+                                        <span className="text-sm font-medium">{f}</span>
+                                        <button type="button" onClick={() => setFormData({ ...formData, flavours: formData.flavours.filter((_, idx) => idx !== i) })} className="text-red-500 hover:text-red-700">
+                                            <X size={14} />
+                                        </button>
+                                    </div>
+                                ))}
+                            </div>
+                            <div className="flex gap-2">
+                                <input
+                                    type="text"
+                                    id="new-flavour"
+                                    placeholder="Add flavour (e.g. Mint)"
+                                    className="flex-1 border p-2 rounded text-sm bg-white"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                            e.preventDefault();
+                                            const val = (e.target as HTMLInputElement).value.trim();
+                                            if (val && !formData.flavours.includes(val)) {
+                                                setFormData({ ...formData, flavours: [...formData.flavours, val] });
+                                                (e.target as HTMLInputElement).value = '';
+                                            }
+                                        }
+                                    }}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const input = document.getElementById('new-flavour') as HTMLInputElement;
+                                        const val = input.value.trim();
+                                        if (val && !formData.flavours.includes(val)) {
+                                            setFormData({ ...formData, flavours: [...formData.flavours, val] });
+                                            input.value = '';
+                                        }
+                                    }}
+                                    className="bg-blue-600 text-white px-4 py-2 rounded text-sm font-bold shadow-sm"
+                                >
+                                    Add
+                                </button>
+                            </div>
+                        </div>
+
+
 
                         {/* Relations */}
                         <div className="mt-4"><h3 className="text-sm font-bold text-gray-500 uppercase tracking-wider">Organization</h3></div>
@@ -442,6 +661,8 @@ export default function ProductsPage() {
                             <label className="block text-sm font-medium mb-1">Description</label>
                             <textarea className="w-full border p-2 rounded h-24" value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })} />
                         </div>
+
+
 
                         <div className="flex flex-wrap gap-6 mt-2">
                             <label className="flex items-center gap-2 cursor-pointer bg-red-50 p-2 rounded border border-red-100 pr-4">
@@ -528,25 +749,71 @@ export default function ProductsPage() {
                                         )}
                                     </td>
                                     <td className="p-4 font-medium">
-                                        <div className="line-clamp-2 w-48 md:w-64 whitespace-normal" title={prod.name}>
+                                        <div className="line-clamp-2 w-48 md:w-64 whitespace-normal font-bold text-gray-900" title={prod.name}>
                                             {prod.name}
                                         </div>
-                                    </td>
-                                    <td className="p-4 text-gray-500">{prod.category?.name}</td>
-                                    <td className="p-4">
-                                        <div className="flex flex-col gap-1">
-                                            {prod.discountPrice && prod.discountPrice < prod.price ? (
-                                                <>
-                                                    <span className="font-bold text-red-600">{prod.discountPrice} INR</span>
-                                                    <span className="text-xs text-gray-400 line-through">{prod.price} INR</span>
-                                                </>
-                                            ) : (
-                                                <span className="font-bold text-gray-900">{prod.price} INR</span>
+                                        <div className="flex flex-wrap gap-1 mt-1">
+                                            {prod.flavours && prod.flavours.length > 0 && (
+                                                <span className="text-[9px] bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100 font-black uppercase">
+                                                    {prod.flavours.length} Flavours
+                                                </span>
+                                            )}
+                                            {prod.variants && prod.variants.length > 0 && (
+                                                <span className="text-[9px] bg-purple-50 text-purple-600 px-1.5 py-0.5 rounded border border-purple-100 font-black uppercase">
+                                                    {prod.variants.length} Variants
+                                                </span>
                                             )}
                                         </div>
                                     </td>
-                                    <td className={`p-4 ${prod.stock < 5 ? 'text-red-500 font-bold' : 'text-green-600'}`}>
-                                        {prod.stock}
+                                    <td className="p-4 text-gray-500 font-medium">
+                                        <span className="bg-gray-100 px-2 py-1 rounded text-xs">{prod.category?.name || 'Uncategorized'}</span>
+                                    </td>
+                                    <td className="p-4">
+                                        <div className="flex flex-col gap-1">
+                                            {(() => {
+                                                const hasVariants = prod.variants && prod.variants.length > 0;
+                                                if (hasVariants) {
+                                                    const prices = prod.variants!.map(v => v.price);
+                                                    const minPrice = Math.min(...prices);
+                                                    const maxPrice = Math.max(...prices);
+                                                    return (
+                                                        <div className="flex flex-col">
+                                                            <span className="text-[10px] text-purple-600 font-black uppercase">Variant Pricing</span>
+                                                            <span className="font-bold text-gray-900">
+                                                                {minPrice === maxPrice ? `${minPrice} INR` : `${minPrice} - ${maxPrice} INR`}
+                                                            </span>
+                                                        </div>
+                                                    );
+                                                }
+
+                                                if (prod.discountPrice && prod.discountPrice < prod.price) {
+                                                    return (
+                                                        <>
+                                                            <span className="font-bold text-red-600">{prod.discountPrice} INR</span>
+                                                            <span className="text-xs text-gray-400 line-through">{prod.price} INR</span>
+                                                        </>
+                                                    );
+                                                }
+                                                return <span className="font-bold text-gray-900">{prod.price || 0} INR</span>;
+                                            })()}
+                                        </div>
+                                    </td>
+                                    <td className="p-4">
+                                        {(() => {
+                                            const hasVariants = prod.variants && prod.variants.length > 0;
+                                            const totalStock = hasVariants
+                                                ? prod.variants!.reduce((acc, v) => acc + v.stock, 0)
+                                                : (prod.stock || 0);
+
+                                            return (
+                                                <div className="flex flex-col">
+                                                    <span className={`font-black ${totalStock < 5 ? 'text-red-500' : 'text-green-600'}`}>
+                                                        {totalStock}
+                                                    </span>
+                                                    {hasVariants && <span className="text-[9px] text-gray-400 uppercase font-bold">Total Stock</span>}
+                                                </div>
+                                            );
+                                        })()}
                                     </td>
                                     <td className="p-4 flex items-center gap-4">
                                         <div className="flex items-center gap-2">

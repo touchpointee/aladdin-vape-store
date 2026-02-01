@@ -1,7 +1,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
-import { Order } from '@/models/all';
+import { Order } from '@/models/unified';
 
 export const dynamic = 'force-dynamic';
 

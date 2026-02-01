@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
-import Category from '@/models/Category';
-import Brand from '@/models/Brand';
+import { Category, Brand } from '@/models/unified';
 
 export async function POST(req: NextRequest) {
     try {

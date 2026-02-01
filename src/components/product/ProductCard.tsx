@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { Heart, Search, Star, ShoppingBag } from "lucide-react";
-import { IProduct } from "@/models/all";
+import { IProduct } from "@/models/unified";
 import { useCartStore } from "@/store/cartStore";
 import { useWishlistStore } from "@/store/wishlistStore";
 
@@ -87,16 +87,23 @@ export default function ProductCard({ product }: ProductCardProps) {
             <div className="p-3 relative z-10 pointer-events-none">
                 {/* Price */}
                 <div className="flex items-center gap-2 mb-1">
-                    {product.discountPrice && product.discountPrice < product.price! ? (
-                        <>
-                            <span className="text-xs text-gray-400 line-through">INR {product.price}</span>
-                            <span className="text-sm font-bold text-red-500">
-                                INR {product.discountPrice}
-                            </span>
-                        </>
-                    ) : (
-                        <span className="text-sm font-bold text-gray-900">INR {product.price}</span>
-                    )}
+                    {(() => {
+                        const hasVariants = !!(product.variants && product.variants.length > 0);
+                        const displayPrice = hasVariants ? product.variants?.[0]?.price : product.price;
+                        const displayDiscountPrice = hasVariants ? product.variants?.[0]?.discountPrice : product.discountPrice;
+
+                        if (displayDiscountPrice && displayDiscountPrice < (displayPrice || 0)) {
+                            return (
+                                <>
+                                    <span className="text-xs text-gray-400 line-through">INR {displayPrice}</span>
+                                    <span className="text-sm font-bold text-red-500">
+                                        INR {displayDiscountPrice}
+                                    </span>
+                                </>
+                            );
+                        }
+                        return <span className="text-sm font-bold text-gray-900">INR {displayPrice || 0}</span>;
+                    })()}
                 </div>
 
                 {/* Name */}
@@ -137,15 +144,24 @@ export default function ProductCard({ product }: ProductCardProps) {
                     onClick={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
+
+                        const hasVariants = !!(product.variants && product.variants.length > 0);
+                        const firstVariant = hasVariants ? product.variants![0] : null;
+                        const finalPrice = firstVariant
+                            ? (firstVariant.discountPrice || firstVariant.price)
+                            : (product.discountPrice || product.price || 0);
+
                         addItem({
                             id: product._id,
                             name: product.name || "Product",
-                            price: product.discountPrice || product.price || 0,
+                            price: finalPrice,
                             image: product.images?.[0] || "",
                             quantity: 1,
                             puffCount: product.puffCount,
                             capacity: product.capacity,
                             resistance: product.resistance,
+                            selectedFlavour: product.flavours?.[0] || "",
+                            selectedNicotine: firstVariant?.nicotine || "",
                         });
                     }}
                     className="w-full py-2 bg-blue-600 text-white rounded font-bold text-[10px] uppercase hover:bg-blue-700 transition-colors pointer-events-auto cursor-pointer flex items-center justify-center gap-1.5 shadow-sm active:scale-95"
