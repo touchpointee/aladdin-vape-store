@@ -22,7 +22,7 @@ export default function BrandSection({ brands }: BrandSectionProps) {
                     >
                         <div className="w-full h-full relative mb-2">
                             {brand.logo ? (
-                                <Image src={brand.logo} alt={brand.name} fill className="object-contain p-2 group-hover:scale-105 transition-transform duration-500" />
+                                <Image src={brand.logo} alt={brand.name} fill className="object-contain p-2 group-hover:scale-105 transition-transform duration-500" unoptimized />
                             ) : (
                                 <div className="w-full h-full rounded-full bg-gray-50 flex items-center justify-center border border-dashed border-gray-200">
                                     <span className="text-2xl font-black text-gray-200">{brand.name[0]}</span>

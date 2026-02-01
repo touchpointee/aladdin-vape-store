@@ -141,7 +141,7 @@ export default function BrandsPage() {
                             <div className="mt-2 text-sm text-gray-500">
                                 <p>Current Logo:</p>
                                 <div className="relative w-20 h-20 rounded border overflow-hidden mt-1">
-                                    <Image src={previewImage} alt="Current Logo" fill className="object-cover" />
+                                    <Image src={previewImage} alt="Current Logo" fill className="object-cover" unoptimized />
                                 </div>
                             </div>
                         )}
@@ -172,7 +172,7 @@ export default function BrandsPage() {
                                 <td className="p-4">
                                     {brand.logo && (
                                         <div className="relative w-12 h-12 rounded overflow-hidden">
-                                            <Image src={brand.logo} alt={brand.name} fill className="object-cover" />
+                                            <Image src={brand.logo} alt={brand.name} fill className="object-cover" unoptimized />
                                         </div>
                                     )}
                                 </td>

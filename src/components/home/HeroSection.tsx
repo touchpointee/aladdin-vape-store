@@ -47,6 +47,7 @@ export default function HeroSection({ settings }: HeroSectionProps) {
                     fill
                     className="object-cover transition-transform duration-700 group-hover:scale-105"
                     priority={theme === 'purple'}
+                    unoptimized
                 />
                 {/* No Overlay - Direct text on image with shadow for readability */}
                 <div className="absolute inset-0 flex flex-col justify-center pl-10 md:pl-12 z-10 w-full sm:w-[80%] md:w-[70%] text-left">

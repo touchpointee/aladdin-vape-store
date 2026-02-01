@@ -67,6 +67,7 @@ Link: ${window.location.href}`;
                         alt={product.name}
                         fill
                         className="object-contain p-8 md:p-12 hover:scale-105 transition duration-500"
+                        unoptimized
                     />
                 </div>
 

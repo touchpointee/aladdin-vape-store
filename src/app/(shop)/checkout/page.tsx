@@ -468,6 +468,7 @@ export default function CheckoutPage() {
                                                 alt="Payment QR Code"
                                                 fill
                                                 className="object-contain p-2"
+                                                unoptimized
                                             />
                                         </div>
                                     ) : (

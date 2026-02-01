@@ -91,6 +91,7 @@ export default function WishlistPage() {
                                         alt={product.name}
                                         fill
                                         className="object-contain p-2 group-hover:scale-105 transition-transform duration-500"
+                                        unoptimized
                                     />
                                 </div>
                                 <div className="p-3 md:p-4 flex flex-col flex-1 relative z-20">

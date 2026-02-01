@@ -273,6 +273,7 @@ export default function AdminOrderDetailPage() {
                                                         alt={item.product.name}
                                                         fill
                                                         className="object-contain p-2"
+                                                        unoptimized
                                                     />
                                                 )}
                                             </div>

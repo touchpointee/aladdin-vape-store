@@ -161,6 +161,7 @@ export default function OrderDetailPage() {
                                         alt={item.product?.name || 'Product'}
                                         fill
                                         className="object-contain p-1"
+                                        unoptimized
                                     />
                                 </div>
                                 <div className="flex-1">

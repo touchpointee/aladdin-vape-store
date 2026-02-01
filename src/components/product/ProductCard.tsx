@@ -79,6 +79,7 @@ export default function ProductCard({ product }: ProductCardProps) {
                     alt={product.name ? `Buy ${product.name} - Online Vape Store India` : "Premium Vape Product"}
                     fill
                     className="object-contain group-hover:scale-105 transition-transform duration-300"
+                    unoptimized
                 />
             </div>
 

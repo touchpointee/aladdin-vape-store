@@ -104,6 +104,7 @@ export default function Header({ categories = [] }: HeaderProps) {
                                     fill
                                     className="object-contain"
                                     priority
+                                    unoptimized
                                 />
                             </div>
                         </Link>
@@ -156,6 +157,7 @@ export default function Header({ categories = [] }: HeaderProps) {
                                                                 alt={product.name}
                                                                 fill
                                                                 className="object-cover"
+                                                                unoptimized
                                                             />
                                                         )}
                                                     </div>

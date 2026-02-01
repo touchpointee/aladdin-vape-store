@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Image from "next/image";
 import { Plus, X } from "lucide-react";
 
@@ -184,54 +184,197 @@ export default function ProductsPage() {
     };
 
     const [searchQuery, setSearchQuery] = useState('');
+    const [stockFilter, setStockFilter] = useState<'all' | 'out' | 'low'>('all');
+    const [selectedCategory, setSelectedCategory] = useState('');
+    const [selectedBrand, setSelectedBrand] = useState('');
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 20;
+
+    // Reset pagination when filters change
+    useEffect(() => {
+        setCurrentPage(1);
+    }, [searchQuery, stockFilter, selectedCategory, selectedBrand]);
+
+    // Available brands based on selected category in FILTER BAR
+    const filteredBrandsForFilter = useMemo(() => {
+        if (!selectedCategory) return brands;
+        // Find brands that have products in the selected category
+        const brandIdsInCategory = new Set(
+            products
+                .filter(p => p.category?._id === selectedCategory)
+                .map(p => p.brand?._id)
+                .filter(Boolean)
+        );
+        return brands.filter(b => brandIdsInCategory.has(b._id));
+    }, [brands, products, selectedCategory]);
+
+    // Available brands based on selected category in FORM
+    const filteredBrandsForForm = useMemo(() => {
+        if (!formData.category) return brands;
+        // Same logic but for the form's category selection
+        const brandIdsInCategory = new Set(
+            products
+                .filter(p => p.category?._id === formData.category)
+                .map(p => p.brand?._id)
+                .filter(Boolean)
+        );
+        const filtered = brands.filter(b => brandIdsInCategory.has(b._id));
+        // If current brand exists but isn't in filtered list, it might be a new assignment,
+        // so we should probably still allow all brands in the form IF no products exist yet.
+        // But for consistency with the user request, let's keep it filtered.
+        return filtered.length > 0 ? filtered : brands;
+    }, [brands, products, formData.category]);
+
+    // Reset brand filter if not applicable to new category
+    useEffect(() => {
+        if (selectedBrand && !filteredBrandsForFilter.find(b => b._id === selectedBrand)) {
+            setSelectedBrand('');
+        }
+    }, [selectedCategory, filteredBrandsForFilter, selectedBrand]);
+
+    // Calculate stock levels
+    const outOfStockCount = products.filter(p => p.stock === 0).length;
+    const lowStockCount = products.filter(p => p.stock > 0 && p.stock < 5).length;
 
     // Filtered Products
     const filteredProducts = products.filter(product => {
         const query = searchQuery.toLowerCase();
-        return (
-            product.name.toLowerCase().includes(query) ||
+
+        // Search filter
+        const matchesSearch = product.name.toLowerCase().includes(query) ||
             product.category?.name.toLowerCase().includes(query) ||
-            product.brand?.name.toLowerCase().includes(query)
-        );
+            product.brand?.name.toLowerCase().includes(query);
+
+        if (!matchesSearch) return false;
+
+        // Stock filter
+        if (stockFilter === 'out' && product.stock !== 0) return false;
+        if (stockFilter === 'low' && (product.stock === 0 || product.stock >= 5)) return false;
+
+        // Category filter
+        if (selectedCategory && product.category?._id !== selectedCategory) return false;
+
+        // Brand filter
+        if (selectedBrand && product.brand?._id !== selectedBrand) return false;
+
+        return true;
     });
+
+    // Pagination Logic
+    const totalPages = Math.ceil(filteredProducts.length / ITEMS_PER_PAGE);
+    const paginatedProducts = filteredProducts.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
+
+    const isFiltered = searchQuery !== '' || stockFilter !== 'all' || selectedCategory !== '' || selectedBrand !== '';
+
+    const handleClearFilters = () => {
+        setSearchQuery('');
+        setStockFilter('all');
+        setSelectedCategory('');
+        setSelectedBrand('');
+        setCurrentPage(1);
+    };
 
     return (
         <div>
-            <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                <h1 className="text-2xl font-bold">Product Management</h1>
+            <div className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+                <div>
+                    <h1 className="text-2xl font-bold text-gray-800">Product Management</h1>
+                    <p className="text-sm text-gray-500">Manage your product inventory and attributes</p>
+                </div>
+                <button
+                    onClick={() => {
+                        setShowForm(!showForm);
+                        setEditingId(null);
+                        if (!showForm) {
+                            setFormData({
+                                name: '', price: '', discountPrice: '', stock: '', puffCount: '', capacity: '', resistance: '', category: '', brand: '', description: '', isHot: false, isTopSelling: false, isNewArrival: false, status: 'active'
+                            });
+                            setExistingImages([]);
+                        }
+                    }}
+                    className="bg-blue-600 text-white px-6 py-2.5 rounded-lg flex items-center justify-center gap-2 w-full md:w-auto shadow-lg hover:bg-blue-700 active:scale-95 transition-all text-sm font-bold uppercase"
+                >
+                    <Plus size={20} /> {showForm ? 'Cancel' : 'Add Product'}
+                </button>
+            </div>
 
-                <div className="flex items-center gap-4 w-full md:w-auto">
-                    {/* Search Bar */}
-                    <div className="relative flex-1 md:w-64">
-                        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                            </svg>
-                        </div>
-                        <input
-                            type="text"
-                            placeholder="Search products..."
-                            className="pl-10 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                        />
+            <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-8 space-y-4">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    {/* Stock Filters */}
+                    <div className="flex items-center gap-1 bg-gray-100 p-1 rounded-lg self-start">
+                        <button
+                            onClick={() => setStockFilter('all')}
+                            className={`px-3 py-1.5 text-[10px] font-bold uppercase rounded-md transition-all ${stockFilter === 'all' ? 'bg-white text-blue-600 shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}
+                        >
+                            All ({products.length})
+                        </button>
+                        <button
+                            onClick={() => setStockFilter('out')}
+                            className={`px-3 py-1.5 text-[10px] font-bold uppercase rounded-md transition-all ${stockFilter === 'out' ? 'bg-red-600 text-white shadow-sm' : 'text-red-500 hover:bg-red-50'}`}
+                        >
+                            Out of Stock ({outOfStockCount})
+                        </button>
+                        <button
+                            onClick={() => setStockFilter('low')}
+                            className={`px-3 py-1.5 text-[10px] font-bold uppercase rounded-md transition-all ${stockFilter === 'low' ? 'bg-orange-500 text-white shadow-sm' : 'text-orange-500 hover:bg-orange-50'}`}
+                        >
+                            Low Stock ({lowStockCount})
+                        </button>
                     </div>
 
-                    <button
-                        onClick={() => {
-                            setShowForm(!showForm);
-                            setEditingId(null);
-                            if (!showForm) { // If opening, reset
-                                setFormData({
-                                    name: '', price: '', discountPrice: '', stock: '', puffCount: '', capacity: '', resistance: '', category: '', brand: '', description: '', isHot: false, isTopSelling: false, isNewArrival: false, status: 'active'
-                                });
-                                setExistingImages([]);
-                            }
-                        }}
-                        className="bg-blue-600 text-white px-4 py-2 rounded flex items-center gap-2 whitespace-nowrap"
-                    >
-                        <Plus size={20} /> {showForm ? 'Cancel' : 'Add Product'}
-                    </button>
+                    <div className="flex flex-col sm:flex-row items-center gap-3 flex-1 lg:max-w-3xl">
+                        {/* Search Bar */}
+                        <div className="relative flex-1 w-full">
+                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                                </svg>
+                            </div>
+                            <input
+                                type="text"
+                                placeholder="Search products..."
+                                className="pl-9 pr-4 py-2 border rounded-lg w-full focus:outline-none focus:ring-2 focus:ring-blue-500 shadow-sm text-sm"
+                                value={searchQuery}
+                                onChange={(e) => setSearchQuery(e.target.value)}
+                            />
+                        </div>
+
+                        {/* Category & Brand Filters */}
+                        <div className="flex items-center gap-2 w-full sm:w-auto">
+                            <select
+                                value={selectedCategory}
+                                onChange={(e) => setSelectedCategory(e.target.value)}
+                                className="text-xs font-bold border rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-blue-500 shadow-sm w-full sm:w-40"
+                            >
+                                <option value="">All Categories</option>
+                                {categories.map((cat) => (
+                                    <option key={cat._id} value={cat._id}>{cat.name}</option>
+                                ))}
+                            </select>
+                            <select
+                                value={selectedBrand}
+                                onChange={(e) => setSelectedBrand(e.target.value)}
+                                className="text-xs font-bold border rounded-lg px-3 py-2 bg-white outline-none focus:ring-2 focus:ring-blue-500 shadow-sm w-full sm:w-40"
+                            >
+                                <option value="">{selectedCategory ? 'Filter Brand' : 'All Brands'}</option>
+                                {filteredBrandsForFilter.map((brand) => (
+                                    <option key={brand._id} value={brand._id}>{brand.name}</option>
+                                ))}
+                            </select>
+                        </div>
+
+                        {isFiltered && (
+                            <button
+                                onClick={handleClearFilters}
+                                className="flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-100 whitespace-nowrap"
+                            >
+                                <X size={14} /> Clear
+                            </button>
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -290,7 +433,7 @@ export default function ProductsPage() {
                             <label className="block text-sm font-medium mb-1">Brand</label>
                             <select className="w-full border p-2 rounded" value={formData.brand} onChange={e => setFormData({ ...formData, brand: e.target.value })}>
                                 <option value="">Select Brand</option>
-                                {brands.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
+                                {filteredBrandsForForm.map(b => <option key={b._id} value={b._id}>{b.name}</option>)}
                             </select>
                         </div>
 
@@ -324,7 +467,7 @@ export default function ProductsPage() {
                                 <div className="flex flex-wrap gap-4 mb-4">
                                     {existingImages.map((img, index) => (
                                         <div key={index} className="relative w-24 h-24 border rounded overflow-hidden group">
-                                            <Image src={img} alt="Product" fill className="object-cover" />
+                                            <Image src={img} alt="Product" fill className="object-cover" unoptimized />
                                             <button
                                                 type="button"
                                                 onClick={() => setExistingImages(existingImages.filter((_, i) => i !== index))}
@@ -375,12 +518,12 @@ export default function ProductsPage() {
                         <tbody className="divide-y">
                             {loading ? (
                                 <tr><td colSpan={6} className="p-4 text-center">Loading...</td></tr>
-                            ) : filteredProducts.map((prod) => (
+                            ) : paginatedProducts.map((prod) => (
                                 <tr key={prod._id} className="hover:bg-gray-50">
                                     <td className="p-4">
                                         {prod.images?.[0] && (
                                             <div className="relative w-12 h-12 rounded overflow-hidden flex-shrink-0">
-                                                <Image src={prod.images[0]} alt={prod.name} fill className="object-cover" />
+                                                <Image src={prod.images[0]} alt={prod.name} fill className="object-cover" unoptimized />
                                             </div>
                                         )}
                                     </td>
@@ -433,6 +576,41 @@ export default function ProductsPage() {
                     </table>
                 </div>
             </div>
+            {/* Pagination Controls */}
+            {!loading && totalPages > 1 && (
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-6 px-4 py-3 bg-white border rounded-lg shadow-sm">
+                    <div className="text-sm text-gray-500">
+                        Showing <span className="font-bold">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="font-bold">{Math.min(currentPage * ITEMS_PER_PAGE, filteredProducts.length)}</span> of <span className="font-bold">{filteredProducts.length}</span> products
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                            className="px-4 py-2 border rounded-md text-sm font-medium disabled:opacity-50 disabled:bg-gray-50 hover:bg-gray-50 transition-colors"
+                        >
+                            Previous
+                        </button>
+                        <div className="flex items-center gap-1">
+                            {[...Array(totalPages)].map((_, i) => (
+                                <button
+                                    key={i + 1}
+                                    onClick={() => setCurrentPage(i + 1)}
+                                    className={`w-10 h-10 flex items-center justify-center rounded-md text-sm font-bold transition-all ${currentPage === i + 1 ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-50 border'}`}
+                                >
+                                    {i + 1}
+                                </button>
+                            ))}
+                        </div>
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                            className="px-4 py-2 border rounded-md text-sm font-medium disabled:opacity-50 disabled:bg-gray-50 hover:bg-gray-50 transition-colors"
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }

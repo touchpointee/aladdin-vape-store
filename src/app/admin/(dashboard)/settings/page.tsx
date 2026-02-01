@@ -147,7 +147,7 @@ export default function SettingsPage() {
                         </div>
                     ) : banners[key].image ? (
                         <div className="relative w-full h-48 rounded overflow-hidden border">
-                            <Image src={banners[key].image} alt="Banner" fill className="object-cover" />
+                            <Image src={banners[key].image} alt="Banner" fill className="object-cover" unoptimized />
                         </div>
                     ) : (
                         <div className="w-full h-48 bg-gray-50 rounded border flex items-center justify-center text-gray-400">
@@ -249,6 +249,7 @@ export default function SettingsPage() {
                                             alt="Logo Preview"
                                             fill
                                             className="object-contain p-1"
+                                            unoptimized
                                         />
                                     </div>
                                     <input
@@ -284,6 +285,7 @@ export default function SettingsPage() {
                                                 alt="Payment QR Code"
                                                 fill
                                                 className="object-contain p-4"
+                                                unoptimized
                                             />
                                         ) : (
                                             <div className="w-full h-full flex flex-col items-center justify-center text-gray-300 gap-2">

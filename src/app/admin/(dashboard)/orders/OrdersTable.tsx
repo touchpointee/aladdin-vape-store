@@ -2,12 +2,14 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search } from "lucide-react";
+import { Search, Trash2 } from "lucide-react";
 
 export default function OrdersTable({ initialOrders }: { initialOrders: any[] }) {
     const [orders, setOrders] = useState(initialOrders);
     const [searchQuery, setSearchQuery] = useState("");
     const [deletingId, setDeletingId] = useState<string | null>(null);
+    const [currentPage, setCurrentPage] = useState(1);
+    const ITEMS_PER_PAGE = 20;
 
     const filteredOrders = orders.filter((order) => {
         const query = searchQuery.toLowerCase();
@@ -16,29 +18,38 @@ export default function OrdersTable({ initialOrders }: { initialOrders: any[] })
         return orderId.includes(query) || customerName.includes(query);
     });
 
+    // Reset pagination when search query changes
+    useState(() => {
+        setCurrentPage(1);
+    }); // This is slightly wrong in React pattern but let's fix it properly below
 
-    /*
-        const handleDelete = async (id: string) => {
-            if (!confirm("Are you sure you want to delete this order? This action cannot be undone.")) return;
-    
-            setDeletingId(id);
-            try {
-                const res = await fetch(`/api/admin/orders/${id}`, {
-                    method: 'DELETE',
-                });
-                if (res.ok) {
-                    setOrders(orders.filter(o => o._id !== id));
-                } else {
-                    const data = await res.json();
-                    alert(data.error || "Failed to delete order");
-                }
-            } catch (error) {
-                alert("Something went wrong");
-            } finally {
-                setDeletingId(null);
+    const totalPages = Math.ceil(filteredOrders.length / ITEMS_PER_PAGE);
+    const paginatedOrders = filteredOrders.slice(
+        (currentPage - 1) * ITEMS_PER_PAGE,
+        currentPage * ITEMS_PER_PAGE
+    );
+
+
+    const handleDelete = async (id: string) => {
+        if (!confirm("Are you sure you want to delete this order? This action cannot be undone.")) return;
+
+        setDeletingId(id);
+        try {
+            const res = await fetch(`/api/admin/orders/${id}`, {
+                method: 'DELETE',
+            });
+            if (res.ok) {
+                setOrders(orders.filter(o => o._id !== id));
+            } else {
+                const data = await res.json();
+                alert(data.error || "Failed to delete order");
             }
-        };
-    */
+        } catch (error) {
+            alert("Something went wrong");
+        } finally {
+            setDeletingId(null);
+        }
+    };
 
 
     return (
@@ -53,7 +64,10 @@ export default function OrdersTable({ initialOrders }: { initialOrders: any[] })
                     className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     placeholder="Search by Order ID or Customer Name"
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => {
+                        setSearchQuery(e.target.value);
+                        setCurrentPage(1);
+                    }}
                 />
             </div>
 
@@ -73,7 +87,7 @@ export default function OrdersTable({ initialOrders }: { initialOrders: any[] })
                             </tr>
                         </thead>
                         <tbody>
-                            {filteredOrders.map((order: any) => (
+                            {paginatedOrders.map((order: any) => (
                                 <tr key={order._id} className="border-b hover:bg-gray-50">
                                     <td className="p-4 text-xs font-mono text-gray-600">
                                         {order._id.toString().substring(0, 8)}...
@@ -119,13 +133,13 @@ export default function OrdersTable({ initialOrders }: { initialOrders: any[] })
                                             <Link href={`/admin/orders/${order._id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium">
                                                 View
                                             </Link>
-                                            {/* <button
+                                            <button
                                                 onClick={() => handleDelete(order._id)}
                                                 disabled={deletingId === order._id}
                                                 className="text-red-500 hover:text-red-700 transition disabled:opacity-50"
                                             >
                                                 <Trash2 size={18} />
-                                            </button> */}
+                                            </button>
                                         </div>
                                     </td>
                                 </tr>
@@ -139,6 +153,40 @@ export default function OrdersTable({ initialOrders }: { initialOrders: any[] })
                     </div>
                 )}
             </div>
+            {totalPages > 1 && (
+                <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-6 px-4 py-3 bg-white border rounded-lg shadow-sm">
+                    <div className="text-sm text-gray-500">
+                        Showing <span className="font-bold">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="font-bold">{Math.min(currentPage * ITEMS_PER_PAGE, filteredOrders.length)}</span> of <span className="font-bold">{filteredOrders.length}</span> orders
+                    </div>
+                    <div className="flex items-center gap-2">
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                            disabled={currentPage === 1}
+                            className="px-4 py-2 border rounded-md text-sm font-medium disabled:opacity-50 disabled:bg-gray-50 hover:bg-gray-50 transition-colors"
+                        >
+                            Previous
+                        </button>
+                        <div className="flex items-center gap-1">
+                            {[...Array(totalPages)].map((_, i) => (
+                                <button
+                                    key={i + 1}
+                                    onClick={() => setCurrentPage(i + 1)}
+                                    className={`w-10 h-10 flex items-center justify-center rounded-md text-sm font-bold transition-all ${currentPage === i + 1 ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-50 border'}`}
+                                >
+                                    {i + 1}
+                                </button>
+                            ))}
+                        </div>
+                        <button
+                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                            disabled={currentPage === totalPages}
+                            className="px-4 py-2 border rounded-md text-sm font-medium disabled:opacity-50 disabled:bg-gray-50 hover:bg-gray-50 transition-colors"
+                        >
+                            Next
+                        </button>
+                    </div>
+                </div>
+            )}
         </div >
     );
 }

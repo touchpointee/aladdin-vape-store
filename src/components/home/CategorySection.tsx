@@ -22,7 +22,7 @@ export default function CategorySection({ categories }: CategorySectionProps) {
                         {/* Background Image/Color */}
                         <div className="absolute inset-0 bg-gray-100">
                             {cat.image ? (
-                                <Image src={cat.image} alt={cat.name} fill className="object-cover group-hover:scale-110 transition-transform duration-500" />
+                                <Image src={cat.image} alt={cat.name} fill className="object-cover group-hover:scale-110 transition-transform duration-500" unoptimized />
                             ) : (
                                 <div className="w-full h-full flex items-center justify-center bg-gray-200 text-gray-400 font-bold uppercase text-[10px]">No Image</div>
                             )}
