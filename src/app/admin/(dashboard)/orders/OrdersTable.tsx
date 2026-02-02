@@ -133,13 +133,13 @@ export default function OrdersTable({ initialOrders }: { initialOrders: any[] })
                                             <Link href={`/admin/orders/${order._id}`} className="text-blue-600 hover:text-blue-800 text-sm font-medium">
                                                 View
                                             </Link>
-                                            <button
-                                                onClick={() => handleDelete(order._id)}
-                                                disabled={deletingId === order._id}
-                                                className="text-red-500 hover:text-red-700 transition disabled:opacity-50"
-                                            >
-                                                <Trash2 size={18} />
-                                            </button>
+                                            {/* <button
+    onClick={() => handleDelete(order._id)}
+    disabled={deletingId === order._id}
+    className="text-red-500 hover:text-red-700 transition disabled:opacity-50"
+>
+    <Trash2 size={18} />
+</button> */}
                                         </div>
                                     </td>
                                 </tr>
