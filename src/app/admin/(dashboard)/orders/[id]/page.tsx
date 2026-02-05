@@ -525,6 +525,29 @@ export default function AdminOrderDetailPage() {
                                     )}
 
 
+                                    {/* Manual Status Actions */}
+                                    {order.status !== 'Cancelled' && order.status !== 'Delivered' && (
+                                        <div className="grid grid-cols-2 gap-3 pt-2">
+                                            <button
+                                                onClick={() => handleStatusUpdate('Packed')}
+                                                disabled={updating || order.status === 'Packed'}
+                                                className={`flex items-center justify-center gap-2 p-3 rounded-lg border font-bold transition disabled:opacity-50 text-sm ${order.status === 'Packed'
+                                                        ? 'bg-blue-100 text-blue-700 border-blue-200 cursor-default'
+                                                        : 'bg-white text-blue-600 border-blue-200 hover:bg-blue-50'
+                                                    }`}
+                                            >
+                                                <Package size={16} /> Mark Packed
+                                            </button>
+                                            <button
+                                                onClick={() => handleStatusUpdate('Delivered')}
+                                                disabled={updating}
+                                                className="flex items-center justify-center gap-2 p-3 rounded-lg bg-white text-green-600 hover:bg-green-50 font-bold border border-green-200 transition disabled:opacity-50 text-sm"
+                                            >
+                                                <CheckCircle size={16} /> Mark Delivered
+                                            </button>
+                                        </div>
+                                    )}
+
                                     {/* Cancel Order Button - Always available unless already cancelled/delivered */}
                                     {order.status !== 'Cancelled' && order.status !== 'Delivered' && (
                                         <button
@@ -624,15 +647,43 @@ export default function AdminOrderDetailPage() {
                                         <label className="text-gray-500 text-xs uppercase">Phone</label>
                                         <div className="flex items-center justify-between">
                                             <div className="font-medium">{order.customer.phone}</div>
-                                            <a
-                                                href={`https://wa.me/${order.customer.phone?.replace(/\s+/g, '')}`}
-                                                target="_blank"
-                                                rel="noopener noreferrer"
+                                            <button
+                                                onClick={() => {
+                                                    const phoneStr = order.customer.phone || '';
+                                                    const phone = phoneStr.toString().replace(/\D/g, '');
+
+                                                    if (!phone) {
+                                                        alert("No phone number found for this customer");
+                                                        return;
+                                                    }
+
+                                                    // Assuming India +91 if not present, but for now just use what's there if it looks long enough, or default to 91
+                                                    const formattedPhone = phone.length === 10 ? `91${phone}` : phone;
+
+                                                    const itemsList = order.products?.map((item: any) =>
+                                                        `- ${item.product?.name || 'Item'} (x${item.quantity})`
+                                                    ).join('\n') || 'No items';
+
+                                                    const message = `Hello ${order.customer.name},
+Thank you for ordering!
+
+Order Details:
+${itemsList}
+
+Total: ₹${order.totalPrice}
+
+Can I confirm your order?
+
+Visit us: ${window.location.origin}`;
+
+                                                    const url = `https://api.whatsapp.com/send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
+                                                    window.open(url, '_blank');
+                                                }}
                                                 className="text-green-600 hover:text-green-700 font-bold text-xs flex items-center gap-1 border border-green-200 bg-green-50 px-2 py-1 rounded"
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-message-circle"><path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z" /></svg>
                                                 WhatsApp
-                                            </a>
+                                            </button>
                                         </div>
                                     </div>
                                     <div>

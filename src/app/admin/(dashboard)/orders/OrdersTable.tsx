@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Search, Trash2 } from "lucide-react";
+import { Search, Trash2, MessageCircle, RefreshCw } from "lucide-react";
 
 export default function OrdersTable({ initialOrders }: { initialOrders: any[] }) {
     const [orders, setOrders] = useState(initialOrders);
@@ -52,23 +52,52 @@ export default function OrdersTable({ initialOrders }: { initialOrders: any[] })
     };
 
 
+    const [syncing, setSyncing] = useState(false);
+
+    const handleSyncAll = async () => {
+        if (!confirm("This will check tracking status for all active orders. It might take a few seconds. Continue?")) return;
+
+        setSyncing(true);
+        try {
+            const res = await fetch('/api/admin/orders/sync-tracking', { method: 'POST' });
+            const data = await res.json();
+            alert(data.message || "Sync complete");
+            window.location.reload(); // Refresh to show new statuses
+        } catch (error) {
+            alert("Failed to sync tracking");
+        } finally {
+            setSyncing(false);
+        }
+    };
+
     return (
         <div className="space-y-4">
-            {/* Search Input */}
-            <div className="relative max-w-md">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-5 w-5 text-gray-400" />
+            <div className="flex flex-col sm:flex-row justify-between gap-4">
+                {/* Search Input */}
+                <div className="relative max-w-md w-full">
+                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <Search className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                        type="text"
+                        className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        placeholder="Search by Order ID or Customer Name"
+                        value={searchQuery}
+                        onChange={(e) => {
+                            setSearchQuery(e.target.value);
+                            setCurrentPage(1);
+                        }}
+                    />
                 </div>
-                <input
-                    type="text"
-                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    placeholder="Search by Order ID or Customer Name"
-                    value={searchQuery}
-                    onChange={(e) => {
-                        setSearchQuery(e.target.value);
-                        setCurrentPage(1);
-                    }}
-                />
+
+                <button
+                    onClick={handleSyncAll}
+                    disabled={syncing}
+                    className="flex items-center justify-center gap-2 px-4 py-2 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-md hover:bg-indigo-100 transition whitespace-nowrap text-sm font-medium disabled:opacity-50"
+                >
+                    <RefreshCw size={18} className={syncing ? "animate-spin" : ""} />
+                    {syncing ? "Syncing..." : "Sync Tracking Status"}
+                </button>
             </div>
 
             <div className="bg-white rounded-lg shadow overflow-hidden">
