@@ -86,33 +86,10 @@ const PrintOrderReceipt: React.FC<PrintOrderReceiptProps> = ({ order }) => {
                     </div>
                 </div>
 
-                {/* Items Table */}
-                <div className="mb-10 w-full overflow-hidden border-2 border-black rounded-xl">
-                    <table className="w-full text-left border-collapse">
-                        <thead>
-                            <tr className="bg-gray-100 border-b-2 border-black">
-                                <th className="p-3 text-xs font-black uppercase tracking-wider">Item Details</th>
-                                <th className="p-3 text-xs font-black uppercase tracking-wider text-center">Qty</th>
-                                <th className="p-3 text-xs font-black uppercase tracking-wider text-right">Price</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {order.products.map((item: any, idx: number) => (
-                                <tr key={idx} className="border-b border-gray-200 last:border-0 font-bold">
-                                    <td className="p-3">
-                                        <div className="text-base uppercase">{item.product?.name || "Product"}</div>
-                                        <div className="flex flex-wrap gap-2 mt-1">
-                                            {item.flavour && <span className="text-[10px] bg-black text-white px-1.5 py-0.5 rounded uppercase">FL: {item.flavour}</span>}
-                                            {item.nicotine && <span className="text-[10px] bg-blue-600 text-white px-1.5 py-0.5 rounded uppercase">NIC: {item.nicotine}</span>}
-                                        </div>
-                                    </td>
-                                    <td className="p-3 text-center text-lg">{item.quantity}</td>
-                                    <td className="p-3 text-right text-base">₹{item.price * item.quantity}</td>
-                                </tr>
-                            ))}
-                        </tbody>
-                    </table>
-                </div>
+                {/* Items Table - Hidden as per request */}
+                {/* <div className="mb-10 w-full overflow-hidden border-2 border-black rounded-xl">
+                    ...
+                </div> */}
 
                 {/* Order Summary Section */}
                 <div className="border-2 border-black p-6 mb-8 rounded-xl">

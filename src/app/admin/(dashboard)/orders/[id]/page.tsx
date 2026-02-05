@@ -26,6 +26,7 @@ export default function AdminOrderDetailPage() {
         height: 10
     });
     const [verifyUtr, setVerifyUtr] = useState('');
+    const [newAwb, setNewAwb] = useState("");
 
     useEffect(() => {
         fetchOrder();
@@ -174,6 +175,29 @@ export default function AdminOrderDetailPage() {
             }
         } catch (error) {
             console.error("Error updating status", error);
+        } finally {
+            setUpdating(false);
+        }
+    };
+
+    const handleUpdateAwb = async () => {
+        if (!newAwb) return;
+        setUpdating(true);
+        try {
+            const res = await fetch(`/api/admin/orders/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ awbNumber: newAwb })
+            });
+
+            if (res.ok) {
+                alert("AWB Saved!");
+                fetchOrder();
+            } else {
+                alert("Failed to save AWB");
+            }
+        } catch (error) {
+            console.error("Error saving AWB", error);
         } finally {
             setUpdating(false);
         }
@@ -532,8 +556,8 @@ export default function AdminOrderDetailPage() {
                                                 onClick={() => handleStatusUpdate('Packed')}
                                                 disabled={updating || order.status === 'Packed'}
                                                 className={`flex items-center justify-center gap-2 p-3 rounded-lg border font-bold transition disabled:opacity-50 text-sm ${order.status === 'Packed'
-                                                        ? 'bg-blue-100 text-blue-700 border-blue-200 cursor-default'
-                                                        : 'bg-white text-blue-600 border-blue-200 hover:bg-blue-50'
+                                                    ? 'bg-blue-100 text-blue-700 border-blue-200 cursor-default'
+                                                    : 'bg-white text-blue-600 border-blue-200 hover:bg-blue-50'
                                                     }`}
                                             >
                                                 <Package size={16} /> Mark Packed
@@ -610,6 +634,34 @@ export default function AdminOrderDetailPage() {
                                             >
                                                 <Package size={16} /> Created on Webparex
                                             </button>
+
+                                            {/* Manual AWB Entry - Show if Shipment Created but no AWB (API failure fallback) */}
+                                            {!order.awbNumber && (
+                                                <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg">
+                                                    <label className="block text-xs font-bold text-red-800 mb-1">
+                                                        ⚠️ AWB not returned by API. Enter manually:
+                                                    </label>
+                                                    <div className="flex gap-2">
+                                                        <input
+                                                            type="text"
+                                                            placeholder="Enter AWB Number"
+                                                            className="flex-1 p-2 text-sm border border-red-300 rounded focus:border-red-500 outline-none"
+                                                            value={newAwb}
+                                                            onChange={(e) => setNewAwb(e.target.value)}
+                                                        />
+                                                        <button
+                                                            onClick={handleUpdateAwb}
+                                                            disabled={updating || !newAwb}
+                                                            className="bg-red-600 text-white px-3 py-1 rounded text-xs font-bold hover:bg-red-700 disabled:opacity-50"
+                                                        >
+                                                            Save
+                                                        </button>
+                                                    </div>
+                                                    <p className="text-[10px] text-red-600/70 mt-1">
+                                                        Check Webparex dashboard for AWB. Saving this enables tracking.
+                                                    </p>
+                                                </div>
+                                            )}
                                         </div>
                                     ) : (
                                         <div className="space-y-2">

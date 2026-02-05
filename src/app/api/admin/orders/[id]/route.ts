@@ -40,6 +40,10 @@ export async function PATCH(
             updateData.status = status;
         }
 
+        if (body.awbNumber !== undefined) {
+            updateData.awbNumber = body.awbNumber;
+        }
+
 
         if (paymentStatus) {
             const validPaymentStatuses = ['COD', 'Paid', 'pending_verification', 'verified', 'failed'];
