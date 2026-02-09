@@ -82,6 +82,7 @@ export interface IOrder extends Document {
     shipmentResponse?: any;
     shipmentOrderId?: string;
     awbNumber?: string;
+    discount?: number;
     createdAt: Date;
     updatedAt: Date;
 }
@@ -236,6 +237,7 @@ const OrderSchema = new Schema<IOrder>(
         shipmentResponse: { type: Schema.Types.Mixed },
         shipmentOrderId: { type: String },
         awbNumber: { type: String },
+        discount: { type: Number, default: 0 },
     },
     { timestamps: true }
 );
@@ -306,7 +308,8 @@ if (mongoose.models.Order && (
     !mongoose.models.Order.schema.path('customer.state') ||
     !mongoose.models.Order.schema.path('utrNumber') ||
     !mongoose.models.Order.schema.path('products.flavour') ||
-    !mongoose.models.Order.schema.path('products.nicotine')
+    !mongoose.models.Order.schema.path('products.nicotine') ||
+    !mongoose.models.Order.schema.path('discount')
 )) {
     delete mongoose.models.Order;
 }

@@ -29,7 +29,7 @@ export async function PATCH(
         await connectDB();
         const { id } = await params;
         const body = await req.json();
-        const { status, paymentStatus } = body;
+        const { status, paymentStatus, discount } = body;
 
         const updateData: any = {};
         if (status) {
@@ -57,8 +57,29 @@ export async function PATCH(
             updateData.customer = body.customer;
         }
 
+        if (discount !== undefined) {
+            const discountNum = Number(discount);
+            if (isNaN(discountNum) || discountNum < 0) {
+                return NextResponse.json({ error: 'Discount must be a non-negative number' }, { status: 400 });
+            }
+            updateData.discount = discountNum;
+
+            // Fetch the order to recalculate totalPrice
+            const currentOrder = await Order.findById(id).populate('products.product');
+            if (currentOrder) {
+                // Calculate subtotal from products
+                const subtotal = currentOrder.products.reduce((sum: number, item: any) => {
+                    return sum + (item.price * item.quantity);
+                }, 0);
+
+                // Recalculate total: subtotal - discount + delivery charge (100)
+                const newTotal = subtotal - discountNum + 100;
+                updateData.totalPrice = newTotal;
+            }
+        }
+
         if (Object.keys(updateData).length === 0) {
-            return NextResponse.json({ error: 'At least one field (status, paymentStatus, or customer) is required' }, { status: 400 });
+            return NextResponse.json({ error: 'At least one field (status, paymentStatus, customer, or discount) is required' }, { status: 400 });
         }
 
         const order = await Order.findByIdAndUpdate(

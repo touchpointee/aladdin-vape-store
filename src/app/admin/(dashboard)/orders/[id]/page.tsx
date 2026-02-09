@@ -29,6 +29,8 @@ export default function AdminOrderDetailPage() {
     const [newAwb, setNewAwb] = useState("");
     const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
     const [addressFormData, setAddressFormData] = useState<any>(null);
+    const [isEditingDiscount, setIsEditingDiscount] = useState(false);
+    const [discountAmount, setDiscountAmount] = useState(0);
 
     useEffect(() => {
         fetchOrder();
@@ -64,6 +66,12 @@ export default function AdminOrderDetailPage() {
                 ...prev,
                 state: order.customer.state || order.customer.city || ""
             }));
+        }
+    }, [order]);
+
+    useEffect(() => {
+        if (order && order.discount !== undefined) {
+            setDiscountAmount(order.discount);
         }
     }, [order]);
 
@@ -249,6 +257,32 @@ export default function AdminOrderDetailPage() {
         }
     };
 
+    const handleDiscountUpdate = async () => {
+        setUpdating(true);
+        try {
+            const res = await fetch(`/api/admin/orders/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ discount: discountAmount })
+            });
+
+            if (res.ok) {
+                const updatedOrder = await res.json();
+                setOrder(updatedOrder);
+                setIsEditingDiscount(false);
+                alert("Discount updated successfully!");
+            } else {
+                const result = await res.json();
+                alert(result.error || "Failed to update discount");
+            }
+        } catch (error) {
+            console.error("Error updating discount", error);
+            alert("An error occurred while updating discount");
+        } finally {
+            setUpdating(false);
+        }
+    };
+
     /* 
     const handleDelete = async () => {
         if (!confirm("Are you sure you want to delete this order? This action cannot be undone.")) return;
@@ -383,6 +417,55 @@ export default function AdminOrderDetailPage() {
                                         <span className="text-gray-600">Subtotal</span>
                                         <span className="font-semibold text-gray-800">₹{order.products.reduce((sum: number, item: any) => sum + (item.price * item.quantity), 0)}</span>
                                     </div>
+
+                                    {/* Discount Section */}
+                                    <div className="no-print flex justify-between items-center text-sm">
+                                        <span className="text-gray-600">Discount</span>
+                                        {isEditingDiscount ? (
+                                            <div className="flex items-center gap-2">
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    value={discountAmount}
+                                                    onChange={(e) => setDiscountAmount(Number(e.target.value))}
+                                                    className="w-24 px-2 py-1 text-sm border border-gray-300 rounded focus:border-blue-500 outline-none text-right"
+                                                    placeholder="0"
+                                                />
+                                                <button
+                                                    onClick={handleDiscountUpdate}
+                                                    disabled={updating}
+                                                    className="text-xs bg-green-600 hover:bg-green-700 text-white px-2 py-1 rounded font-bold disabled:opacity-50"
+                                                >
+                                                    Save
+                                                </button>
+                                                <button
+                                                    onClick={() => {
+                                                        setIsEditingDiscount(false);
+                                                        setDiscountAmount(order.discount || 0);
+                                                    }}
+                                                    className="text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 py-1 rounded font-bold"
+                                                >
+                                                    Cancel
+                                                </button>
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-center gap-2">
+                                                <span className="font-semibold text-green-600">
+                                                    {order.discount > 0 ? `-₹${order.discount}` : '₹0'}
+                                                </span>
+                                                <button
+                                                    onClick={() => {
+                                                        setDiscountAmount(order.discount || 0);
+                                                        setIsEditingDiscount(true);
+                                                    }}
+                                                    className="text-blue-600 hover:text-blue-700"
+                                                >
+                                                    <Edit size={14} />
+                                                </button>
+                                            </div>
+                                        )}
+                                    </div>
+
                                     <div className="flex justify-between items-center text-sm">
                                         <span className="text-gray-600">Delivery Charge</span>
                                         <span className="font-semibold text-gray-800">₹100.00</span>
