@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { ArrowLeft, Package, User, MapPin, Truck, CheckCircle, XCircle, Clock, Printer, CreditCard, RefreshCw } from "lucide-react";
+import { ArrowLeft, Package, User, MapPin, Truck, CheckCircle, XCircle, Clock, Printer, CreditCard, RefreshCw, Edit } from "lucide-react";
 import Link from "next/link";
 import { IOrder } from "@/models/unified";
 import PrintOrderReceipt from "@/components/admin/PrintOrderReceipt";
@@ -27,6 +27,8 @@ export default function AdminOrderDetailPage() {
     });
     const [verifyUtr, setVerifyUtr] = useState('');
     const [newAwb, setNewAwb] = useState("");
+    const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
+    const [addressFormData, setAddressFormData] = useState<any>(null);
 
     useEffect(() => {
         fetchOrder();
@@ -198,6 +200,50 @@ export default function AdminOrderDetailPage() {
             }
         } catch (error) {
             console.error("Error saving AWB", error);
+        } finally {
+            setUpdating(false);
+        }
+    };
+
+    const handleEditAddressOpen = () => {
+        if (order && order.customer) {
+            setAddressFormData({
+                name: order.customer.name,
+                phone: order.customer.phone,
+                email: order.customer.email,
+                address: order.customer.address,
+                landmark: order.customer.landmark || "",
+                city: order.customer.city,
+                state: order.customer.state,
+                pincode: order.customer.pincode,
+                age: order.customer.age
+            });
+            setIsAddressModalOpen(true);
+        }
+    };
+
+    const handleSaveAddress = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setUpdating(true);
+        try {
+            const res = await fetch(`/api/admin/orders/${id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ customer: addressFormData })
+            });
+
+            if (res.ok) {
+                const updatedOrder = await res.json();
+                setOrder(updatedOrder);
+                setIsAddressModalOpen(false);
+                alert("Address updated successfully!");
+            } else {
+                const result = await res.json();
+                alert(result.error || "Failed to update address");
+            }
+        } catch (error) {
+            console.error("Error updating address", error);
+            alert("An error occurred while updating address");
         } finally {
             setUpdating(false);
         }
@@ -748,8 +794,17 @@ Visit us: ${window.location.origin}`;
                                     </div>
 
                                     <div className="pt-2 border-t mt-2">
-                                        <h3 className="font-bold text-gray-800 mb-2 flex items-center gap-2">
-                                            <MapPin size={16} /> Shipping Address
+                                        <h3 className="font-bold text-gray-800 mb-2 flex items-center justify-between">
+                                            <div className="flex items-center gap-2">
+                                                <MapPin size={16} /> Shipping Address
+                                            </div>
+                                            <button
+                                                onClick={handleEditAddressOpen}
+                                                className="text-blue-600 hover:text-blue-800 p-1"
+                                                title="Edit Address"
+                                            >
+                                                <Edit size={16} />
+                                            </button>
                                         </h3>
                                         <p className="text-gray-600 leading-relaxed">
                                             {order.customer.address}<br />
@@ -768,112 +823,257 @@ Visit us: ${window.location.origin}`;
 
             <PrintOrderReceipt order={order} />
 
-            {/* Shipment Modal */}
-            {isShipmentModalOpen && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-                    <div className="bg-white rounded-2xl shadow-2xl border w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
-                        <div className="bg-indigo-600 p-6 text-white">
-                            <h3 className="text-xl font-bold flex items-center gap-2">
-                                <Truck /> Create Shipment
-                            </h3>
-                            <p className="text-sm text-indigo-100 mt-1">Fill in the dimensions and logistics details</p>
-                        </div>
+            {/* Address Edit Modal */}
+            {
+                isAddressModalOpen && addressFormData && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div className="bg-white rounded-2xl shadow-2xl border w-full max-w-md max-h-[90vh] overflow-y-auto animate-in zoom-in-95 duration-200">
+                            <div className="bg-blue-600 p-6 text-white flex justify-between items-center sticky top-0 z-10">
+                                <h3 className="text-xl font-bold flex items-center gap-2">
+                                    <Edit size={20} /> Edit Address
+                                </h3>
+                                <button
+                                    onClick={() => setIsAddressModalOpen(false)}
+                                    className="text-white hover:text-blue-200"
+                                >
+                                    <XCircle size={24} />
+                                </button>
+                            </div>
 
-                        <form onSubmit={handleCreateShipment} className="p-6 space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div className="col-span-2">
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Customer State</label>
-                                    <input
-                                        type="text"
-                                        required
-                                        className="w-full p-2.5 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none"
-                                        value={shipmentData.state}
-                                        onChange={(e) => setShipmentData({ ...shipmentData, state: e.target.value })}
-                                        placeholder="e.g. Kerala"
-                                    />
-                                    <p className="text-[10px] text-gray-400 mt-1 italic">Mandatory field for Shipmozo: Pre-filled from order details.</p>
+                            <form onSubmit={handleSaveAddress} className="p-6 space-y-4">
+                                <div className="space-y-3">
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="col-span-1">
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Name</label>
+                                            <input
+                                                type="text"
+                                                required
+                                                className="w-full p-2 rounded border focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                                value={addressFormData.name}
+                                                onChange={(e) => setAddressFormData({ ...addressFormData, name: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="col-span-1">
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Age</label>
+                                            <input
+                                                type="number"
+                                                required
+                                                className="w-full p-2 rounded border focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                                value={addressFormData.age}
+                                                onChange={(e) => setAddressFormData({ ...addressFormData, age: Number(e.target.value) })}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Phone</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            className="w-full p-2 rounded border focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                            value={addressFormData.phone}
+                                            onChange={(e) => setAddressFormData({ ...addressFormData, phone: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Email</label>
+                                        <input
+                                            type="email"
+                                            required
+                                            className="w-full p-2 rounded border focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                            value={addressFormData.email}
+                                            onChange={(e) => setAddressFormData({ ...addressFormData, email: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Address</label>
+                                        <textarea
+                                            required
+                                            rows={2}
+                                            className="w-full p-2 rounded border focus:ring-2 focus:ring-blue-500 outline-none text-sm resize-none"
+                                            value={addressFormData.address}
+                                            onChange={(e) => setAddressFormData({ ...addressFormData, address: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Landmark</label>
+                                        <input
+                                            type="text"
+                                            className="w-full p-2 rounded border focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                            value={addressFormData.landmark}
+                                            onChange={(e) => setAddressFormData({ ...addressFormData, landmark: e.target.value })}
+                                        />
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <div className="col-span-1">
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">City</label>
+                                            <input
+                                                type="text"
+                                                required
+                                                className="w-full p-2 rounded border focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                                value={addressFormData.city}
+                                                onChange={(e) => setAddressFormData({ ...addressFormData, city: e.target.value })}
+                                            />
+                                        </div>
+                                        <div className="col-span-1">
+                                            <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Pincode</label>
+                                            <input
+                                                type="text"
+                                                required
+                                                className="w-full p-2 rounded border focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                                value={addressFormData.pincode}
+                                                onChange={(e) => setAddressFormData({ ...addressFormData, pincode: e.target.value })}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">State</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            className="w-full p-2 rounded border focus:ring-2 focus:ring-blue-500 outline-none text-sm"
+                                            value={addressFormData.state}
+                                            onChange={(e) => setAddressFormData({ ...addressFormData, state: e.target.value })}
+                                        />
+                                    </div>
                                 </div>
-                                <div className="col-span-2">
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Pickup Warehouse</label>
-                                    <select
-                                        required
-                                        className="w-full p-2.5 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none bg-white disabled:bg-gray-50 text-sm truncate"
-                                        value={shipmentData.warehouse_id}
-                                        onChange={(e) => setShipmentData({ ...shipmentData, warehouse_id: e.target.value })}
-                                        disabled={loadingWarehouses}
+
+                                <div className="pt-2 flex gap-3">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsAddressModalOpen(false)}
+                                        className="flex-1 p-3 rounded-lg border text-gray-600 font-bold hover:bg-gray-50 text-sm"
+                                        disabled={updating}
                                     >
-                                        <option value="" disabled>Select a Warehouse</option>
-                                        {warehouses.map((w) => (
-                                            <option key={w.id} value={w.id}>
-                                                {w.name} ({w.city})
-                                            </option>
-                                        ))}
-                                    </select>
-                                    <p className="text-[10px] text-gray-400 mt-1 italic">Selecting a warehouse will use its registered pickup address.</p>
-                                    {loadingWarehouses && <p className="text-[10px] text-indigo-500 mt-1 animate-pulse">Fetching warehouses...</p>}
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        className="flex-1 p-3 rounded-lg bg-blue-600 text-white font-bold hover:bg-blue-700 text-sm disabled:opacity-50"
+                                        disabled={updating}
+                                    >
+                                        {updating ? "Saving..." : "Save Changes"}
+                                    </button>
                                 </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Weight (gm)</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        className="w-full p-2.5 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none"
-                                        value={shipmentData.weight}
-                                        onChange={(e) => setShipmentData({ ...shipmentData, weight: Number(e.target.value) })}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Length (cm)</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        className="w-full p-2.5 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none"
-                                        value={shipmentData.length}
-                                        onChange={(e) => setShipmentData({ ...shipmentData, length: Number(e.target.value) })}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Width (cm)</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        className="w-full p-2.5 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none"
-                                        value={shipmentData.width}
-                                        onChange={(e) => setShipmentData({ ...shipmentData, width: Number(e.target.value) })}
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Height (cm)</label>
-                                    <input
-                                        type="number"
-                                        required
-                                        className="w-full p-2.5 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none"
-                                        value={shipmentData.height}
-                                        onChange={(e) => setShipmentData({ ...shipmentData, height: Number(e.target.value) })}
-                                    />
-                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )
+            }
+
+            {/* Shipment Modal */}
+            {
+                isShipmentModalOpen && (
+                    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+                        <div className="bg-white rounded-2xl shadow-2xl border w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200">
+                            <div className="bg-indigo-600 p-6 text-white">
+                                <h3 className="text-xl font-bold flex items-center gap-2">
+                                    <Truck /> Create Shipment
+                                </h3>
+                                <p className="text-sm text-indigo-100 mt-1">Fill in the dimensions and logistics details</p>
                             </div>
 
-                            <div className="flex gap-3 pt-6 border-t border-gray-100">
-                                <button
-                                    type="button"
-                                    onClick={() => setIsShipmentModalOpen(false)}
-                                    className="flex-1 p-3 rounded-xl border border-gray-200 font-bold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-[0.98]"
-                                >
-                                    Cancel
-                                </button>
-                                <button
-                                    type="submit"
-                                    disabled={updating}
-                                    className="flex-1 p-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
-                                >
-                                    {updating ? "Processing..." : "Submit Shipment"}
-                                </button>
-                            </div>
-                        </form>
+                            <form onSubmit={handleCreateShipment} className="p-6 space-y-4">
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="col-span-2">
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Customer State</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            className="w-full p-2.5 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none"
+                                            value={shipmentData.state}
+                                            onChange={(e) => setShipmentData({ ...shipmentData, state: e.target.value })}
+                                            placeholder="e.g. Kerala"
+                                        />
+                                        <p className="text-[10px] text-gray-400 mt-1 italic">Mandatory field for Shipmozo: Pre-filled from order details.</p>
+                                    </div>
+                                    <div className="col-span-2">
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Pickup Warehouse</label>
+                                        <select
+                                            required
+                                            className="w-full p-2.5 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none bg-white disabled:bg-gray-50 text-sm truncate"
+                                            value={shipmentData.warehouse_id}
+                                            onChange={(e) => setShipmentData({ ...shipmentData, warehouse_id: e.target.value })}
+                                            disabled={loadingWarehouses}
+                                        >
+                                            <option value="" disabled>Select a Warehouse</option>
+                                            {warehouses.map((w) => (
+                                                <option key={w.id} value={w.id}>
+                                                    {w.name} ({w.city})
+                                                </option>
+                                            ))}
+                                        </select>
+                                        <p className="text-[10px] text-gray-400 mt-1 italic">Selecting a warehouse will use its registered pickup address.</p>
+                                        {loadingWarehouses && <p className="text-[10px] text-indigo-500 mt-1 animate-pulse">Fetching warehouses...</p>}
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Weight (gm)</label>
+                                        <input
+                                            type="number"
+                                            required
+                                            className="w-full p-2.5 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none"
+                                            value={shipmentData.weight}
+                                            onChange={(e) => setShipmentData({ ...shipmentData, weight: Number(e.target.value) })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Length (cm)</label>
+                                        <input
+                                            type="number"
+                                            required
+                                            className="w-full p-2.5 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none"
+                                            value={shipmentData.length}
+                                            onChange={(e) => setShipmentData({ ...shipmentData, length: Number(e.target.value) })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Width (cm)</label>
+                                        <input
+                                            type="number"
+                                            required
+                                            className="w-full p-2.5 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none"
+                                            value={shipmentData.width}
+                                            onChange={(e) => setShipmentData({ ...shipmentData, width: Number(e.target.value) })}
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Height (cm)</label>
+                                        <input
+                                            type="number"
+                                            required
+                                            className="w-full p-2.5 rounded-lg border focus:ring-2 focus:ring-indigo-500 outline-none"
+                                            value={shipmentData.height}
+                                            onChange={(e) => setShipmentData({ ...shipmentData, height: Number(e.target.value) })}
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex gap-3 pt-6 border-t border-gray-100">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsShipmentModalOpen(false)}
+                                        className="flex-1 p-3 rounded-xl border border-gray-200 font-bold text-gray-600 hover:bg-gray-50 hover:border-gray-300 transition-all active:scale-[0.98]"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={updating}
+                                        className="flex-1 p-3 rounded-xl bg-indigo-600 text-white font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all active:scale-[0.98] disabled:opacity-50 disabled:active:scale-100"
+                                    >
+                                        {updating ? "Processing..." : "Submit Shipment"}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
                     </div>
-                </div>
-            )}
+                )
+            }
         </>
     );
 }

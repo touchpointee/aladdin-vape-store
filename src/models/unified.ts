@@ -76,7 +76,7 @@ export interface IOrder extends Document {
     paymentMode: 'COD' | 'PREPAID';
     paymentStatus: 'COD' | 'Paid' | 'pending_verification' | 'verified' | 'failed';
     utrNumber?: string;
-    status: 'Pending' | 'Pickup Pending' | 'Pickup Scheduled' | 'Picked Up' | 'In Transit' | 'Out For Delivery' | 'Delivered' | 'Cancelled';
+    status: 'Pending' | 'Packed' | 'Pickup Pending' | 'Pickup Scheduled' | 'Picked Up' | 'In Transit' | 'Out For Delivery' | 'Delivered' | 'Cancelled';
     orderType: 'website' | 'whatsapp';
     shipmentStatus: 'Pending' | 'Created' | 'Failed';
     shipmentResponse?: any;
@@ -118,6 +118,7 @@ export interface IUTR extends Document {
     utr: string;
     orderId: mongoose.Types.ObjectId;
     createdAt: Date;
+    updatedAt: Date;
 }
 
 // --- Schemas ---
@@ -227,7 +228,7 @@ const OrderSchema = new Schema<IOrder>(
         utrNumber: { type: String, trim: true },
         status: {
             type: String,
-            enum: ['Pending', 'Pickup Pending', 'Pickup Scheduled', 'Picked Up', 'In Transit', 'Out For Delivery', 'Delivered', 'Cancelled'],
+            enum: ['Pending', 'Packed', 'Pickup Pending', 'Pickup Scheduled', 'Picked Up', 'In Transit', 'Out For Delivery', 'Delivered', 'Cancelled'],
             default: 'Pending',
         },
         orderType: { type: String, enum: ['website', 'whatsapp'], default: 'website' },

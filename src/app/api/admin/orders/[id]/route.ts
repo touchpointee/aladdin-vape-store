@@ -33,7 +33,7 @@ export async function PATCH(
 
         const updateData: any = {};
         if (status) {
-            const validStatuses = ['Pending', 'Pickup Pending', 'Pickup Scheduled', 'Picked Up', 'In Transit', 'Out For Delivery', 'Delivered', 'Cancelled'];
+            const validStatuses = ['Pending', 'Packed', 'Pickup Pending', 'Pickup Scheduled', 'Picked Up', 'In Transit', 'Out For Delivery', 'Delivered', 'Cancelled'];
             if (!validStatuses.includes(status)) {
                 return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
             }
@@ -53,8 +53,12 @@ export async function PATCH(
             updateData.paymentStatus = paymentStatus;
         }
 
+        if (body.customer) {
+            updateData.customer = body.customer;
+        }
+
         if (Object.keys(updateData).length === 0) {
-            return NextResponse.json({ error: 'At least one field (status or paymentStatus) is required' }, { status: 400 });
+            return NextResponse.json({ error: 'At least one field (status, paymentStatus, or customer) is required' }, { status: 400 });
         }
 
         const order = await Order.findByIdAndUpdate(
