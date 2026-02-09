@@ -25,10 +25,19 @@ export async function GET(
         try {
             const trackingResult = await trackOrder(order.awbNumber);
 
-            // Update order status if we got a valid status from courier
-            if (trackingResult.mappedStatus && order.status !== 'Cancelled') {
-                order.status = trackingResult.mappedStatus;
+            console.log(`Tracking for AWB ${order.awbNumber}:`, {
+                courierStatus: trackingResult.currentStatus,
+                currentOrderStatus: order.status
+            });
+
+            // Update order status with exact courier status (no mapping)
+            if (trackingResult.currentStatus && order.status !== 'Cancelled') {
+                const oldStatus = order.status;
+                order.status = trackingResult.currentStatus; // Use exact courier status
                 await order.save();
+                console.log(`Order ${order._id} status updated: ${oldStatus} -> ${order.status}`);
+            } else if (!trackingResult.currentStatus) {
+                console.warn(`No status received from courier for order ${order._id}`);
             }
 
             return NextResponse.json({

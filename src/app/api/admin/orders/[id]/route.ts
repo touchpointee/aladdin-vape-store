@@ -33,10 +33,7 @@ export async function PATCH(
 
         const updateData: any = {};
         if (status) {
-            const validStatuses = ['Pending', 'Packed', 'Pickup Pending', 'Pickup Scheduled', 'Picked Up', 'In Transit', 'Out For Delivery', 'Delivered', 'Cancelled'];
-            if (!validStatuses.includes(status)) {
-                return NextResponse.json({ error: 'Invalid status' }, { status: 400 });
-            }
+            // Accept any status string (no validation)
             updateData.status = status;
         }
 

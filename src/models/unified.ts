@@ -76,7 +76,7 @@ export interface IOrder extends Document {
     paymentMode: 'COD' | 'PREPAID';
     paymentStatus: 'COD' | 'Paid' | 'pending_verification' | 'verified' | 'failed';
     utrNumber?: string;
-    status: 'Pending' | 'Packed' | 'Pickup Pending' | 'Pickup Scheduled' | 'Picked Up' | 'In Transit' | 'Out For Delivery' | 'Delivered' | 'Cancelled';
+    status: string;
     orderType: 'website' | 'whatsapp';
     shipmentStatus: 'Pending' | 'Created' | 'Failed';
     shipmentResponse?: any;
@@ -229,7 +229,6 @@ const OrderSchema = new Schema<IOrder>(
         utrNumber: { type: String, trim: true },
         status: {
             type: String,
-            enum: ['Pending', 'Packed', 'Pickup Pending', 'Pickup Scheduled', 'Picked Up', 'In Transit', 'Out For Delivery', 'Delivered', 'Cancelled'],
             default: 'Pending',
         },
         orderType: { type: String, enum: ['website', 'whatsapp'], default: 'website' },
@@ -309,7 +308,9 @@ if (mongoose.models.Order && (
     !mongoose.models.Order.schema.path('utrNumber') ||
     !mongoose.models.Order.schema.path('products.flavour') ||
     !mongoose.models.Order.schema.path('products.nicotine') ||
-    !mongoose.models.Order.schema.path('discount')
+    !mongoose.models.Order.schema.path('discount') ||
+    // Force re-registration if status has enum (we want it to be a plain string)
+    (mongoose.models.Order.schema.path('status') && (mongoose.models.Order.schema.path('status') as any).enumValues)
 )) {
     delete mongoose.models.Order;
 }

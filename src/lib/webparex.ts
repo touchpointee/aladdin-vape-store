@@ -105,17 +105,89 @@ export async function getWarehouses() {
     return data;
 }
 
-// Map courier status - now returns exact courier status
+// Map courier status - handles various courier status formats dynamically
 function mapCourierStatus(courierStatus: string): string | null {
-    const validStatuses = [
-        'Pickup Pending',
-        'Pickup Scheduled',
-        'Picked Up',
-        'In Transit',
-        'Out For Delivery',
-        'Delivered'
-    ];
-    return validStatuses.includes(courierStatus) ? courierStatus : null;
+    if (!courierStatus) return null;
+
+    // Normalize the status (trim and lowercase for comparison)
+    const normalized = courierStatus.trim().toLowerCase();
+
+    // Map courier statuses to our internal statuses
+    const statusMap: { [key: string]: string } = {
+        // Pickup statuses
+        'pickup pending': 'Pickup Pending',
+        'pending pickup': 'Pickup Pending',
+        'pickup_pending': 'Pickup Pending',
+        'awaiting pickup': 'Pickup Pending',
+
+        'pickup scheduled': 'Pickup Scheduled',
+        'scheduled': 'Pickup Scheduled',
+        'pickup_scheduled': 'Pickup Scheduled',
+
+        'picked up': 'Picked Up',
+        'picked_up': 'Picked Up',
+        'pickup done': 'Picked Up',
+        'picked': 'Picked Up',
+        'manifested': 'Picked Up',
+
+        // Transit statuses
+        'in transit': 'In Transit',
+        'in_transit': 'In Transit',
+        'intransit': 'In Transit',
+        'transit': 'In Transit',
+        'in-transit': 'In Transit',
+        'shipped': 'In Transit',
+        'dispatched': 'In Transit',
+
+        // Out for delivery
+        'out for delivery': 'Out For Delivery',
+        'out_for_delivery': 'Out For Delivery',
+        'outfordelivery': 'Out For Delivery',
+        'out-for-delivery': 'Out For Delivery',
+        'ofd': 'Out For Delivery',
+
+        // Delivered
+        'delivered': 'Delivered',
+        'delivery': 'Delivered',
+        'completed': 'Delivered',
+
+        // Packed (manual status)
+        'packed': 'Packed',
+        'ready to ship': 'Packed',
+        'ready_to_ship': 'Packed',
+    };
+
+    // Check if we have a direct mapping
+    if (statusMap[normalized]) {
+        return statusMap[normalized];
+    }
+
+    // If no exact match, try to find partial matches
+    if (normalized.includes('pickup') && normalized.includes('pending')) {
+        return 'Pickup Pending';
+    }
+    if (normalized.includes('pickup') && normalized.includes('scheduled')) {
+        return 'Pickup Scheduled';
+    }
+    if (normalized.includes('picked')) {
+        return 'Picked Up';
+    }
+    if (normalized.includes('transit')) {
+        return 'In Transit';
+    }
+    if (normalized.includes('out') && normalized.includes('delivery')) {
+        return 'Out For Delivery';
+    }
+    if (normalized.includes('delivered')) {
+        return 'Delivered';
+    }
+    if (normalized.includes('packed')) {
+        return 'Packed';
+    }
+
+    // If we still can't map it, log it and return null
+    console.warn(`Unknown courier status received: "${courierStatus}". Please add mapping.`);
+    return null;
 }
 
 
