@@ -32,19 +32,49 @@ export async function ensureBucket() {
     }
 }
 
+import sharp from 'sharp';
+
+// ... (imports)
+
+// ... (minioClient setup)
+
+// ... (BUCKET_NAME)
+
+// ... (ensureBucket)
+
 export async function uploadImage(fileBuffer: Buffer, fileName: string, contentType: string) {
     await ensureBucket();
-    await minioClient.putObject(BUCKET_NAME, fileName, fileBuffer, fileBuffer.length, {
-        'Content-Type': contentType,
+
+    let bufferToUpload = fileBuffer;
+    let finalContentType = contentType;
+    let finalFileName = fileName;
+
+    // Compress supported images (skip SVG)
+    if (contentType.startsWith('image/') && !contentType.includes('svg')) {
+        try {
+            bufferToUpload = await sharp(fileBuffer)
+                .resize({ width: 1920, withoutEnlargement: true }) // Limit max width to 1920px
+                .webp({ quality: 80 }) // Compress to WebP with 80% quality
+                .toBuffer();
+
+            finalContentType = 'image/webp';
+            // Replace extension with .webp
+            finalFileName = fileName.replace(/\.[^/.]+$/, "") + ".webp";
+        } catch (error) {
+            console.error("Image compression failed, falling back to original", error);
+        }
+    }
+
+    await minioClient.putObject(BUCKET_NAME, finalFileName, bufferToUpload, bufferToUpload.length, {
+        'Content-Type': finalContentType,
     });
 
     // Return public URL
     const protocol = process.env.MINIO_USE_SSL === 'true' ? 'https' : 'http';
     const port = process.env.MINIO_PORT ? `:${process.env.MINIO_PORT}` : '';
-    // Note: If running locally with Docker, you might need localhost, 
-    // but if accessing from browser, you need the public address.
-    // For now, constructing generic URL.
-    return `${protocol}://${process.env.MINIO_ENDPOINT}${port}/${BUCKET_NAME}/${fileName}`;
+    const host = process.env.MINIO_ENDPOINT || 'localhost';
+
+    return `${protocol}://${host}${port}/${BUCKET_NAME}/${finalFileName}`;
 }
 
 export default minioClient;

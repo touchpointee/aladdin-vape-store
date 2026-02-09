@@ -9,6 +9,7 @@ export default function PromoBanner() {
                 alt="Weekend Sale"
                 fill
                 className="object-cover group-hover:scale-105 transition-transform duration-700"
+                unoptimized
             />
             <div className="absolute inset-0 bg-black/20 group-hover:bg-black/10 transition-colors" />
 

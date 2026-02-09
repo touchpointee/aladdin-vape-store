@@ -77,10 +77,11 @@ export default function MobileSearch() {
                                             <div className="relative w-10 h-10 flex-shrink-0 bg-gray-100 rounded-md overflow-hidden">
                                                 {product.images?.[0] && (
                                                     <Image
-                                                        src={product.images[0]}
+                                                        src={product.images?.[0] || "/placeholder.png"}
                                                         alt={product.name}
-                                                        fill
-                                                        className="object-cover"
+                                                        width={40}
+                                                        height={40}
+                                                        className="object-contain"
                                                         unoptimized
                                                     />
                                                 )}

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Image from "next/image";
-import { ArrowLeft, Package, User, MapPin, Truck, CheckCircle, XCircle, Clock, Printer, CreditCard, RefreshCw, Edit } from "lucide-react";
+import { ArrowLeft, Package, User, MapPin, Truck, CheckCircle, XCircle, Clock, Printer, CreditCard, RefreshCw, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { IOrder } from "@/models/unified";
 import PrintOrderReceipt from "@/components/admin/PrintOrderReceipt";
@@ -283,7 +283,6 @@ export default function AdminOrderDetailPage() {
         }
     };
 
-    /* 
     const handleDelete = async () => {
         if (!confirm("Are you sure you want to delete this order? This action cannot be undone.")) return;
 
@@ -304,7 +303,6 @@ export default function AdminOrderDetailPage() {
             setUpdating(false);
         }
     };
-    */
 
     if (loading) return <div className="p-8 text-center text-gray-500">Loading order details...</div>;
     if (!order) return <div className="p-8 text-center text-red-500">Order not found</div>;
@@ -348,14 +346,14 @@ export default function AdminOrderDetailPage() {
                                 <Printer size={18} />
                                 Print
                             </button>
-                            {/* <button
+                            <button
                                 onClick={handleDelete}
                                 disabled={updating}
                                 className="no-print flex items-center justify-center gap-2 bg-red-50 text-red-600 px-4 py-2.5 rounded-lg hover:bg-red-100 transition font-bold text-sm sm:text-base border border-red-200 disabled:opacity-50"
                             >
                                 <Trash2 size={18} />
                                 Delete
-                            </button> */}
+                            </button>
                         </div>
                     </div>
 
@@ -377,6 +375,7 @@ export default function AdminOrderDetailPage() {
                                                         alt={item.product.name}
                                                         fill
                                                         className="object-contain p-2"
+                                                        sizes="80px"
                                                         unoptimized
                                                     />
                                                 )}

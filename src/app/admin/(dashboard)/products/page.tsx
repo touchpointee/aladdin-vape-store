@@ -688,7 +688,7 @@ export default function ProductsPage() {
                                 <div className="flex flex-wrap gap-4 mb-4">
                                     {existingImages.map((img, index) => (
                                         <div key={index} className="relative w-24 h-24 border rounded overflow-hidden group">
-                                            <Image src={img} alt="Product" fill className="object-cover" unoptimized />
+                                            <Image src={img} alt="Product" fill className="object-cover" sizes="96px" unoptimized />
                                             <button
                                                 type="button"
                                                 onClick={() => setExistingImages(existingImages.filter((_, i) => i !== index))}
@@ -744,7 +744,7 @@ export default function ProductsPage() {
                                     <td className="p-4">
                                         {prod.images?.[0] && (
                                             <div className="relative w-12 h-12 rounded overflow-hidden flex-shrink-0">
-                                                <Image src={prod.images[0]} alt={prod.name} fill className="object-cover" unoptimized />
+                                                <Image src={prod.images[0]} alt={prod.name} fill className="object-cover" sizes="48px" unoptimized />
                                             </div>
                                         )}
                                     </td>

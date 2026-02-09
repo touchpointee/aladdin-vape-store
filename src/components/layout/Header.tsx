@@ -157,6 +157,7 @@ export default function Header({ categories = [] }: HeaderProps) {
                                                                 alt={product.name}
                                                                 fill
                                                                 className="object-cover"
+                                                                sizes="40px"
                                                                 unoptimized
                                                             />
                                                         )}
@@ -223,11 +224,11 @@ export default function Header({ categories = [] }: HeaderProps) {
                             </div>
                         </button>
                     </div>
-                </div>
-            </header>
+                </div >
+            </header >
 
             {/* ROW 2: Category Nav Bar (Desktop Only) */}
-            <div className="hidden md:block border-b border-gray-200 bg-white shadow-sm px-6">
+            < div className="hidden md:block border-b border-gray-200 bg-white shadow-sm px-6" >
                 <div className="w-full flex items-center justify-between h-[50px]">
 
 
@@ -244,10 +245,10 @@ export default function Header({ categories = [] }: HeaderProps) {
                         ))}
                     </nav>
                 </div>
-            </div>
+            </div >
 
             {/* ROW 3: Promo Banner */}
-            <div className="bg-[#111111] text-white py-2 px-4 flex items-center justify-center border-t border-white/5">
+            < div className="bg-[#111111] text-white py-2 px-4 flex items-center justify-center border-t border-white/5" >
                 <div className="w-full max-w-7xl mx-auto flex flex-col items-center justify-center text-center text-[9px] md:text-xs font-semibold tracking-[0.2em] uppercase gap-1 leading-tight">
                     <div className="flex flex-wrap items-center justify-center gap-x-4 md:gap-x-8">
                         <span>All India Delivery</span>
@@ -256,15 +257,16 @@ export default function Header({ categories = [] }: HeaderProps) {
                     </div>
                     <span className="font-extrabold text-[10px] md:text-xs tracking-[0.25em] text-white/95">Chat with Us on WhatsApp</span>
                 </div>
-            </div>
+            </div >
 
             {/* Mobile Sidebar Menu (Drawer) - UNCHANGED */}
-            <div
+            < div
                 className={`fixed inset-0 z-[100] transition-opacity duration-300 md:hidden ${mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
-                    }`}
+                    }`
+                }
             >
                 {/* Backdrop */}
-                <div
+                < div
                     className="absolute inset-0 bg-black/50 backdrop-blur-sm"
                     onClick={() => setMobileMenuOpen(false)}
                 />
@@ -339,7 +341,7 @@ export default function Header({ categories = [] }: HeaderProps) {
                         </Link>
                     </div>
                 </div>
-            </div>
+            </div >
         </>
     );
 }

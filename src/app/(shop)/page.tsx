@@ -91,6 +91,7 @@ export default async function Home() {
                 fill
                 className="object-cover object-center"
                 priority
+                unoptimized
               />
             </Link>
           </div>

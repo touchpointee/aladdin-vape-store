@@ -13,27 +13,11 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
         }
 
-        await ensureBucket();
-
         const buffer = Buffer.from(await file.arrayBuffer());
         const filename = `${uuidv4()}-${file.name.replace(/\s+/g, '-')}`;
 
-        // Upload to MinIO
-        await minioClient.putObject(bucketName, filename, buffer, buffer.length, {
-            'Content-Type': file.type,
-        });
-
-        // Public URL logic (assuming public bucket policy)
-        // If MinIO is running locally, we need to construct the URL carefully.
-        // For localhost, it might differ from production.
-        // Here we construct a URL based on the environment config.
-        const protocol = process.env.MINIO_USE_SSL === 'true' ? 'https' : 'http';
-        const host = process.env.MINIO_ENDPOINT || 'localhost';
-        const port = process.env.MINIO_PORT || '9000';
-
-        // Use the proxy/access URL if specifically defined, otherwise construct it
-        // Note: For images to be viewable in browser, the bucket must have public read policy (set in ensureBucketExists)
-        const url = `${protocol}://${host}:${port}/${bucketName}/${filename}`;
+        // Use helper which now includes compression
+        const url = await uploadImage(buffer, filename, file.type);
 
         return NextResponse.json({ url });
     } catch (error: any) {

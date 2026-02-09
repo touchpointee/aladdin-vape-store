@@ -79,6 +79,8 @@ Link: ${window.location.href}`;
                         alt={product.name}
                         fill
                         className="object-contain p-8 md:p-12 hover:scale-105 transition duration-500"
+                        priority
+                        sizes="(max-width: 768px) 100vw, 50vw"
                         unoptimized
                     />
                 </div>

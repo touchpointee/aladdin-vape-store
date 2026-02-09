@@ -152,7 +152,7 @@ export default function CategoriesPage() {
                             <div className="mt-2 text-sm text-gray-500">
                                 <p>Current Image:</p>
                                 <div className="relative w-24 h-24 rounded border overflow-hidden mt-1">
-                                    <Image src={previewImage} alt="Current Category" fill className="object-cover" unoptimized />
+                                    <Image src={previewImage} alt="Current Category" fill className="object-cover" sizes="96px" unoptimized />
                                 </div>
                             </div>
                         )}
@@ -183,7 +183,7 @@ export default function CategoriesPage() {
                                 <td className="p-4">
                                     {cat.image && (
                                         <div className="relative w-12 h-12 rounded overflow-hidden">
-                                            <Image src={cat.image} alt={cat.name} fill className="object-cover" unoptimized />
+                                            <Image src={cat.image} alt={cat.name} fill className="object-cover" sizes="48px" unoptimized />
                                         </div>
                                     )}
                                 </td>
