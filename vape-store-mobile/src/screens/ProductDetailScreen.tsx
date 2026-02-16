@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Linking,
+  Alert,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { Minus, Plus, MessageCircle } from '../components/Icons';
@@ -53,8 +54,11 @@ export default function ProductDetailScreen() {
   }, [id]);
 
   useEffect(() => {
-    get<{ value: string }>('api/settings', { key: 'whatsapp_number' })
-      .then((r) => setWhatsappNumber(r?.value || ''))
+    get<{ value: unknown }>('api/settings', { key: 'whatsapp_number' })
+      .then((r) => {
+        const v = r?.value;
+        setWhatsappNumber(typeof v === 'string' ? v : v != null ? String(v) : '');
+      })
       .catch(() => {});
   }, []);
 
@@ -93,10 +97,19 @@ export default function ProductDetailScreen() {
     navigation.navigate('Cart');
   };
 
-  const handleWhatsApp = () => {
+  const handleWhatsApp = async () => {
+    const digits = String(whatsappNumber ?? '').replace(/\D/g, '');
+    if (!digits || digits.length < 10) {
+      Alert.alert('WhatsApp number not set', 'Please contact the store. WhatsApp number is not configured.');
+      return;
+    }
     const msg = `Hi, I want to buy:\nProduct: ${product.name}\n${selectedFlavour ? `Flavour: ${selectedFlavour}\n` : ''}${selectedNicotine ? `Nicotine: ${selectedNicotine}\n` : ''}Quantity: ${quantity}\nPrice: ₹${discountedPrice * quantity}`;
-    const url = `https://wa.me/${whatsappNumber.replace(/\D/g, '')}?text=${encodeURIComponent(msg)}`;
-    Linking.openURL(url);
+    const url = `https://wa.me/${digits}?text=${encodeURIComponent(msg)}`;
+    try {
+      await Linking.openURL(url);
+    } catch (_) {
+      Alert.alert('Error', 'Could not open WhatsApp. Please try again or contact the store by another method.');
+    }
   };
 
   const imageUri = product.images?.[0]
