@@ -2,8 +2,24 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify } from 'jose';
 
+const corsHeaders = {
+    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+};
+
 export async function middleware(req: NextRequest) {
     const path = req.nextUrl.pathname;
+
+    // CORS for API (Expo web localhost:8081/8082, mobile app, etc.)
+    if (path.startsWith('/api')) {
+        if (req.method === 'OPTIONS') {
+            return new NextResponse(null, { status: 204, headers: corsHeaders });
+        }
+        const res = NextResponse.next();
+        Object.entries(corsHeaders).forEach(([key, value]) => res.headers.set(key, value));
+        return res;
+    }
 
     // Only protect /admin routes
     if (path.startsWith('/admin')) {
@@ -32,5 +48,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-    matcher: ['/admin/:path*'],
+    matcher: ['/api/:path*', '/admin/:path*'],
 };

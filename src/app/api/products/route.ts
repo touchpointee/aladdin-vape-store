@@ -58,11 +58,15 @@ export async function GET(req: NextRequest) {
         const page = parseInt(searchParams.get('page') || '1');
         const limit = parseInt(searchParams.get('limit') || '30');
         const skip = (page - 1) * limit;
+        const sortParam = searchParams.get('sort');
+        let sort: any = { createdAt: -1 };
+        if (sortParam === 'price_asc') sort = { price: 1 };
+        else if (sortParam === 'price_desc') sort = { price: -1 };
 
         const products = await Product.find(query)
             .populate('category')
             .populate('brand')
-            .sort({ createdAt: -1 })
+            .sort(sort)
             .skip(skip)
             .limit(limit);
 
