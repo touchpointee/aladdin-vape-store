@@ -144,14 +144,19 @@ export default function CheckoutPage() {
             }
         }
 
+        const phoneDigits = formData.phone.replace(/\D/g, '');
+        if (phoneDigits.length !== 10) {
+            alert('Please enter a valid 10-digit mobile number');
+            return;
+        }
 
         setLoading(true);
 
         try {
-            // Normalize data for sending
+            // Normalize data for sending (phone stored as 10 digits only)
             const normalizedData = {
                 ...formData,
-                phone: formData.phone.trim(),
+                phone: phoneDigits,
                 age: Number(formData.age)
             };
 
@@ -215,6 +220,8 @@ export default function CheckoutPage() {
                 throw new Error(errData.error || 'Order failed');
             }
 
+            // Save checkout name to profile so it appears in reviews / account
+            useAuthStore.getState().updateUser({ name: normalizedData.name });
             setSuccess(true);
             clearCart();
         } catch (error: any) {
@@ -352,13 +359,19 @@ export default function CheckoutPage() {
                                 <div className="flex gap-4">
                                     <div className="flex-1">
                                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Phone Number</label>
-                                        <input
-                                            name="phone" required type="tel"
-                                            value={formData.phone}
-                                            onChange={handleChange}
-                                            className="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 outline-none"
-                                            placeholder="+91 9876543210"
-                                        />
+                                        <div className="flex items-center border border-gray-300 rounded overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500">
+                                            <span className="px-3 py-2 bg-gray-100 text-gray-600 text-sm font-medium border-r border-gray-300">+91</span>
+                                            <input
+                                                name="phone"
+                                                required
+                                                type="tel"
+                                                inputMode="numeric"
+                                                value={formData.phone}
+                                                onChange={handleChange}
+                                                className="flex-1 min-w-0 border-0 rounded-none p-2 text-sm focus:outline-none focus:ring-0"
+                                                placeholder="10-digit mobile number"
+                                            />
+                                        </div>
                                     </div>
                                     <div className="w-24">
                                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Age</label>

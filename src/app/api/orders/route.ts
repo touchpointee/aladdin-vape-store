@@ -67,9 +67,20 @@ export async function POST(req: NextRequest) {
             orderPaymentMode = 'PREPAID';
         }
 
+        // Validate customer phone: must be 10 digits
+        const customerPhone = (body.customer?.phone ?? '').toString().replace(/\D/g, '');
+        if (customerPhone.length !== 10) {
+            return NextResponse.json({ error: 'Phone number must be exactly 10 digits' }, { status: 400 });
+        }
+        const customerWithPhone = {
+            ...body.customer,
+            phone: customerPhone
+        };
+
         // Create order
         const order = await Order.create({
             ...body,
+            customer: customerWithPhone,
             totalPrice: calculatedTotal + 100, // Add flat 100rs delivery fee
             status: 'Pending',
             paymentMode: orderPaymentMode,

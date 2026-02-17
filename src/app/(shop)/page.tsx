@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import HeroSection from "@/components/home/HeroSection";
 import CategorySection from "@/components/home/CategorySection";
+import CustomerReviewsSection from "@/components/home/CustomerReviewsSection";
 import BrandSection from "@/components/home/BrandSection";
 import ProductGrid from "@/components/product/ProductGrid";
 import MobileSearch from "@/components/home/MobileSearch";
@@ -17,11 +18,11 @@ async function getHomeData() {
     const conn = await connectDB();
     if (!conn) {
       console.warn("Skipping data fetch - DB Connection failed");
-      return { products: [], categories: [], brands: [], newArrivals: [], disposables: [], bannerSettings: null };
+      return { products: [], categories: [], brands: [], newArrivals: [], disposables: [], bannerSettings: null, reviewScreenshots: [] };
     }
 
     // Parallel fetching for performance
-    const [products, categories, brands, newArrivals, disposables, settingsDoc] = await Promise.all([
+    const [products, categories, brands, newArrivals, disposables, settingsDoc, reviewScreensDoc] = await Promise.all([
       // Hot Products
       Product.find({ status: { $regex: '^active$', $options: 'i' }, isHot: true }).sort({ createdAt: -1 }).limit(8).lean(),
       // Categories
@@ -34,6 +35,8 @@ async function getHomeData() {
       Product.find({ status: { $regex: '^active$', $options: 'i' }, isTopSelling: true }).sort({ createdAt: -1 }).limit(8).lean(),
       // Settings
       Settings.findOne({ key: 'home_banners' }).lean(),
+      // Customer review screenshots for home section
+      Settings.findOne({ key: 'review_screenshots' }).lean(),
     ]);
 
     const allProductIds = [
@@ -62,23 +65,33 @@ async function getHomeData() {
       }
     }
 
+    let reviewScreenshots: { url: string; caption?: string; order?: number }[] = [];
+    if (reviewScreensDoc && reviewScreensDoc.value) {
+      try {
+        const raw = typeof reviewScreensDoc.value === 'string' ? JSON.parse(reviewScreensDoc.value) : reviewScreensDoc.value;
+        reviewScreenshots = Array.isArray(raw) ? raw : [];
+      } catch (_) {}
+    }
+    reviewScreenshots.sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+
     return {
       products: serialize(products),
       categories: serialize(categories),
       brands: serialize(brands),
       newArrivals: serialize(newArrivals),
       disposables: serialize(disposables),
-      bannerSettings
+      bannerSettings,
+      reviewScreenshots
     };
 
   } catch (error) {
     console.warn("DB not ready or error:", error);
-    return { products: [], categories: [], brands: [], newArrivals: [], disposables: [], bannerSettings: null };
+    return { products: [], categories: [], brands: [], newArrivals: [], disposables: [], bannerSettings: null, reviewScreenshots: [] };
   }
 }
 
 export default async function Home() {
-  const { products, categories, brands, newArrivals, disposables, bannerSettings } = await getHomeData();
+  const { products, categories, brands, newArrivals, disposables, bannerSettings, reviewScreenshots } = await getHomeData();
 
   return (
     <div className="pb-24">
@@ -117,6 +130,9 @@ export default async function Home() {
 
         </div>
       </div>
+
+      {/* Customer Reviews (screenshots) */}
+      <CustomerReviewsSection screenshots={reviewScreenshots} />
 
       {/* 3. New Arrivals Section */}
       <div className="mt-12 px-4 max-w-7xl mx-auto">

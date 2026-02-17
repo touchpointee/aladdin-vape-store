@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { useCartStore } from "@/store/cartStore";
+import { useAuthStore } from "@/store/authStore";
 import { Star, Minus, Plus } from "lucide-react";
 
 const REVIEW_GUEST_KEY = "review_guest_id";
@@ -27,6 +28,7 @@ export default function ProductDetailClient({ product, whatsappNumber }: Product
     const [selectedFlavour, setSelectedFlavour] = useState(product.flavours?.[0] || "");
     const [selectedNicotine, setSelectedNicotine] = useState(product.variants?.[0]?.nicotine || "");
     const { addItem, openCart } = useCartStore();
+    const { user, isLoggedIn } = useAuthStore();
 
     const [reviews, setReviews] = useState<any[]>([]);
     const [averageRating, setAverageRating] = useState(0);
@@ -36,6 +38,21 @@ export default function ProductDetailClient({ product, whatsappNumber }: Product
     const [reviewComment, setReviewComment] = useState("");
     const [reviewName, setReviewName] = useState("");
     const [reviewSubmitting, setReviewSubmitting] = useState(false);
+    const [firstAddressName, setFirstAddressName] = useState<string>("");
+
+    useEffect(() => {
+        if (isLoggedIn && user?.phone && !user?.name) {
+            fetch(`/api/addresses?phone=${encodeURIComponent(user.phone)}`)
+                .then((r) => r.json())
+                .then((data: any[]) => {
+                    const name = Array.isArray(data) && data[0]?.name ? data[0].name : "";
+                    setFirstAddressName(name);
+                })
+                .catch(() => {});
+        } else {
+            setFirstAddressName("");
+        }
+    }, [isLoggedIn, user?.phone, user?.name]);
 
     const fetchReviews = useCallback(async () => {
         try {
@@ -57,16 +74,18 @@ export default function ProductDetailClient({ product, whatsappNumber }: Product
         if (reviewRating < 1 || reviewRating > 5) return;
         setReviewSubmitting(true);
         try {
-            const res = await fetch(`/api/products/${product._id}/reviews`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    rating: reviewRating,
-                    comment: reviewComment.trim(),
-                    authorName: reviewName.trim() || "Guest",
-                    customerId: getOrCreateGuestId(),
-                }),
-            });
+            const authorName = (isLoggedIn && (user?.name || firstAddressName)) ? (user?.name || firstAddressName) : (reviewName.trim() || "Guest");
+                const customerId = isLoggedIn && user?.phone ? "user:" + user.phone : getOrCreateGuestId();
+                const res = await fetch(`/api/products/${product._id}/reviews`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        rating: reviewRating,
+                        comment: reviewComment.trim(),
+                        authorName,
+                        customerId,
+                    }),
+                });
             if (res.ok) {
                 setReviewRating(0);
                 setReviewComment("");
@@ -337,7 +356,11 @@ Link: ${window.location.href}`;
                                         ))}
                                         <span className="text-xs text-gray-500 ml-2">{reviewRating ? `${reviewRating} star${reviewRating > 1 ? "s" : ""}` : "Select rating"}</span>
                                     </div>
-                                    <input type="text" placeholder="Your name" value={reviewName} onChange={e => setReviewName(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm mb-2" />
+                                    {isLoggedIn && (user?.name || firstAddressName) ? (
+                                        <p className="text-sm text-gray-600 mb-2">Posting as <span className="font-semibold">{user?.name || firstAddressName}</span></p>
+                                    ) : (
+                                        <input type="text" placeholder="Your name" value={reviewName} onChange={e => setReviewName(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm mb-2" />
+                                    )}
                                     <textarea placeholder="Your review" value={reviewComment} onChange={e => setReviewComment(e.target.value)} rows={2} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm mb-2 resize-none" />
                                     <button type="submit" disabled={reviewSubmitting || reviewRating < 1} className="px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50">Submit Review</button>
                                 </form>

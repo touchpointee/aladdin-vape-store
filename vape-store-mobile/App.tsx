@@ -12,6 +12,7 @@ import {
   Poppins_800ExtraBold,
 } from '@expo-google-fonts/poppins';
 import RootNavigator from './src/navigation/RootNavigator';
+import ReviewScreenshotModal from './src/components/ReviewScreenshotModal';
 import { loadApiConfig } from './src/api/config';
 
 const SPLASH_MIN_MS = 2200;
@@ -56,6 +57,7 @@ export default function App() {
     <SafeAreaProvider>
       <StatusBar style="dark" />
       <RootNavigator />
+      <ReviewScreenshotModal />
     </SafeAreaProvider>
   );
 }

@@ -16,6 +16,7 @@ import { Minus, Plus, MessageCircle, Star } from '../components/Icons';
 import { get, post } from '../api/client';
 import { storage } from '../store/storage';
 import { useCartStore } from '../store/cartStore';
+import { useAuthStore } from '../store/authStore';
 import type { Product } from '../types';
 import { getApiBaseUrl } from '../api/config';
 import { fontFamily, fontFamilySemiBold, fontFamilyBold, fontFamilyExtraBold } from '../theme';
@@ -41,8 +42,23 @@ export default function ProductDetailScreen() {
   const [reviewComment, setReviewComment] = useState('');
   const [reviewName, setReviewName] = useState('');
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [firstAddressName, setFirstAddressName] = useState('');
 
   const addItem = useCartStore((s) => s.addItem);
+  const { user, isLoggedIn } = useAuthStore();
+
+  useEffect(() => {
+    if (isLoggedIn && user?.phone && !user?.name) {
+      get<{ name?: string }[]>('api/addresses', { phone: user.phone })
+        .then((data) => {
+          const name = Array.isArray(data) && data[0]?.name ? data[0].name : '';
+          setFirstAddressName(name);
+        })
+        .catch(() => {});
+    } else {
+      setFirstAddressName('');
+    }
+  }, [isLoggedIn, user?.phone, user?.name]);
 
   const REVIEW_GUEST_KEY = 'review_guest_id';
   const getOrCreateGuestId = async (): Promise<string> => {
@@ -150,16 +166,17 @@ export default function ProductDetailScreen() {
     if (reviewRating < 1 || reviewRating > 5) return;
     setReviewSubmitting(true);
     try {
-      const customerId = await getOrCreateGuestId();
+      const authorName = (isLoggedIn && (user?.name || firstAddressName)) ? (user?.name || firstAddressName) : (reviewName.trim() || 'Guest');
+      const customerId = isLoggedIn && user?.phone ? 'user:' + user.phone : await getOrCreateGuestId();
       await post(`api/products/${product._id}/reviews`, {
         rating: reviewRating,
         comment: reviewComment.trim(),
-        authorName: reviewName.trim() || 'Guest',
+        authorName,
         customerId,
       });
       setReviewRating(0);
       setReviewComment('');
-      setReviewName('');
+      if (!isLoggedIn) setReviewName('');
       fetchReviews();
     } catch (_) {
       Alert.alert('Error', 'Could not submit review. Try again.');
@@ -293,8 +310,14 @@ export default function ProductDetailScreen() {
                     </TouchableOpacity>
                   ))}
                 </View>
-                <Text style={styles.reviewInputLabel}>Name</Text>
-                <TextInput placeholder="Name" value={reviewName} onChangeText={setReviewName} style={styles.textInput} placeholderTextColor="#9ca3af" />
+                {isLoggedIn && (user?.name || firstAddressName) ? (
+                  <Text style={styles.reviewPostingAs}>Posting as <Text style={styles.reviewPostingAsBold}>{user?.name || firstAddressName}</Text></Text>
+                ) : (
+                  <>
+                    <Text style={styles.reviewInputLabel}>Name</Text>
+                    <TextInput placeholder="Name" value={reviewName} onChangeText={setReviewName} style={styles.textInput} placeholderTextColor="#9ca3af" />
+                  </>
+                )}
                 <Text style={styles.reviewInputLabel}>Review</Text>
                 <TextInput placeholder="Review" value={reviewComment} onChangeText={setReviewComment} style={[styles.textInput, styles.textArea]} placeholderTextColor="#9ca3af" multiline numberOfLines={2} />
                 <TouchableOpacity style={[styles.submitReviewBtn, (reviewSubmitting || reviewRating < 1) && styles.submitReviewBtnDisabled]} onPress={handleSubmitReview} disabled={reviewSubmitting || reviewRating < 1}>
@@ -362,6 +385,8 @@ const styles = StyleSheet.create({
   reviewFormTitle: { fontSize: 14, fontFamily: fontFamilySemiBold, color: '#374151', marginBottom: 10 },
   starBtn: { padding: 4 },
   reviewInputLabel: { fontSize: 12, fontFamily: fontFamilySemiBold, color: '#6b7280', marginTop: 10, marginBottom: 4 },
+  reviewPostingAs: { fontSize: 14, fontFamily, color: '#6b7280', marginTop: 10, marginBottom: 4 },
+  reviewPostingAsBold: { fontFamily: fontFamilyBold, color: '#111' },
   textInput: { borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, fontFamily, color: '#111', backgroundColor: '#fff' },
   textArea: { minHeight: 64, textAlignVertical: 'top' },
   submitReviewBtn: { backgroundColor: '#2563eb', paddingVertical: 12, borderRadius: 12, alignItems: 'center', marginTop: 12 },

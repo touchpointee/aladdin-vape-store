@@ -155,6 +155,7 @@ export default function CheckoutScreen() {
       if (paymentMethod === 'PREPAID') orderData.utrNumber = utrNumber.trim();
 
       await post('api/orders', orderData);
+      updateUser({ name: normalizedData.name });
       setSuccess(true);
       clearCart();
     } catch (err: any) {

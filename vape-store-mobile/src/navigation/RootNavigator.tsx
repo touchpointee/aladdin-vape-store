@@ -80,30 +80,33 @@ function HomeTabs() {
 
 export default function RootNavigator() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator
-        screenOptions={{
-          headerStyle: { backgroundColor: '#fff' },
-          headerTintColor: '#111',
-          headerTitleStyle: { fontWeight: '700', fontSize: 18, fontFamily: fontFamilyBold },
-        }}
-      >
-        <Stack.Screen name="Tabs" component={HomeTabs} options={{ headerShown: false }} />
-        <Stack.Screen name="ProductDetail" component={ProductDetailScreen} options={{ title: 'Product' }} />
-        <Stack.Screen name="Cart" component={CartScreen} options={{ title: 'Cart' }} />
-        <Stack.Screen name="Checkout" component={CheckoutScreen} options={{ title: 'Checkout' }} />
-        <Stack.Screen name="Orders" component={OrdersScreen} options={{ title: 'My Orders' }} />
-        <Stack.Screen name="OrderDetail" component={OrderDetailScreen} options={{ title: 'Order Details' }} />
-        <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'Login' }} />
-        <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: 'Edit Profile' }} />
-        <Stack.Screen name="Addresses" component={AddressesScreen} options={{ title: 'Saved Addresses' }} />
-        <Stack.Screen name="Help" component={HelpScreen} options={{ title: 'Help & Support' }} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <View style={styles.root}>
+      <NavigationContainer>
+        <Stack.Navigator
+          screenOptions={{
+            headerStyle: { backgroundColor: '#fff' },
+            headerTintColor: '#111',
+            headerTitleStyle: { fontWeight: '700', fontSize: 18, fontFamily: fontFamilyBold },
+          }}
+        >
+          <Stack.Screen name="Tabs" component={HomeTabs} options={{ headerShown: false }} />
+          <Stack.Screen name="ProductDetail" component={ProductDetailScreen} options={{ title: 'Product' }} />
+          <Stack.Screen name="Cart" component={CartScreen} options={{ title: 'Cart' }} />
+          <Stack.Screen name="Checkout" component={CheckoutScreen} options={{ title: 'Checkout' }} />
+          <Stack.Screen name="Orders" component={OrdersScreen} options={{ title: 'My Orders' }} />
+          <Stack.Screen name="OrderDetail" component={OrderDetailScreen} options={{ title: 'Order Details' }} />
+          <Stack.Screen name="Login" component={LoginScreen} options={{ title: 'Login' }} />
+          <Stack.Screen name="Profile" component={ProfileScreen} options={{ title: 'Edit Profile' }} />
+          <Stack.Screen name="Addresses" component={AddressesScreen} options={{ title: 'Saved Addresses' }} />
+          <Stack.Screen name="Help" component={HelpScreen} options={{ title: 'Help & Support' }} />
+        </Stack.Navigator>
+      </NavigationContainer>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  root: { flex: 1 },
   tabBar: {
     backgroundColor: '#fff',
     borderTopWidth: 1,

@@ -97,12 +97,17 @@ export default function AddressesPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        const phoneDigits = formData.phone.replace(/\D/g, '');
+        if (phoneDigits.length !== 10) {
+            alert('Please enter a valid 10-digit mobile number');
+            return;
+        }
         setActionLoading(true);
 
         try {
             const url = '/api/addresses';
             const method = editingId ? 'PUT' : 'POST';
-            const body = editingId ? { ...formData, _id: editingId } : formData;
+            const body = editingId ? { ...formData, phone: phoneDigits, _id: editingId } : { ...formData, phone: phoneDigits };
 
             const res = await fetch(url, {
                 method,
@@ -158,13 +163,18 @@ export default function AddressesPage() {
                             <div className="flex gap-4">
                                 <div className="flex-1">
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Phone</label>
-                                    <input
-                                        required
-                                        value={formData.phone}
-                                        onChange={e => setFormData({ ...formData, phone: e.target.value })}
-                                        className="w-full border-b border-gray-200 py-2 text-sm focus:border-blue-500 outline-none"
-                                        placeholder="Phone"
-                                    />
+                                    <div className="flex items-center border-b border-gray-200 focus-within:border-blue-500">
+                                        <span className="text-gray-600 text-sm font-medium pr-2">+91</span>
+                                        <input
+                                            required
+                                            type="tel"
+                                            inputMode="numeric"
+                                            value={formData.phone}
+                                            onChange={e => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                                            className="flex-1 min-w-0 border-0 border-b border-transparent py-2 text-sm focus:outline-none focus:border-blue-500 bg-transparent"
+                                            placeholder="10-digit mobile number"
+                                        />
+                                    </div>
                                 </div>
                                 <div className="w-20">
                                     <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Age</label>

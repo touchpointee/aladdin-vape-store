@@ -186,6 +186,7 @@ export default function AdminLayout({
                         { href: "/admin/brands", label: "Brands" },
                         { href: "/admin/orders", label: "Orders" },
                         { href: "/admin/reviews", label: "Reviews" },
+                        { href: "/admin/review-screenshots", label: "Review Screenshots" },
                         { href: "/admin/settings", label: "Settings" }
                     ].map(link => (
                         <Link

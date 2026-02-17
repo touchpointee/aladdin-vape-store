@@ -42,6 +42,10 @@ export interface IProduct extends Document {
     isTopSelling?: boolean;
     isNewArrival?: boolean;
     rating?: number;
+    /** From reviews API: average of approved reviews (not stored on product doc) */
+    averageRating?: number | null;
+    /** From reviews API: count of approved reviews (not stored on product doc) */
+    reviewCount?: number;
     flavours?: string[];
     variants?: {
         nicotine: string;

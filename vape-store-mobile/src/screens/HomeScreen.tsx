@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Fragment } from 'react';
 import {
   View,
   Text,
@@ -18,6 +18,7 @@ import Header from '../components/Header';
 import HomeSearchBar from '../components/HomeSearchBar';
 import ProductCard from '../components/ProductCard';
 import { getApiBaseUrl } from '../api/config';
+import { useReviewScreenshotModalStore } from '../store/reviewScreenshotModalStore';
 import type { Product, Category, Brand } from '../types';
 
 export default function HomeScreen() {
@@ -28,23 +29,27 @@ export default function HomeScreen() {
   const [topSelling, setTopSelling] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [brands, setBrands] = useState<Brand[]>([]);
+  const [reviewScreenshots, setReviewScreenshots] = useState<{ url: string; caption?: string; order?: number }[]>([]);
+  const openReviewScreenshotModal = useReviewScreenshotModalStore((s) => s.open);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = async () => {
     try {
-      const [hotRes, newRes, topRes, categoriesRes, brandsRes] = await Promise.all([
+      const [hotRes, newRes, topRes, categoriesRes, brandsRes, screenshotsRes] = await Promise.all([
         get<{ products: Product[] }>('api/products', { isHot: 'true', limit: '8' }),
         get<{ products: Product[] }>('api/products', { isNewArrival: 'true', limit: '8' }),
         get<{ products: Product[] }>('api/products', { isTopSelling: 'true', limit: '8' }),
         get<Category[]>('api/categories'),
         get<Brand[]>('api/brands'),
+        get<{ screenshots: { url: string; caption?: string; order?: number }[] }>('api/review-screenshots'),
       ]);
       setProducts(hotRes?.products || []);
       setNewArrivals(newRes?.products || []);
       setTopSelling(topRes?.products || []);
       setCategories(Array.isArray(categoriesRes) ? categoriesRes : []);
       setBrands(Array.isArray(brandsRes) ? brandsRes : []);
+      setReviewScreenshots(Array.isArray(screenshotsRes?.screenshots) ? screenshotsRes.screenshots : []);
     } catch (e) {
       console.warn('Home load error', e);
     } finally {
@@ -134,6 +139,37 @@ export default function HomeScreen() {
               </TouchableOpacity>
             ))}
           </View>
+        </View>
+      )}
+
+      {reviewScreenshots.length > 0 && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Customer Reviews</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.reviewScreenshotsScroll}
+          >
+            {reviewScreenshots.map((s, i) => (
+              <Fragment key={`${s.url}-${i}`}>
+                {i > 0 && <View style={styles.reviewScreenshotDivider} />}
+                <TouchableOpacity
+                  style={styles.reviewScreenshotCard}
+                  onPress={() => openReviewScreenshotModal(s.url.startsWith('http') ? s.url : imageUrl(s.url), s.caption)}
+                  activeOpacity={0.9}
+                >
+                  <Image
+                    source={{ uri: s.url.startsWith('http') ? s.url : imageUrl(s.url) }}
+                    style={styles.reviewScreenshotImage}
+                    resizeMode="cover"
+                  />
+                  {s.caption ? (
+                    <Text style={styles.reviewScreenshotCaption} numberOfLines={2}>{s.caption}</Text>
+                  ) : null}
+                </TouchableOpacity>
+              </Fragment>
+            ))}
+          </ScrollView>
         </View>
       )}
 
@@ -306,6 +342,34 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: fontFamilyBold,
     color: '#fff',
+  },
+  reviewScreenshotsScroll: {
+    paddingVertical: 8,
+    gap: 12,
+    paddingRight: 16,
+  },
+  reviewScreenshotDivider: {
+    width: 1,
+    alignSelf: 'stretch',
+    backgroundColor: '#d1d5db',
+    marginRight: 12,
+  },
+  reviewScreenshotCard: {
+    width: 240,
+    marginRight: 12,
+    overflow: 'hidden',
+  },
+  reviewScreenshotImage: {
+    width: 240,
+    height: 336,
+    borderRadius: 12,
+    backgroundColor: '#f3f4f6',
+  },
+  reviewScreenshotCaption: {
+    marginTop: 6,
+    fontSize: 11,
+    color: '#6b7280',
+    fontFamily: fontFamily,
   },
   brandGrid: {
     flexDirection: 'row',
