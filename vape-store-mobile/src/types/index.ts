@@ -38,6 +38,9 @@ export interface Product {
   isTopSelling?: boolean;
   isNewArrival?: boolean;
   slug?: string;
+  rating?: number;
+  averageRating?: number | null;
+  reviewCount?: number;
 }
 
 export interface CartItem {

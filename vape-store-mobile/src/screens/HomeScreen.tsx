@@ -17,7 +17,7 @@ import { fontFamily, fontFamilyBold } from '../theme';
 import Header from '../components/Header';
 import HomeSearchBar from '../components/HomeSearchBar';
 import ProductCard from '../components/ProductCard';
-import { API_BASE_URL } from '../api/config';
+import { getApiBaseUrl } from '../api/config';
 import type { Product, Category, Brand } from '../types';
 
 export default function HomeScreen() {
@@ -74,7 +74,7 @@ export default function HomeScreen() {
   const padding = 16;
   const heroWidth = width - padding * 2;
   const heroHeight = heroWidth * (4 / 3); // aspect 3/4 like web
-  const baseUrl = API_BASE_URL.replace(/\/$/, '');
+  const baseUrl = getApiBaseUrl();
   const imageUrl = (path: string | undefined) =>
     !path ? '' : path.startsWith('http') ? path : `${baseUrl}${path.startsWith('/') ? path : '/' + path}`;
   const catCardSize = (width - padding * 2 - 12) / 2; // 2-col grid, 12 gap
@@ -99,7 +99,7 @@ export default function HomeScreen() {
           activeOpacity={0.98}
         >
           <Image
-            source={{ uri: `${API_BASE_URL.replace(/\/$/, '')}/brand-banner.png` }}
+            source={{ uri: `${getApiBaseUrl()}/brand-banner.png` }}
             style={styles.heroImage}
             resizeMode="cover"
           />

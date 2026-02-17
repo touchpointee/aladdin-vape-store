@@ -17,7 +17,7 @@ import { get, post, put } from '../api/client';
 import { useCartStore } from '../store/cartStore';
 import { fontFamily, fontFamilySemiBold, fontFamilyBold } from '../theme';
 import { useAuthStore } from '../store/authStore';
-import { API_BASE_URL } from '../api/config';
+import { getApiBaseUrl } from '../api/config';
 import type { Address } from '../types';
 
 const DELIVERY_CHARGE = 100;
@@ -287,7 +287,7 @@ export default function CheckoutScreen() {
           <>
             {paymentQrCode ? (
               <View style={styles.qrWrap}>
-                <Image source={{ uri: paymentQrCode.startsWith('http') ? paymentQrCode : `${API_BASE_URL}${paymentQrCode}` }} style={styles.qr} resizeMode="contain" />
+                <Image source={{ uri: paymentQrCode.startsWith('http') ? paymentQrCode : `${getApiBaseUrl()}${paymentQrCode}` }} style={styles.qr} resizeMode="contain" />
               </View>
             ) : null}
             <Text style={styles.qrLabel}>Scan to pay ₹{total}</Text>

@@ -12,7 +12,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Minus, Plus, Trash2 } from '../components/Icons';
 import { useCartStore } from '../store/cartStore';
 import { get } from '../api/client';
-import { API_BASE_URL } from '../api/config';
+import { getApiBaseUrl } from '../api/config';
 import { fontFamily, fontFamilySemiBold, fontFamilyBold } from '../theme';
 
 function uniqueKey(item: { id: string; selectedFlavour?: string; selectedNicotine?: string }) {
@@ -51,7 +51,7 @@ export default function CartScreen() {
       <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
         {items.map((item) => {
           const key = uniqueKey(item);
-          const imgUri = item.image?.startsWith('http') ? item.image : item.image ? `${API_BASE_URL}${item.image}` : 'https://via.placeholder.com/80';
+          const imgUri = item.image?.startsWith('http') ? item.image : item.image ? `${getApiBaseUrl()}${item.image}` : 'https://via.placeholder.com/80';
           return (
             <View key={key} style={styles.row}>
               <Image source={{ uri: imgUri }} style={styles.thumb} />

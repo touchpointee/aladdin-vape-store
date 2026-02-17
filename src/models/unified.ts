@@ -122,6 +122,19 @@ export interface IUTR extends Document {
     updatedAt: Date;
 }
 
+export interface IReview extends Document {
+    product: mongoose.Types.ObjectId;
+    rating: number;
+    comment: string;
+    authorName: string;
+    authorPhone?: string;
+    /** One review per customer per product: "guest:uuid" or "user:userId" */
+    customerId?: string;
+    status: 'pending' | 'approved' | 'rejected';
+    createdAt: Date;
+    updatedAt: Date;
+}
+
 // --- Schemas ---
 
 const CategorySchema = new Schema<ICategory>(
@@ -292,6 +305,21 @@ const UTRSchema = new Schema<IUTR>(
 // Index for fast lookup
 UTRSchema.index({ utr: 1 });
 
+const ReviewSchema = new Schema<IReview>(
+    {
+        product: { type: Schema.Types.ObjectId, ref: 'Product', required: true, index: true },
+        rating: { type: Number, required: true, min: 1, max: 5 },
+        comment: { type: String, default: '', trim: true },
+        authorName: { type: String, default: 'Guest', trim: true },
+        authorPhone: { type: String, trim: true },
+        customerId: { type: String, trim: true },
+        status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'approved' },
+    },
+    { timestamps: true }
+);
+ReviewSchema.index({ product: 1, createdAt: -1 });
+ReviewSchema.index({ product: 1, customerId: 1 }, { unique: true, sparse: true });
+
 // Force re-registration of Product if schema doesn't match new requirements (variants, optional price)
 if (mongoose.models.Product && (
     !mongoose.models.Product.schema.path('variants') ||
@@ -319,6 +347,10 @@ if (mongoose.models.Address && !mongoose.models.Address.schema.path('state')) {
     delete mongoose.models.Address;
 }
 
+if (mongoose.models.Review && (!mongoose.models.Review.schema.path('customerId') || !mongoose.models.Review.schema.path('status'))) {
+    delete mongoose.models.Review;
+}
+
 // --- Models ---
 // Check if models exist to prevent overwrite error during hot reload
 export const Category: Model<ICategory> = mongoose.models.Category || mongoose.model<ICategory>('Category', CategorySchema);
@@ -329,3 +361,4 @@ export const Settings: Model<ISettings> = mongoose.models.Settings || mongoose.m
 export const Address: Model<IAddress> = mongoose.models.Address || mongoose.model<IAddress>('Address', AddressSchema);
 export const PushSubscription: Model<IPushSubscription> = mongoose.models.PushSubscription || mongoose.model<IPushSubscription>('PushSubscription', PushSubscriptionSchema);
 export const UTR: Model<IUTR> = mongoose.models.UTR || mongoose.model<IUTR>('UTR', UTRSchema);
+export const Review: Model<IReview> = mongoose.models.Review || mongoose.model<IReview>('Review', ReviewSchema);

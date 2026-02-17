@@ -3,7 +3,7 @@ import { View, Text, ScrollView, StyleSheet, Image, ActivityIndicator } from 're
 import { useRoute, RouteProp } from '@react-navigation/native';
 import { CheckCircle, XCircle, Package } from '../components/Icons';
 import { get } from '../api/client';
-import { API_BASE_URL } from '../api/config';
+import { getApiBaseUrl } from '../api/config';
 import type { Order } from '../types';
 import { fontFamily, fontFamilySemiBold, fontFamilyBold } from '../theme';
 
@@ -72,7 +72,7 @@ export default function OrderDetailScreen() {
         {(order.products || []).map((item: any, idx: number) => (
           <View key={idx} style={styles.itemRow}>
             <Image
-              source={{ uri: item.product?.images?.[0]?.startsWith('http') ? item.product.images[0] : `${API_BASE_URL}${item.product?.images?.[0] || ''}` }}
+              source={{ uri: item.product?.images?.[0]?.startsWith('http') ? item.product.images[0] : `${getApiBaseUrl()}${item.product?.images?.[0] || ''}` }}
               style={styles.itemThumb}
             />
             <View style={styles.itemDetails}>

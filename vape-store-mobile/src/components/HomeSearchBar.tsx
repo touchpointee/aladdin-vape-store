@@ -3,11 +3,11 @@ import { View, TextInput, StyleSheet, TouchableOpacity, Text, Image, ActivityInd
 import { useNavigation } from '@react-navigation/native';
 import { Search } from './Icons';
 import { get } from '../api/client';
-import { API_BASE_URL } from '../api/config';
+import { getApiBaseUrl } from '../api/config';
 import { fontFamily, fontFamilyBold } from '../theme';
 import type { Product } from '../types';
 
-const baseUrl = API_BASE_URL.replace(/\/$/, '');
+const baseUrl = getApiBaseUrl();
 const imageUrl = (path: string | undefined) =>
   !path ? '' : path.startsWith('http') ? path : `${baseUrl}${path.startsWith('/') ? path : '/' + path}`;
 

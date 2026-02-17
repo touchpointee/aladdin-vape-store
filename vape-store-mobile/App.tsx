@@ -12,6 +12,7 @@ import {
   Poppins_800ExtraBold,
 } from '@expo-google-fonts/poppins';
 import RootNavigator from './src/navigation/RootNavigator';
+import { loadApiConfig } from './src/api/config';
 
 const SPLASH_MIN_MS = 2200;
 
@@ -28,8 +29,14 @@ export default function App() {
 
   useEffect(() => {
     if (!fontsLoaded) return;
-    const t = setTimeout(() => setShowSplash(false), SPLASH_MIN_MS);
-    return () => clearTimeout(t);
+    let cancelled = false;
+    Promise.all([
+      loadApiConfig(4000),
+      new Promise((r) => setTimeout(r, SPLASH_MIN_MS)),
+    ]).then(() => {
+      if (!cancelled) setShowSplash(false);
+    });
+    return () => { cancelled = true; };
   }, [fontsLoaded]);
 
   if (showSplash) {

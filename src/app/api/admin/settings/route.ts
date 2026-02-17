@@ -25,6 +25,7 @@ export async function GET(req: NextRequest) {
         const whatsappSettings = await Settings.findOne({ key: 'whatsapp_number' });
         const logoSettings = await Settings.findOne({ key: 'site_logo' });
         const qrCodeSettings = await Settings.findOne({ key: 'payment_qr_code' });
+        const appApiBaseUrlSettings = await Settings.findOne({ key: 'app_api_base_url' });
         const notificationSettings = await Settings.findOne({ key: 'notification_settings' });
         const paymentSettings = await Settings.findOne({ key: 'payment_settings' });
 
@@ -34,6 +35,7 @@ export async function GET(req: NextRequest) {
             whatsapp_number: whatsappSettings ? whatsappSettings.value : '',
             site_logo: logoSettings ? logoSettings.value : '/logo.jpg',
             payment_qr_code: qrCodeSettings ? qrCodeSettings.value : '',
+            app_api_base_url: appApiBaseUrlSettings ? appApiBaseUrlSettings.value : '',
             notification_sound_enabled: notificationSettings ? JSON.parse(notificationSettings.value).enabled : true,
             notification_sound_url: notificationSettings ? JSON.parse(notificationSettings.value).url : 'https://assets.mixkit.co/active_storage/sfx/1013/1013-preview.mp3',
             online_payment_enabled: paymentSettings ? JSON.parse(paymentSettings.value).online_enabled : true,
@@ -54,6 +56,16 @@ export async function POST(req: NextRequest) {
             await Settings.findOneAndUpdate(
                 { key: 'whatsapp_number' },
                 { value: formData.get('whatsapp_number') as string },
+                { upsert: true }
+            );
+        }
+
+        // 1a. Mobile app backend URL (used by app without releasing an update)
+        if (formData.has('app_api_base_url')) {
+            const val = (formData.get('app_api_base_url') as string || '').trim().replace(/\/+$/, '');
+            await Settings.findOneAndUpdate(
+                { key: 'app_api_base_url' },
+                { value: val },
                 { upsert: true }
             );
         }

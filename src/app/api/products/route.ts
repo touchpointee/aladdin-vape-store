@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import connectDB from '@/lib/db';
-import { Product, Category, Brand } from "@/models/unified";
+import { Product, Category, Brand, Review } from "@/models/unified";
 
 export async function GET(req: NextRequest) {
     try {
@@ -68,12 +69,40 @@ export async function GET(req: NextRequest) {
             .populate('brand')
             .sort(sort)
             .skip(skip)
-            .limit(limit);
+            .limit(limit)
+            .lean();
 
         const total = await Product.countDocuments(query);
 
-        return NextResponse.json({
-            products: Array.isArray(products) ? products : [],
+        const productIds = (products as any[]).map((p) => {
+            const id = p._id;
+            return id && typeof id === 'string' ? new mongoose.Types.ObjectId(id) : id;
+        }).filter(Boolean);
+        const reviewStats = await Review.aggregate([
+            { $match: { product: { $in: productIds }, status: { $in: ['approved'] } } },
+            { $group: { _id: '$product', averageRating: { $avg: '$rating' }, reviewCount: { $sum: 1 } } },
+        ]);
+        const statsByProduct: Record<string, { averageRating: number; reviewCount: number }> = {};
+        reviewStats.forEach((s: any) => {
+            const key = s._id != null ? String(s._id) : '';
+            if (key) statsByProduct[key] = {
+                averageRating: Math.round((Number(s.averageRating) || 0) * 10) / 10,
+                reviewCount: Number(s.reviewCount) || 0,
+            };
+        });
+
+        const productsWithRating = (products as any[]).map((p) => {
+            const id = p._id != null ? String(p._id) : '';
+            const stats = id ? statsByProduct[id] : undefined;
+            return {
+                ...p,
+                averageRating: stats?.averageRating ?? null,
+                reviewCount: stats?.reviewCount ?? 0,
+            };
+        });
+
+        const res = NextResponse.json({
+            products: productsWithRating,
             pagination: {
                 total,
                 page,
@@ -81,6 +110,8 @@ export async function GET(req: NextRequest) {
                 pages: Math.ceil(total / limit)
             }
         });
+        res.headers.set('Cache-Control', 'no-store, max-age=0');
+        return res;
     } catch (error: any) {
         console.error("Products API Error:", error);
         return NextResponse.json({

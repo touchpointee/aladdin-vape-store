@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Settings, Bell, Image as ImageIcon, MessageSquare, QrCode, Volume2, Save, CreditCard, ShieldCheck, ShieldAlert } from "lucide-react";
+import { Settings, Bell, Image as ImageIcon, MessageSquare, QrCode, Volume2, Save, CreditCard, ShieldCheck, ShieldAlert, Smartphone } from "lucide-react";
 import { urlBase64ToUint8Array } from "@/lib/notifications";
 
 export default function SettingsPage() {
@@ -16,6 +16,7 @@ export default function SettingsPage() {
     });
 
     const [whatsappNumber, setWhatsappNumber] = useState('');
+    const [appApiBaseUrl, setAppApiBaseUrl] = useState('');
     const [siteLogo, setSiteLogo] = useState('/logo.jpg');
     const [paymentQrCode, setPaymentQrCode] = useState('');
     const [notificationSoundEnabled, setNotificationSoundEnabled] = useState(true);
@@ -50,6 +51,9 @@ export default function SettingsPage() {
                 }
                 if (data.whatsapp_number) {
                     setWhatsappNumber(data.whatsapp_number);
+                }
+                if (data.app_api_base_url !== undefined) {
+                    setAppApiBaseUrl(data.app_api_base_url || '');
                 }
                 if (data.site_logo) {
                     setSiteLogo(data.site_logo);
@@ -95,6 +99,7 @@ export default function SettingsPage() {
 
         // Append General Settings
         formData.append('whatsapp_number', whatsappNumber);
+        formData.append('app_api_base_url', appApiBaseUrl);
         if (files.siteLogo) formData.append('site_logo', files.siteLogo);
         if (files.paymentQrCode) formData.append('payment_qr_code', files.paymentQrCode);
         formData.append('notification_sound_enabled', String(notificationSoundEnabled));
@@ -290,6 +295,21 @@ export default function SettingsPage() {
                                     onChange={(e) => setWhatsappNumber(e.target.value)}
                                 />
                                 <p className="text-[11px] text-gray-400 mt-2 ml-1">Include country code, no + or spaces.</p>
+                            </div>
+
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-semibold mb-2 text-gray-700 flex items-center gap-2">
+                                    <Smartphone size={16} className="text-blue-500" />
+                                    Mobile app backend URL
+                                </label>
+                                <input
+                                    type="url"
+                                    className="w-full border-gray-200 border p-3 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
+                                    placeholder="e.g. https://aladdinvapestoreindia.com"
+                                    value={appApiBaseUrl}
+                                    onChange={(e) => setAppApiBaseUrl(e.target.value)}
+                                />
+                                <p className="text-[11px] text-gray-400 mt-2 ml-1">API URL the mobile app uses. Change this to point the app to a new backend without releasing an app update. Leave empty to use this site&apos;s URL.</p>
                             </div>
 
                             <div>

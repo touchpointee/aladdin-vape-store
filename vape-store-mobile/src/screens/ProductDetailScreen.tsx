@@ -9,13 +9,15 @@ import {
   ActivityIndicator,
   Linking,
   Alert,
+  TextInput,
 } from 'react-native';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
-import { Minus, Plus, MessageCircle } from '../components/Icons';
-import { get } from '../api/client';
+import { Minus, Plus, MessageCircle, Star } from '../components/Icons';
+import { get, post } from '../api/client';
+import { storage } from '../store/storage';
 import { useCartStore } from '../store/cartStore';
 import type { Product } from '../types';
-import { API_BASE_URL } from '../api/config';
+import { getApiBaseUrl } from '../api/config';
 import { fontFamily, fontFamilySemiBold, fontFamilyBold, fontFamilyExtraBold } from '../theme';
 
 type Params = { id: string; slug?: string };
@@ -31,8 +33,26 @@ export default function ProductDetailScreen() {
   const [selectedFlavour, setSelectedFlavour] = useState<string>('');
   const [selectedNicotine, setSelectedNicotine] = useState<string>('');
   const [whatsappNumber, setWhatsappNumber] = useState('');
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [averageRating, setAverageRating] = useState(0);
+  const [reviewsTotal, setReviewsTotal] = useState(0);
+  const [reviewsLoading, setReviewsLoading] = useState(true);
+  const [reviewRating, setReviewRating] = useState(0);
+  const [reviewComment, setReviewComment] = useState('');
+  const [reviewName, setReviewName] = useState('');
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
 
   const addItem = useCartStore((s) => s.addItem);
+
+  const REVIEW_GUEST_KEY = 'review_guest_id';
+  const getOrCreateGuestId = async (): Promise<string> => {
+    let id = await storage.getItem(REVIEW_GUEST_KEY);
+    if (!id) {
+      id = 'guest:' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+      await storage.setItem(REVIEW_GUEST_KEY, id);
+    }
+    return id;
+  };
 
   useEffect(() => {
     let cancelled = false;
@@ -61,6 +81,20 @@ export default function ProductDetailScreen() {
       })
       .catch(() => {});
   }, []);
+
+  const fetchReviews = React.useCallback(async () => {
+    try {
+      const data = await get<{ reviews: any[]; averageRating: number; total: number }>(`api/products/${id}/reviews`);
+      setReviews(data.reviews || []);
+      setAverageRating(data.averageRating ?? 0);
+      setReviewsTotal(data.total ?? 0);
+    } catch (_) {}
+    setReviewsLoading(false);
+  }, [id]);
+
+  useEffect(() => {
+    if (product) fetchReviews();
+  }, [product?._id, fetchReviews]);
 
   if (loading || !product) {
     return (
@@ -112,8 +146,29 @@ export default function ProductDetailScreen() {
     }
   };
 
+  const handleSubmitReview = async () => {
+    if (reviewRating < 1 || reviewRating > 5) return;
+    setReviewSubmitting(true);
+    try {
+      const customerId = await getOrCreateGuestId();
+      await post(`api/products/${product._id}/reviews`, {
+        rating: reviewRating,
+        comment: reviewComment.trim(),
+        authorName: reviewName.trim() || 'Guest',
+        customerId,
+      });
+      setReviewRating(0);
+      setReviewComment('');
+      setReviewName('');
+      fetchReviews();
+    } catch (_) {
+      Alert.alert('Error', 'Could not submit review. Try again.');
+    }
+    setReviewSubmitting(false);
+  };
+
   const imageUri = product.images?.[0]
-    ? (product.images[0].startsWith('http') ? product.images[0] : `${API_BASE_URL}${product.images[0]}`)
+    ? (product.images[0].startsWith('http') ? product.images[0] : `${getApiBaseUrl()}${product.images[0]}`)
     : 'https://via.placeholder.com/400';
 
   return (
@@ -129,6 +184,12 @@ export default function ProductDetailScreen() {
 
       <View style={styles.body}>
         <Text style={styles.name}>{product.name}</Text>
+        <View style={styles.ratingRow}>
+          {[1, 2, 3, 4, 5].map((s) => (
+            <Star key={s} size={14} color={s <= Math.round(averageRating) ? '#eab308' : '#d1d5db'} fill={s <= Math.round(averageRating) ? '#eab308' : 'transparent'} />
+          ))}
+          <Text style={styles.ratingText}>{reviewsLoading ? '...' : reviewsTotal === 0 ? 'No reviews' : `${averageRating.toFixed(1)} (${reviewsTotal})`}</Text>
+        </View>
         <View style={styles.priceBox}>
           <Text style={styles.price}>₹{discountedPrice}</Text>
           {basePrice > discountedPrice && <Text style={styles.originalPrice}>₹{basePrice}</Text>}
@@ -200,6 +261,49 @@ export default function ProductDetailScreen() {
           <MessageCircle size={22} color="#fff" />
           <Text style={styles.btnWhatsAppText}>Buy via WhatsApp</Text>
         </TouchableOpacity>
+
+        <View style={styles.reviewsSection}>
+          <Text style={styles.reviewsTitle}>Customer Reviews</Text>
+          {reviewsLoading ? (
+            <Text style={styles.reviewsMeta}>Loading...</Text>
+          ) : (
+            <>
+              {reviews.length > 0 && (
+                <View style={styles.reviewList}>
+                  {reviews.map((r: any) => (
+                    <View key={r._id} style={styles.reviewItem}>
+                      <View style={styles.reviewHeader}>
+                        <View style={styles.starRow}>
+                          {[1, 2, 3, 4, 5].map((s) => <Star key={s} size={12} color={s <= r.rating ? '#eab308' : '#d1d5db'} fill={s <= r.rating ? '#eab308' : 'transparent'} />)}
+                        </View>
+                        <Text style={styles.reviewAuthor}>{r.authorName || 'Guest'}</Text>
+                        <Text style={styles.reviewDate}>{new Date(r.createdAt).toLocaleDateString()}</Text>
+                      </View>
+                      {r.comment ? <Text style={styles.reviewComment}>{r.comment}</Text> : null}
+                    </View>
+                  ))}
+                </View>
+              )}
+              <View style={styles.reviewForm}>
+                <Text style={styles.reviewFormTitle}>Write a review</Text>
+                <View style={styles.starRow}>
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <TouchableOpacity key={s} onPress={() => setReviewRating(s)} style={styles.starBtn}>
+                      <Star size={28} color={s <= reviewRating ? '#eab308' : '#d1d5db'} fill={s <= reviewRating ? '#eab308' : 'transparent'} />
+                    </TouchableOpacity>
+                  ))}
+                </View>
+                <Text style={styles.reviewInputLabel}>Name</Text>
+                <TextInput placeholder="Name" value={reviewName} onChangeText={setReviewName} style={styles.textInput} placeholderTextColor="#9ca3af" />
+                <Text style={styles.reviewInputLabel}>Review</Text>
+                <TextInput placeholder="Review" value={reviewComment} onChangeText={setReviewComment} style={[styles.textInput, styles.textArea]} placeholderTextColor="#9ca3af" multiline numberOfLines={2} />
+                <TouchableOpacity style={[styles.submitReviewBtn, (reviewSubmitting || reviewRating < 1) && styles.submitReviewBtnDisabled]} onPress={handleSubmitReview} disabled={reviewSubmitting || reviewRating < 1}>
+                  <Text style={styles.submitReviewBtnText}>Submit Review</Text>
+                </TouchableOpacity>
+              </View>
+            </>
+          )}
+        </View>
       </View>
       <View style={{ height: 80 }} />
     </ScrollView>
@@ -242,4 +346,25 @@ const styles = StyleSheet.create({
   btnPrimaryText: { color: '#fff', fontFamily: fontFamilyBold, fontSize: 14 },
   btnWhatsApp: { backgroundColor: '#22c55e', paddingVertical: 14, borderRadius: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8 },
   btnWhatsAppText: { color: '#fff', fontFamily: fontFamilyBold, fontSize: 14 },
+  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 },
+  ratingText: { fontSize: 12, fontFamily, color: '#6b7280' },
+  reviewsSection: { marginTop: 24, paddingTop: 20, borderTopWidth: 1, borderTopColor: '#f3f4f6' },
+  reviewsTitle: { fontSize: 18, fontFamily: fontFamilyBold, color: '#111', marginBottom: 12 },
+  reviewsMeta: { fontSize: 14, fontFamily, color: '#6b7280', marginBottom: 12 },
+  reviewList: { marginBottom: 16 },
+  reviewItem: { marginBottom: 16, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: '#f3f4f6' },
+  reviewHeader: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginBottom: 4 },
+  starRow: { flexDirection: 'row', gap: 2 },
+  reviewAuthor: { fontSize: 13, fontFamily: fontFamilySemiBold, color: '#374151' },
+  reviewDate: { fontSize: 11, fontFamily, color: '#9ca3af' },
+  reviewComment: { fontSize: 14, fontFamily, color: '#6b7280', lineHeight: 20 },
+  reviewForm: { backgroundColor: '#f9fafb', padding: 16, borderRadius: 12, borderWidth: 1, borderColor: '#e5e7eb' },
+  reviewFormTitle: { fontSize: 14, fontFamily: fontFamilySemiBold, color: '#374151', marginBottom: 10 },
+  starBtn: { padding: 4 },
+  reviewInputLabel: { fontSize: 12, fontFamily: fontFamilySemiBold, color: '#6b7280', marginTop: 10, marginBottom: 4 },
+  textInput: { borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, fontFamily, color: '#111', backgroundColor: '#fff' },
+  textArea: { minHeight: 64, textAlignVertical: 'top' },
+  submitReviewBtn: { backgroundColor: '#2563eb', paddingVertical: 12, borderRadius: 12, alignItems: 'center', marginTop: 12 },
+  submitReviewBtnDisabled: { opacity: 0.5 },
+  submitReviewBtnText: { color: '#fff', fontFamily: fontFamilyBold, fontSize: 14 },
 });

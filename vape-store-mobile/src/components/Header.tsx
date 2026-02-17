@@ -4,7 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ShoppingBag, Heart } from './Icons';
 import { get } from '../api/client';
-import { API_BASE_URL } from '../api/config';
+import { getApiBaseUrl } from '../api/config';
 import { useCartStore } from '../store/cartStore';
 import { useWishlistStore } from '../store/wishlistStore';
 import { fontFamily, fontFamilyBold } from '../theme';
@@ -22,7 +22,7 @@ export default function Header() {
       .catch(() => {});
   }, []);
 
-  const logoUri = siteLogo.startsWith('http') ? siteLogo : `${API_BASE_URL.replace(/\/$/, '')}${siteLogo}`;
+  const logoUri = siteLogo.startsWith('http') ? siteLogo : `${getApiBaseUrl()}${siteLogo}`;
 
   return (
     <View style={[styles.wrapper, { paddingTop: insets.top }]}>

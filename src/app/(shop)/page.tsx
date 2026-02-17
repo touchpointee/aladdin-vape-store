@@ -7,6 +7,7 @@ import ProductGrid from "@/components/product/ProductGrid";
 import MobileSearch from "@/components/home/MobileSearch";
 import PromoBanner from "@/components/home/PromoBanner";
 import connectDB from "@/lib/db";
+import { getReviewStatsForProductIds, attachReviewStatsToProducts } from "@/lib/reviewStats";
 import { Product, Category, Brand, Settings } from "@/models/unified";
 
 export const revalidate = 3600; // revalidate at most every hour
@@ -34,6 +35,16 @@ async function getHomeData() {
       // Settings
       Settings.findOne({ key: 'home_banners' }).lean(),
     ]);
+
+    const allProductIds = [
+      ...(products as any[]).map((p) => p._id),
+      ...(newArrivals as any[]).map((p) => p._id),
+      ...(disposables as any[]).map((p) => p._id),
+    ];
+    const reviewStatsMap = await getReviewStatsForProductIds(allProductIds);
+    attachReviewStatsToProducts(products as any[], reviewStatsMap);
+    attachReviewStatsToProducts(newArrivals as any[], reviewStatsMap);
+    attachReviewStatsToProducts(disposables as any[], reviewStatsMap);
 
     const serialize = (items: any[]) => items.map(i => ({
       ...i,

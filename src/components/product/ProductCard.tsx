@@ -129,15 +129,23 @@ export default function ProductCard({ product }: ProductCardProps) {
                     </div>
                 )}
 
-                {/* Rating */}
-                <div className="flex gap-0.5 mb-3">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                        <Star
-                            key={star}
-                            size={10}
-                            className={`${star <= (product.rating || 5) ? "fill-gray-300 text-gray-300" : "text-gray-200"}`}
-                        />
-                    ))}
+                {/* Rating — only from reviews; no reviews = no filled stars */}
+                <div className="flex items-center gap-1 mb-3">
+                    <div className="flex gap-0.5">
+                        {[1, 2, 3, 4, 5].map((star) => {
+                            const hasReviews = (product.reviewCount ?? 0) > 0;
+                            const rating = hasReviews ? (product.averageRating ?? 0) : 0;
+                            const filled = star <= Math.round(rating);
+                            return (
+                                <Star
+                                    key={star}
+                                    size={10}
+                                    className={filled ? "fill-yellow-400 text-yellow-400" : "text-gray-200"}
+                                />
+                            );
+                        })}
+                    </div>
+                    <span className="text-[10px] text-gray-400">({product.reviewCount ?? 0})</span>
                 </div>
 
                 {/* Add to Cart Button */}

@@ -1,9 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { useCartStore } from "@/store/cartStore";
 import { Star, Minus, Plus } from "lucide-react";
+
+const REVIEW_GUEST_KEY = "review_guest_id";
+
+function getOrCreateGuestId(): string {
+    if (typeof window === "undefined") return "";
+    let id = localStorage.getItem(REVIEW_GUEST_KEY);
+    if (!id) {
+        id = "guest:" + (typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2) + Date.now().toString(36));
+        localStorage.setItem(REVIEW_GUEST_KEY, id);
+    }
+    return id;
+}
 
 interface ProductDetailClientProps {
     product: any;
@@ -15,6 +27,54 @@ export default function ProductDetailClient({ product, whatsappNumber }: Product
     const [selectedFlavour, setSelectedFlavour] = useState(product.flavours?.[0] || "");
     const [selectedNicotine, setSelectedNicotine] = useState(product.variants?.[0]?.nicotine || "");
     const { addItem, openCart } = useCartStore();
+
+    const [reviews, setReviews] = useState<any[]>([]);
+    const [averageRating, setAverageRating] = useState(0);
+    const [reviewsTotal, setReviewsTotal] = useState(0);
+    const [reviewsLoading, setReviewsLoading] = useState(true);
+    const [reviewRating, setReviewRating] = useState(0);
+    const [reviewComment, setReviewComment] = useState("");
+    const [reviewName, setReviewName] = useState("");
+    const [reviewSubmitting, setReviewSubmitting] = useState(false);
+
+    const fetchReviews = useCallback(async () => {
+        try {
+            const res = await fetch(`/api/products/${product._id}/reviews`);
+            const data = await res.json();
+            if (res.ok) {
+                setReviews(data.reviews || []);
+                setAverageRating(data.averageRating ?? 0);
+                setReviewsTotal(data.total ?? 0);
+            }
+        } catch (_) {}
+        finally { setReviewsLoading(false); }
+    }, [product._id]);
+
+    useEffect(() => { fetchReviews(); }, [fetchReviews]);
+
+    const handleSubmitReview = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (reviewRating < 1 || reviewRating > 5) return;
+        setReviewSubmitting(true);
+        try {
+            const res = await fetch(`/api/products/${product._id}/reviews`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    rating: reviewRating,
+                    comment: reviewComment.trim(),
+                    authorName: reviewName.trim() || "Guest",
+                    customerId: getOrCreateGuestId(),
+                }),
+            });
+            if (res.ok) {
+                setReviewRating(0);
+                setReviewComment("");
+                await fetchReviews();
+            }
+        } catch (_) {}
+        setReviewSubmitting(false);
+    };
 
     // Find current variant based on selection
     const currentVariant = product.variants?.find((v: any) => v.nicotine === selectedNicotine);
@@ -91,9 +151,13 @@ Link: ${window.location.href}`;
 
                     <div className="flex items-center gap-1 mb-4">
                         <div className="flex text-yellow-400">
-                            {[1, 2, 3, 4, 5].map(s => <Star key={s} size={14} className="fill-current" />)}
+                            {[1, 2, 3, 4, 5].map(s => (
+                                <Star key={s} size={14} className={s <= Math.round(averageRating) ? "fill-current" : ""} />
+                            ))}
                         </div>
-                        <span className="text-xs text-gray-400">(No reviews)</span>
+                        <span className="text-xs text-gray-400">
+                            {reviewsLoading ? "..." : reviewsTotal === 0 ? "(No reviews)" : `${averageRating.toFixed(1)} (${reviewsTotal} review${reviewsTotal !== 1 ? "s" : ""})`}
+                        </span>
                     </div>
 
                     {/* Price */}
@@ -238,6 +302,47 @@ Link: ${window.location.href}`;
                         <p className="text-sm text-gray-600 leading-relaxed">
                             {product.description || "No description available."}
                         </p>
+                    </div>
+
+                    {/* Customer Reviews */}
+                    <div className="mt-10 pt-8 border-t border-gray-200">
+                        <h3 className="text-lg font-bold text-gray-900 mb-4">Customer Reviews</h3>
+                        {reviewsLoading ? (
+                            <p className="text-sm text-gray-500">Loading reviews...</p>
+                        ) : (
+                            <>
+                                {reviews.length > 0 && (
+                                    <ul className="space-y-4 mb-6">
+                                        {reviews.map((r: any) => (
+                                            <li key={r._id} className="border-b border-gray-100 pb-4 last:border-0">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <div className="flex text-yellow-400">
+                                                        {[1, 2, 3, 4, 5].map(s => <Star key={s} size={12} className={s <= r.rating ? "fill-current" : ""} />)}
+                                                    </div>
+                                                    <span className="text-xs font-semibold text-gray-700">{r.authorName || "Guest"}</span>
+                                                    <span className="text-xs text-gray-400">{new Date(r.createdAt).toLocaleDateString()}</span>
+                                                </div>
+                                                {r.comment && <p className="text-sm text-gray-600 mt-1">{r.comment}</p>}
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                                <form onSubmit={handleSubmitReview} className="bg-gray-50 p-4 rounded-xl border border-gray-100">
+                                    <p className="text-sm font-bold text-gray-700 mb-2">Write a review</p>
+                                    <div className="flex items-center gap-1 mb-2">
+                                        {[1, 2, 3, 4, 5].map(s => (
+                                            <button key={s} type="button" onClick={() => setReviewRating(s)} className="p-0.5 focus:outline-none">
+                                                <Star size={24} className={s <= reviewRating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"} />
+                                            </button>
+                                        ))}
+                                        <span className="text-xs text-gray-500 ml-2">{reviewRating ? `${reviewRating} star${reviewRating > 1 ? "s" : ""}` : "Select rating"}</span>
+                                    </div>
+                                    <input type="text" placeholder="Your name" value={reviewName} onChange={e => setReviewName(e.target.value)} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm mb-2" />
+                                    <textarea placeholder="Your review" value={reviewComment} onChange={e => setReviewComment(e.target.value)} rows={2} className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm mb-2 resize-none" />
+                                    <button type="submit" disabled={reviewSubmitting || reviewRating < 1} className="px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 disabled:opacity-50">Submit Review</button>
+                                </form>
+                            </>
+                        )}
                     </div>
                 </div>
             </div>

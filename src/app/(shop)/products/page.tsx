@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import connectDB from "@/lib/db";
+import { getReviewStatsForProductIds, attachReviewStatsToProducts } from "@/lib/reviewStats";
 import { Product, Category, Brand } from "@/models/unified";
 import ProductFilter from "@/components/product/ProductFilter";
 import ProductSearchHeader from "@/components/product/ProductSearchHeader";
@@ -102,14 +103,19 @@ async function getData(searchParams: SearchParams) {
     const limit = 30;
 
     // Fetch
-    const [products, totalProducts] = await Promise.all([
+    const [productsRaw, totalProducts] = await Promise.all([
         Product.find(filter)
             .populate("category")
             .populate("brand")
             .sort(sort)
-            .limit(limit),
+            .limit(limit)
+            .lean(),
         Product.countDocuments(filter)
     ]);
+
+    const productIds = (productsRaw as any[]).map((p) => p._id);
+    const reviewStatsMap = await getReviewStatsForProductIds(productIds);
+    const products = attachReviewStatsToProducts(productsRaw as any[], reviewStatsMap);
 
     const categories = await Category.find({ status: { $regex: '^active$', $options: 'i' } }).select("_id name slug");
     const brands = await Brand.find({ status: { $regex: '^active$', $options: 'i' } }).select("_id name slug");

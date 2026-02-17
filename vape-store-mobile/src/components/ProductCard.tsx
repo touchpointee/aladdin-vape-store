@@ -1,6 +1,7 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, Image, StyleSheet } from 'react-native';
-import { Heart } from '../components/Icons';
+import { Heart, Star } from '../components/Icons';
+import { getApiBaseUrl } from '../api/config';
 import { useCartStore } from '../store/cartStore';
 import { fontFamily, fontFamilyBold } from '../theme';
 import { useWishlistStore } from '../store/wishlistStore';
@@ -78,7 +79,7 @@ export default function ProductCard({ product, onPress, width: customWidth }: Pr
         </TouchableOpacity>
         <View style={styles.imageWrap}>
           <Image
-            source={{ uri: product.images?.[0] || 'https://via.placeholder.com/200' }}
+            source={{ uri: product.images?.[0]?.startsWith('http') ? product.images[0] : product.images?.[0] ? `${getApiBaseUrl()}${product.images[0]}` : 'https://via.placeholder.com/200' }}
             style={styles.image}
             resizeMode="contain"
           />
@@ -90,6 +91,17 @@ export default function ProductCard({ product, onPress, width: customWidth }: Pr
           <Text style={styles.price}>
             ₹{showDiscount ? displayDiscount : displayPrice}
           </Text>
+        </View>
+        <View style={styles.ratingRow}>
+          {[1, 2, 3, 4, 5].map((s) => {
+            const hasReviews = (product.reviewCount ?? 0) > 0;
+            const rating = hasReviews ? (product.averageRating ?? 0) : 0;
+            const filled = s <= Math.round(rating);
+            return (
+              <Star key={s} size={10} color={filled ? '#eab308' : '#d1d5db'} fill={filled ? '#eab308' : 'transparent'} />
+            );
+          })}
+          <Text style={styles.reviewCount}>({product.reviewCount ?? 0})</Text>
         </View>
         <Text style={styles.name} numberOfLines={2}>{product.name}</Text>
         {product.puffCount != null && (
@@ -131,6 +143,8 @@ const styles = StyleSheet.create({
   priceRow: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 10, marginTop: 8 },
   originalPrice: { fontSize: 11, color: '#9ca3af', textDecorationLine: 'line-through' },
   price: { fontSize: 14, fontWeight: '700', color: '#dc2626' },
+  ratingRow: { flexDirection: 'row', alignItems: 'center', gap: 2, paddingHorizontal: 10, marginTop: 4 },
+  reviewCount: { fontSize: 10, color: '#9ca3af' },
   name: { fontSize: 12, fontWeight: '600', color: '#374151', paddingHorizontal: 10, marginTop: 4, fontFamily: fontFamily },
   meta: { fontSize: 10, color: '#6b7280', paddingHorizontal: 10, marginTop: 2 },
   addBtn: {
