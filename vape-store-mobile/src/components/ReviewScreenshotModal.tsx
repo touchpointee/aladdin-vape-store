@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,33 +8,52 @@ import {
   StyleSheet,
   Dimensions,
   Platform,
+  ActivityIndicator,
 } from 'react-native';
 import { useReviewScreenshotModalStore } from '../store/reviewScreenshotModalStore';
 import { fontFamily } from '../theme';
 
 const { width: winWidth, height: winHeight } = Dimensions.get('window');
+const IMAGE_PADDING = 48;
+const IMAGE_MAX_WIDTH = winWidth - IMAGE_PADDING;
+const IMAGE_MAX_HEIGHT = winHeight * 0.85 - 80;
 
 export default function ReviewScreenshotModal() {
   const { url, caption, close } = useReviewScreenshotModalStore();
   const visible = !!url;
+  const [imageLoading, setImageLoading] = useState(true);
+  const [imageError, setImageError] = useState(false);
+
+  const handleClose = () => {
+    setImageLoading(true);
+    setImageError(false);
+    close();
+  };
+
+  useEffect(() => {
+    if (url) {
+      setImageLoading(true);
+      setImageError(false);
+    }
+  }, [url]);
 
   return (
     <Modal
       visible={visible}
       transparent
       animationType="fade"
-      onRequestClose={close}
+      onRequestClose={handleClose}
       statusBarTranslucent
       presentationStyle="overFullScreen"
     >
       <TouchableOpacity
         style={[styles.wrap, styles.wrapFullScreen, { width: winWidth, height: winHeight }]}
         activeOpacity={1}
-        onPress={close}
+        onPress={handleClose}
       >
         <TouchableOpacity
           style={styles.closeBtn}
-          onPress={close}
+          onPress={handleClose}
           hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
           <Text style={styles.closeText}>✕</Text>
@@ -44,10 +63,25 @@ export default function ReviewScreenshotModal() {
             <TouchableOpacity
               activeOpacity={1}
               onPress={() => {}}
-              style={styles.imageTouchable}
+              style={[styles.imageTouchable, { width: IMAGE_MAX_WIDTH, maxHeight: IMAGE_MAX_HEIGHT }]}
             >
-              <Image source={{ uri: url }} style={styles.image} resizeMode="contain" />
-              {caption ? <Text style={styles.caption}>{caption}</Text> : null}
+              {imageLoading && !imageError ? (
+                <View style={styles.loadingWrap}>
+                  <ActivityIndicator size="large" color="rgba(255,255,255,0.9)" />
+                </View>
+              ) : null}
+              <Image
+                source={{ uri: url }}
+                style={styles.image}
+                resizeMode="contain"
+                onLoadStart={() => { setImageLoading(true); setImageError(false); }}
+                onLoad={() => setImageLoading(false)}
+                onError={() => { setImageLoading(false); setImageError(true); }}
+              />
+              {imageError ? (
+                <Text style={styles.errorText}>Could not load image</Text>
+              ) : null}
+              {caption && !imageError ? <Text style={styles.caption}>{caption}</Text> : null}
             </TouchableOpacity>
           ) : null}
         </View>
@@ -79,6 +113,23 @@ const styles = StyleSheet.create({
   imageTouchable: {
     alignItems: 'center',
   },
+  loadingWrap: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 1,
+  },
+  errorText: {
+    marginTop: 12,
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.7)',
+    textAlign: 'center',
+    fontFamily: fontFamily,
+  },
   closeBtn: {
     position: 'absolute',
     top: 16,
@@ -97,10 +148,11 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   image: {
-    width: '100%',
+    width: IMAGE_MAX_WIDTH,
+    maxHeight: IMAGE_MAX_HEIGHT,
     aspectRatio: 9 / 16,
-    maxHeight: '85%',
     borderRadius: 12,
+    backgroundColor: 'transparent',
   },
   caption: {
     marginTop: 12,
