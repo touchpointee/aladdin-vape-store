@@ -4,10 +4,18 @@
     "development": { "developmentClient": true, "distribution": "internal" },
     "preview": {
       "distribution": "internal",
-      "android": { "buildType": "apk" }
+      "android": { "buildType": "apk" },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://aladdinvapestoreindia.net",
+        "EXPO_PUBLIC_APP_CONFIG_URLS": "https://aladdinvapestoreindia.net,https://aladdinvapestoreindia.com,https://aladdinstorestest.com,https://aladdinstore2026test.com,https://aladdinvapestoretest.com,https://aladdinstoretest.in,https://aladdinvapetest.in"
+      }
     },
     "production": {
-      "android": { "buildType": "apk" }
+      "android": { "buildType": "apk" },
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://aladdinvapestoreindia.net",
+        "EXPO_PUBLIC_APP_CONFIG_URLS": "https://aladdinvapestoreindia.net,https://aladdinvapestoreindia.com,https://aladdinstorestest.com,https://aladdinstore2026test.com,https://aladdinvapestoretest.com,https://aladdinstoretest.in,https://aladdinvapetest.in"
+      }
     }
   },
   "submit": { "production": {} }

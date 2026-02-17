@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { revalidatePath } from 'next/cache';
 import connectDB from '@/lib/db';
 import { Settings } from '@/models/unified';
 
@@ -47,6 +48,7 @@ export async function POST(req: NextRequest) {
       { value: JSON.stringify(normalized) },
       { upsert: true }
     );
+    revalidatePath('/');
     return NextResponse.json({ screenshots: normalized });
   } catch (e) {
     console.error('Admin review screenshots POST:', e);

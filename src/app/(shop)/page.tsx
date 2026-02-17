@@ -11,7 +11,7 @@ import connectDB from "@/lib/db";
 import { getReviewStatsForProductIds, attachReviewStatsToProducts } from "@/lib/reviewStats";
 import { Product, Category, Brand, Settings } from "@/models/unified";
 
-export const revalidate = 3600; // revalidate at most every hour
+export const revalidate = 120; // revalidate at most every 2 min (review screenshots etc. also invalidated on save via revalidatePath)
 
 async function getHomeData() {
   try {
