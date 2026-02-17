@@ -151,6 +151,7 @@ export default function CheckoutScreen() {
         })),
         totalPrice: subtotal() + DELIVERY_CHARGE,
         paymentMode: paymentMethod,
+        orderSource: 'app',
       };
       if (paymentMethod === 'PREPAID') orderData.utrNumber = utrNumber.trim();
 

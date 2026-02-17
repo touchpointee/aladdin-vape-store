@@ -77,6 +77,8 @@ export async function POST(req: NextRequest) {
             phone: customerPhone
         };
 
+        const orderSource = body.orderSource === 'app' ? 'app' : 'website';
+
         // Create order
         const order = await Order.create({
             ...body,
@@ -85,7 +87,8 @@ export async function POST(req: NextRequest) {
             status: 'Pending',
             paymentMode: orderPaymentMode,
             paymentStatus: orderPaymentStatus,
-            utrNumber: paymentMode === 'PREPAID' ? utrNumber.trim() : undefined
+            utrNumber: paymentMode === 'PREPAID' ? utrNumber.trim() : undefined,
+            orderSource
         });
 
         // Save UTR to prevent reuse (only for prepaid)

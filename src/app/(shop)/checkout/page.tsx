@@ -201,7 +201,8 @@ export default function CheckoutPage() {
                     nicotine: item.selectedNicotine
                 })),
                 totalPrice: subtotal() + DELIVERY_CHARGE,
-                paymentMode: paymentMethod
+                paymentMode: paymentMethod,
+                orderSource: 'website'
             };
 
             // Add UTR for prepaid orders

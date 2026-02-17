@@ -820,6 +820,14 @@ export default function AdminOrderDetailPage() {
                                 </h2>
                                 <div className="space-y-4 text-sm">
                                     <div>
+                                        <label className="text-gray-500 text-xs uppercase">Order from</label>
+                                        <div className="font-medium">
+                                            <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded ${order.orderSource === 'app' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-700'}`}>
+                                                {order.orderSource === 'app' ? 'App' : 'Website'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                    <div>
                                         <label className="text-gray-500 text-xs uppercase">Name & Age</label>
                                         <div className="font-medium">{order.customer.name} ({order.customer.age} Yrs)</div>
                                     </div>

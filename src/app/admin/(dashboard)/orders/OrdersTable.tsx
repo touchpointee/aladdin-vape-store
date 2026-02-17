@@ -111,6 +111,7 @@ export default function OrdersTable({ initialOrders }: { initialOrders: any[] })
                                 <th className="p-4 text-sm font-medium text-gray-500">Payment</th>
                                 <th className="p-4 text-sm font-medium text-gray-500">Pay Status</th>
                                 <th className="p-4 text-sm font-medium text-gray-500">Status</th>
+                                <th className="p-4 text-sm font-medium text-gray-500">Source</th>
                                 <th className="p-4 text-sm font-medium text-gray-500">Date</th>
                                 <th className="p-4 text-sm font-medium text-gray-500 text-right">Actions</th>
                             </tr>
@@ -154,6 +155,11 @@ export default function OrdersTable({ initialOrders }: { initialOrders: any[] })
                                             {order.status}
                                         </span>
                                     </td>
+                                    <td className="p-4 text-sm">
+                                        <span className={`px-2 py-0.5 text-xs font-medium rounded ${order.orderSource === 'app' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-700'}`}>
+                                            {order.orderSource === 'app' ? 'App' : 'Website'}
+                                        </span>
+                                    </td>
                                     <td className="p-4 text-xs text-gray-500">
                                         {new Date(order.createdAt).toLocaleDateString()}
                                     </td>
@@ -183,36 +189,40 @@ export default function OrdersTable({ initialOrders }: { initialOrders: any[] })
                 )}
             </div>
             {totalPages > 1 && (
-                <div className="flex flex-col md:flex-row items-center justify-between gap-4 mt-6 px-4 py-3 bg-white border rounded-lg shadow-sm">
-                    <div className="text-sm text-gray-500">
+                <div className="flex flex-col gap-4 mt-6 px-4 py-3 bg-white border rounded-lg shadow-sm">
+                    <div className="text-sm text-gray-500 text-center sm:text-left">
                         Showing <span className="font-bold">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="font-bold">{Math.min(currentPage * ITEMS_PER_PAGE, filteredOrders.length)}</span> of <span className="font-bold">{filteredOrders.length}</span> orders
                     </div>
-                    <div className="flex items-center gap-2">
-                        <button
-                            onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                            disabled={currentPage === 1}
-                            className="px-4 py-2 border rounded-md text-sm font-medium disabled:opacity-50 disabled:bg-gray-50 hover:bg-gray-50 transition-colors"
-                        >
-                            Previous
-                        </button>
-                        <div className="flex items-center gap-1">
-                            {[...Array(totalPages)].map((_, i) => (
-                                <button
-                                    key={i + 1}
-                                    onClick={() => setCurrentPage(i + 1)}
-                                    className={`w-10 h-10 flex items-center justify-center rounded-md text-sm font-bold transition-all ${currentPage === i + 1 ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-50 border'}`}
-                                >
-                                    {i + 1}
-                                </button>
-                            ))}
+                    <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                        <div className="flex items-center justify-center sm:justify-start gap-2 shrink-0">
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                                disabled={currentPage === 1}
+                                className="px-4 py-2 border rounded-md text-sm font-medium disabled:opacity-50 disabled:bg-gray-50 hover:bg-gray-50 transition-colors"
+                            >
+                                Previous
+                            </button>
+                            <button
+                                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                                disabled={currentPage === totalPages}
+                                className="px-4 py-2 border rounded-md text-sm font-medium disabled:opacity-50 disabled:bg-gray-50 hover:bg-gray-50 transition-colors"
+                            >
+                                Next
+                            </button>
                         </div>
-                        <button
-                            onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                            disabled={currentPage === totalPages}
-                            className="px-4 py-2 border rounded-md text-sm font-medium disabled:opacity-50 disabled:bg-gray-50 hover:bg-gray-50 transition-colors"
-                        >
-                            Next
-                        </button>
+                        <div className="overflow-x-auto -mx-2 px-2 sm:mx-0 sm:px-0">
+                            <div className="flex items-center justify-center gap-1 min-w-max py-1">
+                                {[...Array(totalPages)].map((_, i) => (
+                                    <button
+                                        key={i + 1}
+                                        onClick={() => setCurrentPage(i + 1)}
+                                        className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-md text-sm font-bold transition-all ${currentPage === i + 1 ? 'bg-blue-600 text-white shadow-md' : 'text-gray-600 hover:bg-gray-50 border'}`}
+                                    >
+                                        {i + 1}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
                     </div>
                 </div>
             )}
