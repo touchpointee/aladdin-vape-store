@@ -419,7 +419,12 @@ export default function AdminOrderDetailPage() {
 
                                     {/* Discount Section */}
                                     <div className="no-print flex justify-between items-center text-sm">
-                                        <span className="text-gray-600">Discount</span>
+                                        <span className="text-gray-600">
+                                            Discount
+                                            {order.orderSource === 'app' && (order.discount ?? 0) > 0 && (
+                                                <span className="ml-1.5 text-xs text-indigo-600 font-medium">(First order 10% offer)</span>
+                                            )}
+                                        </span>
                                         {isEditingDiscount ? (
                                             <div className="flex items-center gap-2">
                                                 <input
@@ -450,7 +455,7 @@ export default function AdminOrderDetailPage() {
                                         ) : (
                                             <div className="flex items-center gap-2">
                                                 <span className="font-semibold text-green-600">
-                                                    {order.discount > 0 ? `-₹${order.discount}` : '₹0'}
+                                                    {(order.discount ?? 0) > 0 ? `-₹${(order.discount ?? 0).toFixed(2)}` : '₹0'}
                                                 </span>
                                                 <button
                                                     onClick={() => {
@@ -821,10 +826,15 @@ export default function AdminOrderDetailPage() {
                                 <div className="space-y-4 text-sm">
                                     <div>
                                         <label className="text-gray-500 text-xs uppercase">Order from</label>
-                                        <div className="font-medium">
+                                        <div className="font-medium flex flex-wrap items-center gap-2">
                                             <span className={`inline-block px-2 py-0.5 text-xs font-semibold rounded ${order.orderSource === 'app' ? 'bg-indigo-100 text-indigo-700' : 'bg-gray-100 text-gray-700'}`}>
                                                 {order.orderSource === 'app' ? 'App' : 'Website'}
                                             </span>
+                                            {order.orderSource === 'app' && (order.discount ?? 0) > 0 && (
+                                                <span className="inline-block px-2 py-0.5 text-xs font-medium rounded bg-green-100 text-green-700">
+                                                    First order 10% applied (−₹{(order.discount ?? 0).toFixed(2)})
+                                                </span>
+                                            )}
                                         </div>
                                     </div>
                                     <div>

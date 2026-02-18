@@ -84,6 +84,8 @@ export interface IOrder extends Document {
     orderType: 'website' | 'whatsapp';
     /** Where the order was placed: app (mobile) or website */
     orderSource?: 'app' | 'website';
+    /** App install identifier; used for first-order offer (one per install) */
+    installId?: string;
     shipmentStatus: 'Pending' | 'Created' | 'Failed';
     shipmentResponse?: any;
     shipmentOrderId?: string;
@@ -252,6 +254,7 @@ const OrderSchema = new Schema<IOrder>(
         },
         orderType: { type: String, enum: ['website', 'whatsapp'], default: 'website' },
         orderSource: { type: String, enum: ['app', 'website'], default: 'website' },
+        installId: { type: String, trim: true },
         shipmentStatus: { type: String, enum: ['Pending', 'Created', 'Failed'], default: 'Pending' },
         shipmentResponse: { type: Schema.Types.Mixed },
         shipmentOrderId: { type: String },

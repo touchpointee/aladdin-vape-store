@@ -18,6 +18,8 @@ import { useCartStore } from '../store/cartStore';
 import { fontFamily, fontFamilySemiBold, fontFamilyBold } from '../theme';
 import { useAuthStore } from '../store/authStore';
 import { getApiBaseUrl } from '../api/config';
+import { getInstallId } from '../utils/installId';
+import { storage } from '../store/storage';
 import type { Address } from '../types';
 
 const DELIVERY_CHARGE = 100;
@@ -34,6 +36,8 @@ export default function CheckoutScreen() {
   const [paymentQrCode, setPaymentQrCode] = useState('');
   const [onlinePaymentEnabled, setOnlinePaymentEnabled] = useState(true);
   const [showUtrModal, setShowUtrModal] = useState(false);
+  const [firstOrderEligible, setFirstOrderEligible] = useState(false);
+  const [installId, setInstallId] = useState<string | null>(null);
 
   const [savedAddresses, setSavedAddresses] = useState<Address[]>([]);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
@@ -77,6 +81,16 @@ export default function CheckoutScreen() {
         .catch(() => {});
     }
   }, []);
+
+  useEffect(() => {
+    (async () => {
+      const id = await getInstallId(storage);
+      setInstallId(id);
+      const params: Record<string, string> = { installId: id };
+      if (formData.phone && formData.phone.replace(/\D/g, '').length === 10) params.phone = formData.phone;
+      get<{ eligible: boolean }>('api/first-order-offer', params).then((r) => setFirstOrderEligible(!!r?.eligible)).catch(() => setFirstOrderEligible(false));
+    })();
+  }, [formData.phone]);
 
   useEffect(() => {
     if (isLoggedIn && user?.phone) {
@@ -140,6 +154,11 @@ export default function CheckoutScreen() {
         if (isLoggedIn && user?.phone) await fetchAddresses(user.phone);
       }
 
+      const appInstallId = installId || (await getInstallId(storage));
+      const sub = subtotal();
+      const discountAmount = firstOrderEligible && appInstallId ? Math.round(sub * 0.1 * 100) / 100 : 0;
+      const orderTotal = sub - discountAmount + DELIVERY_CHARGE;
+
       const orderData: any = {
         customer: normalizedData,
         products: items.map((item) => ({
@@ -149,10 +168,11 @@ export default function CheckoutScreen() {
           flavour: item.selectedFlavour,
           nicotine: item.selectedNicotine,
         })),
-        totalPrice: subtotal() + DELIVERY_CHARGE,
+        totalPrice: orderTotal,
         paymentMode: paymentMethod,
         orderSource: 'app',
       };
+      if (appInstallId) orderData.installId = appInstallId;
       if (paymentMethod === 'PREPAID') orderData.utrNumber = utrNumber.trim();
 
       await post('api/orders', orderData);
@@ -196,7 +216,9 @@ export default function CheckoutScreen() {
     );
   }
 
-  const total = subtotal() + DELIVERY_CHARGE;
+  const sub = subtotal();
+  const firstOrderDiscount = firstOrderEligible ? Math.round(sub * 0.1 * 100) / 100 : 0;
+  const total = sub - firstOrderDiscount + DELIVERY_CHARGE;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
@@ -292,7 +314,7 @@ export default function CheckoutScreen() {
                 <Image source={{ uri: paymentQrCode.startsWith('http') ? paymentQrCode : `${getApiBaseUrl()}${paymentQrCode}` }} style={styles.qr} resizeMode="contain" />
               </View>
             ) : null}
-            <Text style={styles.qrLabel}>Scan to pay ₹{total}</Text>
+            <Text style={styles.qrLabel}>Scan to pay ₹{total.toFixed(2)}</Text>
             <TouchableOpacity style={styles.utrBtn} onPress={() => setShowUtrModal(true)}>
               <CheckCircle size={20} color="#fff" />
               <Text style={styles.utrBtnText}>I've Paid - Enter UTR</Text>
@@ -326,6 +348,12 @@ export default function CheckoutScreen() {
           <Text style={styles.summaryLabel}>Delivery</Text>
           <Text style={styles.summaryValue}>₹{DELIVERY_CHARGE}</Text>
         </View>
+        {firstOrderEligible && firstOrderDiscount > 0 && (
+          <View style={styles.summaryRow}>
+            <Text style={styles.discountLabel}>First order (10% off)</Text>
+            <Text style={styles.discountValue}>-₹{firstOrderDiscount.toFixed(2)}</Text>
+          </View>
+        )}
         <View style={[styles.summaryRow, styles.totalRow]}>
           <Text style={styles.totalLabel}>Total</Text>
           <Text style={styles.totalValue}>₹{total.toFixed(2)}</Text>
@@ -408,6 +436,8 @@ const styles = StyleSheet.create({
   summaryDivider: { height: 1, backgroundColor: '#f3f4f6', marginVertical: 8 },
   summaryLabel: { fontFamily, color: '#6b7280' },
   summaryValue: { fontFamily: fontFamilySemiBold, color: '#111' },
+  discountLabel: { fontFamily, color: '#166534' },
+  discountValue: { fontFamily: fontFamilyBold, color: '#166534' },
   totalRow: { borderTopWidth: 1, borderTopColor: '#e5e7eb', marginTop: 8, paddingTop: 12 },
   totalLabel: { fontSize: 16, fontFamily: fontFamilyBold, color: '#111' },
   totalValue: { fontSize: 18, fontFamily: fontFamilyBold, color: '#dc2626' },

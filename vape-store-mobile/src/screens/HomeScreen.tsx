@@ -10,6 +10,7 @@ import {
   RefreshControl,
   FlatList,
   Dimensions,
+  Modal,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { get } from '../api/client';
@@ -19,6 +20,8 @@ import HomeSearchBar from '../components/HomeSearchBar';
 import ProductCard from '../components/ProductCard';
 import { getApiBaseUrl } from '../api/config';
 import { useReviewScreenshotModalStore } from '../store/reviewScreenshotModalStore';
+import { getInstallId } from '../utils/installId';
+import { storage } from '../store/storage';
 import type { Product, Category, Brand } from '../types';
 
 export default function HomeScreen() {
@@ -33,16 +36,20 @@ export default function HomeScreen() {
   const openReviewScreenshotModal = useReviewScreenshotModalStore((s) => s.open);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [firstOrderEligible, setFirstOrderEligible] = useState<boolean | null>(null);
+  const [showFirstOrderModal, setShowFirstOrderModal] = useState(false);
 
   const load = async () => {
     try {
-      const [hotRes, newRes, topRes, categoriesRes, brandsRes, screenshotsRes] = await Promise.all([
+      const installId = await getInstallId(storage);
+      const [hotRes, newRes, topRes, categoriesRes, brandsRes, screenshotsRes, offerRes] = await Promise.all([
         get<{ products: Product[] }>('api/products', { isHot: 'true', limit: '8' }),
         get<{ products: Product[] }>('api/products', { isNewArrival: 'true', limit: '8' }),
         get<{ products: Product[] }>('api/products', { isTopSelling: 'true', limit: '8' }),
         get<Category[]>('api/categories'),
         get<Brand[]>('api/brands'),
         get<{ screenshots: { url: string; caption?: string; order?: number }[] }>('api/review-screenshots'),
+        get<{ eligible: boolean }>('api/first-order-offer', { installId }).catch(() => ({ eligible: false })),
       ]);
       setProducts(hotRes?.products || []);
       setNewArrivals(newRes?.products || []);
@@ -50,6 +57,9 @@ export default function HomeScreen() {
       setCategories(Array.isArray(categoriesRes) ? categoriesRes : []);
       setBrands(Array.isArray(brandsRes) ? brandsRes : []);
       setReviewScreenshots(Array.isArray(screenshotsRes?.screenshots) ? screenshotsRes.screenshots : []);
+      const eligible = !!offerRes?.eligible;
+      setFirstOrderEligible(eligible);
+      if (eligible) setShowFirstOrderModal(true);
     } catch (e) {
       console.warn('Home load error', e);
     } finally {
@@ -110,6 +120,35 @@ export default function HomeScreen() {
           />
         </TouchableOpacity>
       </View>
+
+      {/* First order 10% offer: popup + banner (only when eligible) */}
+      {firstOrderEligible && (
+        <>
+          <TouchableOpacity
+            style={styles.firstOrderBanner}
+            onPress={() => navigation.navigate('Products')}
+            activeOpacity={0.9}
+          >
+            <Text style={styles.firstOrderBannerBadge}>FIRST ORDER</Text>
+            <Text style={styles.firstOrderBannerTitle}>Get 10% off</Text>
+            <Text style={styles.firstOrderBannerSub}>Use at checkout — one-time offer</Text>
+          </TouchableOpacity>
+          <Modal visible={showFirstOrderModal} transparent animationType="fade">
+            <TouchableOpacity style={styles.firstOrderModalOverlay} activeOpacity={1} onPress={() => setShowFirstOrderModal(false)}>
+              <View style={styles.firstOrderModalBox}>
+                <Text style={styles.firstOrderModalTitle}>Welcome! 🎉</Text>
+                <Text style={styles.firstOrderModalBody}>Get <Text style={styles.firstOrderModalHighlight}>10% off</Text> on your first order when you shop from the app.</Text>
+                <TouchableOpacity style={styles.firstOrderModalBtn} onPress={() => { setShowFirstOrderModal(false); navigation.navigate('Products'); }}>
+                  <Text style={styles.firstOrderModalBtnText}>Shop now</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => setShowFirstOrderModal(false)}>
+                  <Text style={styles.firstOrderModalDismiss}>Maybe later</Text>
+                </TouchableOpacity>
+              </View>
+            </TouchableOpacity>
+          </Modal>
+        </>
+      )}
 
       {categories.length > 0 && (
         <View style={styles.section}>
@@ -422,5 +461,79 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
+  },
+  firstOrderBanner: {
+    marginHorizontal: 16,
+    marginTop: 16,
+    paddingVertical: 14,
+    paddingHorizontal: 18,
+    borderRadius: 12,
+    backgroundColor: '#dc2626',
+    borderWidth: 1,
+    borderColor: '#b91c1c',
+  },
+  firstOrderBannerBadge: {
+    fontSize: 10,
+    fontFamily: fontFamilyBold,
+    color: 'rgba(255,255,255,0.9)',
+    letterSpacing: 1,
+    marginBottom: 4,
+  },
+  firstOrderBannerTitle: {
+    fontSize: 20,
+    fontFamily: fontFamilyBold,
+    color: '#fff',
+  },
+  firstOrderBannerSub: {
+    fontSize: 12,
+    fontFamily: fontFamily,
+    color: 'rgba(255,255,255,0.9)',
+    marginTop: 4,
+  },
+  firstOrderModalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  firstOrderModalBox: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 24,
+    alignItems: 'center',
+  },
+  firstOrderModalTitle: {
+    fontSize: 22,
+    fontFamily: fontFamilyBold,
+    color: '#111',
+    marginBottom: 12,
+  },
+  firstOrderModalBody: {
+    fontSize: 16,
+    fontFamily: fontFamily,
+    color: '#374151',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  firstOrderModalHighlight: {
+    fontFamily: fontFamilyBold,
+    color: '#dc2626',
+  },
+  firstOrderModalBtn: {
+    backgroundColor: '#dc2626',
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 12,
+    marginBottom: 12,
+  },
+  firstOrderModalBtnText: {
+    color: '#fff',
+    fontFamily: fontFamilyBold,
+    fontSize: 16,
+  },
+  firstOrderModalDismiss: {
+    fontSize: 14,
+    fontFamily: fontFamily,
+    color: '#6b7280',
   },
 });

@@ -78,17 +78,33 @@ export async function POST(req: NextRequest) {
         };
 
         const orderSource = body.orderSource === 'app' ? 'app' : 'website';
+        const installId = body.installId?.trim();
+        const DELIVERY_CHARGE = 100;
+
+        // First-order 10% offer (app only): eligible if no prior app order with this installId or phone
+        let finalTotal = calculatedTotal + DELIVERY_CHARGE;
+        let discountAmount = 0;
+        if (orderSource === 'app' && installId) {
+            const firstOrderQuery: any = { orderSource: 'app', $or: [{ installId }, { 'customer.phone': customerPhone }] };
+            const priorCount = await Order.countDocuments(firstOrderQuery);
+            if (priorCount === 0) {
+                discountAmount = Math.round(calculatedTotal * 0.1 * 100) / 100;
+                finalTotal = Math.round((calculatedTotal - discountAmount + DELIVERY_CHARGE) * 100) / 100;
+            }
+        }
 
         // Create order
         const order = await Order.create({
             ...body,
             customer: customerWithPhone,
-            totalPrice: calculatedTotal + 100, // Add flat 100rs delivery fee
+            totalPrice: finalTotal,
             status: 'Pending',
             paymentMode: orderPaymentMode,
             paymentStatus: orderPaymentStatus,
             utrNumber: paymentMode === 'PREPAID' ? utrNumber.trim() : undefined,
-            orderSource
+            orderSource,
+            installId: orderSource === 'app' ? installId : undefined,
+            discount: discountAmount > 0 ? discountAmount : undefined,
         });
 
         // Save UTR to prevent reuse (only for prepaid)
@@ -116,7 +132,7 @@ export async function POST(req: NextRequest) {
         // Trigger background push notifications for admins
         sendPushNotificationToAdmins({
             title: '🎉 New Order Received!',
-            body: `Order from ${body.customer.name} for ₹${calculatedTotal + 100}`,
+            body: `Order from ${body.customer.name} for ₹${finalTotal}`,
             url: '/admin/orders' // This will open the admin orders page
         }).catch(err => console.error('Delayed push error:', err));
 
