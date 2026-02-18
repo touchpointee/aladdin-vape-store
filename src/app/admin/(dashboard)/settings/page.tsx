@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { Settings, Bell, Image as ImageIcon, MessageSquare, QrCode, Volume2, Save, CreditCard, ShieldCheck, ShieldAlert, Smartphone } from "lucide-react";
+import { Settings, Bell, Image as ImageIcon, MessageSquare, QrCode, Volume2, Save, CreditCard, ShieldCheck, ShieldAlert, Smartphone, Download } from "lucide-react";
 import { urlBase64ToUint8Array } from "@/lib/notifications";
 
 export default function SettingsPage() {
@@ -23,12 +23,14 @@ export default function SettingsPage() {
     const [notificationSoundUrl, setNotificationSoundUrl] = useState('https://assets.mixkit.co/active_storage/sfx/1013/1013-preview.mp3');
     const [onlinePaymentEnabled, setOnlinePaymentEnabled] = useState(true);
     const [notificationPermission, setNotificationPermission] = useState<NotificationPermission>('default');
+    const [appApkUrl, setAppApkUrl] = useState('');
 
     const [files, setFiles] = useState<{ [key: string]: File | null }>({
         banner1: null,
         banner2: null,
         siteLogo: null,
-        paymentQrCode: null
+        paymentQrCode: null,
+        appApk: null
     });
 
     useEffect(() => {
@@ -70,6 +72,9 @@ export default function SettingsPage() {
                 if (data.online_payment_enabled !== undefined) {
                     setOnlinePaymentEnabled(data.online_payment_enabled);
                 }
+                if (data.app_apk_url !== undefined) {
+                    setAppApkUrl(data.app_apk_url || '');
+                }
             }
         } catch (error) {
             console.error('Failed to load settings', error);
@@ -102,6 +107,7 @@ export default function SettingsPage() {
         formData.append('app_api_base_url', appApiBaseUrl);
         if (files.siteLogo) formData.append('site_logo', files.siteLogo);
         if (files.paymentQrCode) formData.append('payment_qr_code', files.paymentQrCode);
+        if (files.appApk) formData.append('app_apk', files.appApk);
         formData.append('notification_sound_enabled', String(notificationSoundEnabled));
         formData.append('notification_sound_url', notificationSoundUrl);
         formData.append('online_payment_enabled', String(onlinePaymentEnabled));
@@ -129,7 +135,7 @@ export default function SettingsPage() {
             if (res.ok) {
                 alert('Settings Updated Successfully!');
                 fetchSettings(); // Refresh list to get consistent state
-                setFiles({ banner1: null, banner2: null, siteLogo: null, paymentQrCode: null });
+                setFiles({ banner1: null, banner2: null, siteLogo: null, paymentQrCode: null, appApk: null });
             } else {
                 alert('Failed to update settings');
             }
@@ -310,6 +316,29 @@ export default function SettingsPage() {
                                     onChange={(e) => setAppApiBaseUrl(e.target.value)}
                                 />
                                 <p className="text-[11px] text-gray-400 mt-2 ml-1">API URL the mobile app uses. Change this to point the app to a new backend without releasing an app update. Leave empty to use this site&apos;s URL.</p>
+                            </div>
+
+                            <div className="md:col-span-2">
+                                <label className="block text-sm font-semibold mb-2 text-gray-700 flex items-center gap-2">
+                                    <Download size={16} className="text-blue-500" />
+                                    App download (APK)
+                                </label>
+                                <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-3">
+                                    {appApkUrl ? (
+                                        <p className="text-sm text-gray-600 break-all">
+                                            Current APK: <a href={appApkUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">{appApkUrl}</a>
+                                        </p>
+                                    ) : (
+                                        <p className="text-sm text-gray-500">No APK uploaded. The &quot;Download app&quot; page will show &quot;available soon&quot; until you upload one.</p>
+                                    )}
+                                    <input
+                                        type="file"
+                                        accept=".apk,application/vnd.android.package-archive"
+                                        onChange={(e) => handleFileChange(e, 'appApk')}
+                                        className="text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-600 file:text-white hover:file:bg-blue-700 cursor-pointer"
+                                    />
+                                    <p className="text-[11px] text-gray-400">Upload your Android APK. Used on the website &quot;Download app&quot; page. Save settings after choosing a file.</p>
+                                </div>
                             </div>
 
                             <div>

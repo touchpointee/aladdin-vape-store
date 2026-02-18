@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { View, StyleSheet } from 'react-native';
-import { Home, LayoutGrid, Heart, User } from '../components/Icons';
+import { Home, LayoutGrid, ShoppingBag, Heart, User } from '../components/Icons';
 import { fontFamilySemiBold, fontFamilyBold } from '../theme';
 
 import HomeScreen from '../screens/HomeScreen';
@@ -60,6 +60,14 @@ function HomeTabs() {
         options={{ tabBarIcon: ({ focused }) => <TabIcon Icon={LayoutGrid} focused={focused} /> }}
       />
       <Tab.Screen
+        name="Cart"
+        component={CartScreen}
+        options={{
+          tabBarIcon: ({ focused }) => <TabIcon Icon={ShoppingBag} focused={focused} />,
+          tabBarBadge: totalItems > 0 ? totalItems : undefined,
+        }}
+      />
+      <Tab.Screen
         name="Wishlist"
         component={WishlistScreen}
         options={{
@@ -91,7 +99,6 @@ export default function RootNavigator() {
         >
           <Stack.Screen name="Tabs" component={HomeTabs} options={{ headerShown: false }} />
           <Stack.Screen name="ProductDetail" component={ProductDetailScreen} options={{ title: 'Product' }} />
-          <Stack.Screen name="Cart" component={CartScreen} options={{ title: 'Cart' }} />
           <Stack.Screen name="Checkout" component={CheckoutScreen} options={{ title: 'Checkout' }} />
           <Stack.Screen name="Orders" component={OrdersScreen} options={{ title: 'My Orders' }} />
           <Stack.Screen name="OrderDetail" component={OrderDetailScreen} options={{ title: 'Order Details' }} />

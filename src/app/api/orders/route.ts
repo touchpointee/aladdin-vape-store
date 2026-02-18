@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import { Order, Product, UTR } from '@/models/unified';
 import { sendPushNotificationToAdmins } from '@/lib/push';
+import { getClientIp } from '@/lib/getClientIp';
 
 export async function POST(req: NextRequest) {
     try {
@@ -79,13 +80,16 @@ export async function POST(req: NextRequest) {
 
         const orderSource = body.orderSource === 'app' ? 'app' : 'website';
         const installId = body.installId?.trim();
+        const clientIp = getClientIp(req);
         const DELIVERY_CHARGE = 100;
 
-        // First-order 10% offer (app only): eligible if no prior app order with this installId or phone
+        // First-order 10% offer (app only): eligible if no prior app order with this installId, phone, or IP
         let finalTotal = calculatedTotal + DELIVERY_CHARGE;
         let discountAmount = 0;
         if (orderSource === 'app' && installId) {
-            const firstOrderQuery: any = { orderSource: 'app', $or: [{ installId }, { 'customer.phone': customerPhone }] };
+            const orConditions: any[] = [{ installId }, { 'customer.phone': customerPhone }];
+            if (clientIp) orConditions.push({ clientIp });
+            const firstOrderQuery: any = { orderSource: 'app', $or: orConditions };
             const priorCount = await Order.countDocuments(firstOrderQuery);
             if (priorCount === 0) {
                 discountAmount = Math.round(calculatedTotal * 0.1 * 100) / 100;
@@ -104,6 +108,7 @@ export async function POST(req: NextRequest) {
             utrNumber: paymentMode === 'PREPAID' ? utrNumber.trim() : undefined,
             orderSource,
             installId: orderSource === 'app' ? installId : undefined,
+            clientIp: orderSource === 'app' ? clientIp ?? undefined : undefined,
             discount: discountAmount > 0 ? discountAmount : undefined,
         });
 

@@ -77,4 +77,17 @@ export async function uploadImage(fileBuffer: Buffer, fileName: string, contentT
     return `${protocol}://${host}${port}/${BUCKET_NAME}/${finalFileName}`;
 }
 
+/** Upload a raw file (e.g. APK) without compression. Returns public URL. */
+export async function uploadFile(fileBuffer: Buffer, fileName: string, contentType: string) {
+    await ensureBucket();
+    const safeName = fileName.replace(/\s+/g, '-');
+    await minioClient.putObject(BUCKET_NAME, safeName, fileBuffer, fileBuffer.length, {
+        'Content-Type': contentType || 'application/octet-stream',
+    });
+    const protocol = process.env.MINIO_USE_SSL === 'true' ? 'https' : 'http';
+    const port = process.env.MINIO_PORT ? `:${process.env.MINIO_PORT}` : '';
+    const host = process.env.MINIO_ENDPOINT || 'localhost';
+    return `${protocol}://${host}${port}/${BUCKET_NAME}/${safeName}`;
+}
+
 export default minioClient;

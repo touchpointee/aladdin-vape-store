@@ -9,6 +9,7 @@ import {
   Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Minus, Plus, Trash2 } from '../components/Icons';
 import { useCartStore } from '../store/cartStore';
 import { get } from '../api/client';
@@ -21,6 +22,7 @@ function uniqueKey(item: { id: string; selectedFlavour?: string; selectedNicotin
 
 export default function CartScreen() {
   const navigation = useNavigation<any>();
+  const insets = useSafeAreaInsets();
   const { items, removeItem, updateQuantity, subtotal, syncCartWithServer } = useCartStore();
 
   useEffect(() => {
@@ -37,7 +39,7 @@ export default function CartScreen() {
 
   if (items.length === 0) {
     return (
-      <View style={styles.centered}>
+      <View style={[styles.centered, { paddingTop: insets.top }]}>
         <Text style={styles.emptyTitle}>Your cart is empty</Text>
         <TouchableOpacity style={styles.shopBtn} onPress={() => navigation.navigate('Tabs')}>
           <Text style={styles.shopBtnText}>Go to Shop</Text>
@@ -48,7 +50,7 @@ export default function CartScreen() {
 
   return (
     <View style={styles.container}>
-      <ScrollView style={styles.scroll} contentContainerStyle={styles.scrollContent}>
+      <ScrollView style={styles.scroll} contentContainerStyle={[styles.scrollContent, { paddingTop: 16 + insets.top }]}>
         {items.map((item) => {
           const key = uniqueKey(item);
           const imgUri = item.image?.startsWith('http') ? item.image : item.image ? `${getApiBaseUrl()}${item.image}` : 'https://via.placeholder.com/80';
@@ -109,8 +111,8 @@ const styles = StyleSheet.create({
   shopBtnText: { color: '#fff', fontFamily: fontFamilyBold },
   row: { flexDirection: 'row', backgroundColor: '#fff', padding: 12, borderRadius: 12, marginBottom: 12, borderWidth: 1, borderColor: '#f3f4f6' },
   thumb: { width: 80, height: 80, borderRadius: 8, backgroundColor: '#f3f4f6' },
-  details: { flex: 1, marginLeft: 12 },
-  itemName: { fontSize: 14, fontFamily: fontFamilySemiBold, color: '#111' },
+  details: { flex: 1, marginLeft: 12, minWidth: 0 },
+  itemName: { fontSize: 14, fontFamily: fontFamilySemiBold, color: '#111', flexShrink: 1 },
   meta: { fontSize: 11, fontFamily, color: '#6b7280', marginTop: 4 },
   qtyRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 },
   qtyWrap: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#e5e7eb', borderRadius: 8 },

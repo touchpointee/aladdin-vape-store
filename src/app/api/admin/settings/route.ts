@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/db';
 import { Settings } from '@/models/unified';
-import { uploadImage } from '@/lib/minio';
+import { uploadImage, uploadFile } from '@/lib/minio';
 
 export async function GET(req: NextRequest) {
     await connectDB();
@@ -28,6 +28,7 @@ export async function GET(req: NextRequest) {
         const appApiBaseUrlSettings = await Settings.findOne({ key: 'app_api_base_url' });
         const notificationSettings = await Settings.findOne({ key: 'notification_settings' });
         const paymentSettings = await Settings.findOne({ key: 'payment_settings' });
+        const appApkSettings = await Settings.findOne({ key: 'app_apk_url' });
 
         return NextResponse.json({
             banner1: bannerSettings ? JSON.parse(bannerSettings.value).banner1 : null,
@@ -36,6 +37,7 @@ export async function GET(req: NextRequest) {
             site_logo: logoSettings ? logoSettings.value : '/logo.jpg',
             payment_qr_code: qrCodeSettings ? qrCodeSettings.value : '',
             app_api_base_url: appApiBaseUrlSettings ? appApiBaseUrlSettings.value : '',
+            app_apk_url: appApkSettings ? appApkSettings.value : '',
             notification_sound_enabled: notificationSettings ? JSON.parse(notificationSettings.value).enabled : true,
             notification_sound_url: notificationSettings ? JSON.parse(notificationSettings.value).url : 'https://assets.mixkit.co/active_storage/sfx/1013/1013-preview.mp3',
             online_payment_enabled: paymentSettings ? JSON.parse(paymentSettings.value).online_enabled : true,
@@ -122,6 +124,22 @@ export async function POST(req: NextRequest) {
                 { value: JSON.stringify({ online_enabled }) },
                 { upsert: true }
             );
+        }
+
+        // 1f. Handle App APK (download app)
+        if (formData.has('app_apk')) {
+            const apkFile = formData.get('app_apk') as File;
+            if (apkFile && apkFile.size > 0) {
+                const buffer = Buffer.from(await apkFile.arrayBuffer());
+                const fileName = `app/download-${Date.now()}-${apkFile.name.replace(/\s+/g, '-')}`;
+                const contentType = apkFile.type || 'application/vnd.android.package-archive';
+                const apkUrl = await uploadFile(buffer, fileName, contentType);
+                await Settings.findOneAndUpdate(
+                    { key: 'app_apk_url' },
+                    { value: apkUrl },
+                    { upsert: true }
+                );
+            }
         }
 
         // 2. Handle Banner Settings (only if banner fields are present)

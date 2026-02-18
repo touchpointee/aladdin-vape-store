@@ -53,7 +53,7 @@ export default function Header() {
               </View>
             )}
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => navigation.navigate('Cart')} style={styles.iconBtn}>
+          <TouchableOpacity onPress={() => navigation.navigate('Tabs', { screen: 'Cart' })} style={styles.iconBtn}>
             <ShoppingBag size={24} color="#6b7280" />
             {totalItems > 0 && (
               <View style={styles.badge}>

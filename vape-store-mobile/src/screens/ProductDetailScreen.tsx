@@ -139,12 +139,12 @@ export default function ProductDetailScreen() {
       selectedFlavour: selectedFlavour || undefined,
       selectedNicotine: selectedNicotine || undefined,
     });
-    navigation.navigate('Cart');
+    navigation.navigate('Tabs', { screen: 'Cart' });
   };
 
   const handleBuyNow = () => {
     handleAddToCart();
-    navigation.navigate('Cart');
+    navigation.navigate('Tabs', { screen: 'Cart' });
   };
 
   const handleWhatsApp = async () => {

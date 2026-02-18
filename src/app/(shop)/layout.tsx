@@ -1,6 +1,7 @@
 import Header from '@/components/layout/Header';
 import BottomNav from '@/components/layout/BottomNav';
 import CartDrawer from '@/components/cart/CartDrawer';
+import DownloadAppBanner from '@/components/layout/DownloadAppBanner';
 import connectDB from "@/lib/db";
 import { Category } from "@/models/unified";
 import FloatingWhatsApp from '@/components/common/FloatingWhatsApp';
@@ -28,6 +29,11 @@ export default async function ShopLayout({
         <div className="w-full min-h-screen bg-gray-50 flex flex-col items-center">
 
             <div className="w-full min-h-screen bg-white relative flex flex-col transition-all duration-300">
+
+                {/* Download app banner - First purchase 10% off */}
+                <div className="flex-none">
+                    <DownloadAppBanner />
+                </div>
 
                 {/* Header - Sticky on Mobile, Normal on Desktop */}
                 <div className="flex-none z-50 sticky top-0">
