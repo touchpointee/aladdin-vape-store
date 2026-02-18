@@ -28,9 +28,12 @@ export async function POST(req: NextRequest) {
         if (!body.phone || !body.address || !body.city || !body.state || !body.pincode || !body.email || body.age === undefined) {
             return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
         }
-        const phoneDigits = body.phone.toString().replace(/\D/g, '');
+        const phoneDigits = body.phone.toString().replace(/\D/g, '').replace(/^0+/, '');
         if (phoneDigits.length !== 10) {
             return NextResponse.json({ error: 'Phone number must be exactly 10 digits' }, { status: 400 });
+        }
+        if (phoneDigits.startsWith('0')) {
+            return NextResponse.json({ error: 'Phone number cannot start with 0' }, { status: 400 });
         }
 
         const newAddress = await Address.create({ ...body, phone: phoneDigits });
@@ -50,9 +53,12 @@ export async function PUT(req: NextRequest) {
             return NextResponse.json({ error: 'Address ID required' }, { status: 400 });
         }
         if (updateData.phone !== undefined) {
-            const phoneDigits = updateData.phone.toString().replace(/\D/g, '');
+            const phoneDigits = updateData.phone.toString().replace(/\D/g, '').replace(/^0+/, '');
             if (phoneDigits.length !== 10) {
                 return NextResponse.json({ error: 'Phone number must be exactly 10 digits' }, { status: 400 });
+            }
+            if (phoneDigits.startsWith('0')) {
+                return NextResponse.json({ error: 'Phone number cannot start with 0' }, { status: 400 });
             }
             updateData.phone = phoneDigits;
         }

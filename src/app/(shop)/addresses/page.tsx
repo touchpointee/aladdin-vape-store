@@ -97,9 +97,13 @@ export default function AddressesPage() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const phoneDigits = formData.phone.replace(/\D/g, '');
+        const phoneDigits = formData.phone.replace(/\D/g, '').replace(/^0+/, '');
         if (phoneDigits.length !== 10) {
             alert('Please enter a valid 10-digit mobile number');
+            return;
+        }
+        if (phoneDigits.startsWith('0')) {
+            alert('Phone number cannot start with 0');
             return;
         }
         setActionLoading(true);
@@ -170,7 +174,7 @@ export default function AddressesPage() {
                                             type="tel"
                                             inputMode="numeric"
                                             value={formData.phone}
-                                            onChange={e => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })}
+                                            onChange={e => setFormData({ ...formData, phone: e.target.value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 10) })}
                                             className="flex-1 min-w-0 border-0 border-b border-transparent py-2 text-sm focus:outline-none focus:border-blue-500 bg-transparent"
                                             placeholder="10-digit mobile number"
                                         />

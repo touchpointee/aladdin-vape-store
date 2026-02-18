@@ -127,7 +127,7 @@ export default function CheckoutPage() {
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         let value = e.target.value;
         if (e.target.name === 'phone') {
-            value = value.replace(/\D/g, '').slice(0, 10);
+            value = value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 10);
         }
         setFormData({ ...formData, [e.target.name]: value });
     };
@@ -144,9 +144,13 @@ export default function CheckoutPage() {
             }
         }
 
-        const phoneDigits = formData.phone.replace(/\D/g, '');
+        const phoneDigits = formData.phone.replace(/\D/g, '').replace(/^0+/, '');
         if (phoneDigits.length !== 10) {
             alert('Please enter a valid 10-digit mobile number');
+            return;
+        }
+        if (phoneDigits.startsWith('0')) {
+            alert('Phone number cannot start with 0');
             return;
         }
 

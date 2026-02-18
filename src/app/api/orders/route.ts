@@ -68,10 +68,13 @@ export async function POST(req: NextRequest) {
             orderPaymentMode = 'PREPAID';
         }
 
-        // Validate customer phone: must be 10 digits
-        const customerPhone = (body.customer?.phone ?? '').toString().replace(/\D/g, '');
+        // Validate customer phone: must be 10 digits, cannot start with 0
+        const customerPhone = (body.customer?.phone ?? '').toString().replace(/\D/g, '').replace(/^0+/, '');
         if (customerPhone.length !== 10) {
             return NextResponse.json({ error: 'Phone number must be exactly 10 digits' }, { status: 400 });
+        }
+        if (customerPhone.startsWith('0')) {
+            return NextResponse.json({ error: 'Phone number cannot start with 0' }, { status: 400 });
         }
         const customerWithPhone = {
             ...body.customer,
