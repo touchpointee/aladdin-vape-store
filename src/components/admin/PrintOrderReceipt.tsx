@@ -71,6 +71,10 @@ const PrintOrderReceipt: React.FC<PrintOrderReceiptProps> = ({ order }) => {
                         <span className="w-40 shrink-0 text-gray-500 uppercase text-xs">Customer Name</span>
                         <span className="text-lg">{order.customer.name} ({order.customer.age} Yrs)</span>
                     </div>
+                    <div className="flex border-b border-gray-100 pb-2">
+                        <span className="w-40 shrink-0 text-gray-500 uppercase text-xs">Customer Phone</span>
+                        <span className="text-lg">{order.customer.phone}</span>
+                    </div>
                     <div className="flex items-start border-b border-gray-100 pb-2">
                         <span className="w-40 shrink-0 text-gray-500 uppercase text-xs">Shipping Address</span>
                         <div className="flex flex-col text-lg uppercase">
