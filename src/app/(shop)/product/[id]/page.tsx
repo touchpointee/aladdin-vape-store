@@ -1,6 +1,7 @@
 import { Metadata, ResolvingMetadata } from 'next';
 import connectDB from "@/lib/db";
 import { Product, Settings } from "@/models/unified";
+import { getBaseUrl } from "@/lib/utils";
 import ProductDetailClient from "./ProductDetailClient";
 import Script from "next/script";
 import { notFound } from "next/navigation";
@@ -60,7 +61,7 @@ export async function generateMetadata(
         openGraph: {
             title: product.metaTitle || `${product.name} | Aladdin Vape Store`,
             description: product.metaDescription || product.description?.substring(0, 160),
-            url: `https://aladdinvapestoreindia.com/product/${product.slug || product._id}`,
+            url: `${getBaseUrl()}/product/${product.slug || product._id}`,
             images: [productImage, ...previousImages],
             type: 'article',
         },
@@ -91,12 +92,13 @@ export default async function ProductDetailPage({ params }: Props) {
             ? (product.price - (product.price * product.discountPercent / 100))
             : product.price);
 
+    const baseUrl = getBaseUrl();
     // JSON-LD Schema
     const jsonLd = {
         "@context": "https://schema.org",
         "@type": "Product",
         "name": product.name,
-        "image": product.images?.map((img: string) => img.startsWith('http') ? img : `https://aladdinvapestoreindia.com${img}`),
+        "image": product.images?.map((img: string) => img.startsWith('http') ? img : `${baseUrl}${img}`),
         "description": product.description,
         "brand": {
             "@type": "Brand",
@@ -104,7 +106,7 @@ export default async function ProductDetailPage({ params }: Props) {
         },
         "offers": {
             "@type": "Offer",
-            "url": `https://aladdinvapestoreindia.com/product/${product.slug || product._id}`,
+            "url": `${baseUrl}/product/${product.slug || product._id}`,
             "priceCurrency": "INR",
             "price": discountedPrice,
             "availability": product.stock > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",

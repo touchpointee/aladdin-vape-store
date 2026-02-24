@@ -211,9 +211,12 @@ const ProductSchema = new Schema<IProduct>(
     { timestamps: true }
 );
 
-ProductSchema.pre('save', function (this: any) {
+ProductSchema.pre('save', async function (this: any) {
     if (this.isModified('name') || !this.slug) {
-        this.slug = this.name.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
+        const base = this.name.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
+        const ProductModel = this.constructor as Model<IProduct>;
+        const existing = await ProductModel.findOne({ slug: base, _id: { $ne: this._id } });
+        this.slug = existing ? `${base}-${this._id.toString().slice(-6)}` : base;
     }
     if (!this.metaTitle || (this.isModified('name') && this.metaTitle.includes('Aladdin Vape Store'))) {
         this.metaTitle = `${this.name} | Buy Online | Best Price in India | Aladdin Vape Store`;
