@@ -315,6 +315,11 @@ export default function CheckoutScreen() {
               </View>
             ) : null}
             <Text style={styles.qrLabel}>Scan to pay ₹{total.toFixed(2)}</Text>
+            {total > 2000 && (
+              <View style={styles.qrNoteWrap}>
+                <Text style={styles.qrNoteText}>Use another phone to scan so payment above ₹2000 can be done.</Text>
+              </View>
+            )}
             <TouchableOpacity style={styles.utrBtn} onPress={() => setShowUtrModal(true)}>
               <CheckCircle size={20} color="#fff" />
               <Text style={styles.utrBtnText}>I've Paid - Enter UTR</Text>
@@ -424,6 +429,8 @@ const styles = StyleSheet.create({
   qrWrap: { width: 160, height: 160, alignSelf: 'center', marginVertical: 12, backgroundColor: '#fff', borderRadius: 12, overflow: 'hidden' },
   qr: { width: '100%', height: '100%' },
   qrLabel: { textAlign: 'center', marginBottom: 8, fontSize: 14, fontFamily, color: '#6b7280' },
+  qrNoteWrap: { backgroundColor: '#fef3c7', borderWidth: 1, borderColor: '#fcd34d', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8, marginBottom: 8, alignSelf: 'stretch' },
+  qrNoteText: { fontSize: 12, fontFamily, color: '#92400e', textAlign: 'center' },
   utrBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8, backgroundColor: '#22c55e', paddingVertical: 12, borderRadius: 10 },
   utrBtnText: { color: '#fff', fontFamily: fontFamilyBold },
   utrOk: { marginTop: 8, padding: 8, backgroundColor: '#f0fdf4', borderRadius: 8 },

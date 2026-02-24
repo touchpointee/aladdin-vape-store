@@ -481,6 +481,11 @@ export default function CheckoutPage() {
                             <div className="mt-4 pt-4 border-t border-gray-100">
                                 <div className="text-center mb-4">
                                     <p className="text-sm text-gray-600 mb-3">Scan QR code to pay ₹{(subtotal() + DELIVERY_CHARGE).toFixed(2)}</p>
+                                    {(subtotal() + DELIVERY_CHARGE) > 2000 && (
+                                        <p className="text-xs text-amber-700 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 mb-3 max-w-sm mx-auto">
+                                            Use another phone to scan so payment above ₹2000 can be done.
+                                        </p>
+                                    )}
                                     {paymentQrCode ? (
                                         <div className="relative w-48 h-48 mx-auto bg-white border-2 border-gray-200 rounded-lg overflow-hidden">
                                             <Image
