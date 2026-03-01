@@ -135,8 +135,8 @@ export default function CheckoutPage() {
         setFormData({ ...formData, [e.target.name]: value });
     };
 
-    const ageNum = Math.min(120, Math.max(0, parseInt(formData.age, 10) || 0));
-    const setAge = (value: number) => setFormData({ ...formData, age: value ? String(value) : '' });
+    const ageNum = Math.min(70, Math.max(0, parseInt(formData.age, 10) || 0));
+    const setAge = (value: number | '') => setFormData({ ...formData, age: value === '' ? '' : String(value) });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -157,6 +157,12 @@ export default function CheckoutPage() {
         }
         if (phoneDigits.startsWith('0')) {
             alert('Phone number cannot start with 0');
+            return;
+        }
+
+        const age = Number(formData.age);
+        if (!formData.age || isNaN(age) || age < 18 || age > 70) {
+            alert('Please enter a valid age between 18 and 70');
             return;
         }
 
@@ -393,7 +399,7 @@ export default function CheckoutPage() {
                                                 type="number"
                                                 inputMode="numeric"
                                                 min={18}
-                                                max={120}
+                                                max={70}
                                                 value={formData.age}
                                                 onChange={handleChange}
                                                 className="w-10 min-w-0 flex-1 border-0 rounded-none p-2 text-sm text-center focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
@@ -403,7 +409,7 @@ export default function CheckoutPage() {
                                                 <button
                                                     type="button"
                                                     aria-label="Increase age"
-                                                    onClick={() => setAge(ageNum >= 120 ? 120 : ageNum + 1)}
+                                                    onClick={() => setAge(ageNum >= 70 ? 70 : ageNum + 1)}
                                                     className="flex items-center justify-center p-1.5 text-gray-600 hover:bg-gray-100 active:bg-gray-200 border-b border-gray-300 min-h-0 touch-manipulation"
                                                 >
                                                     <ChevronUp size={16} strokeWidth={2.5} />
