@@ -4,7 +4,7 @@ import { useCartStore } from "@/store/cartStore";
 import { useAuthStore } from "@/store/authStore";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { ArrowLeft, CheckCircle, MapPin, Plus, CreditCard, Banknote, Copy, Check } from "lucide-react";
+import { ArrowLeft, CheckCircle, MapPin, Plus, CreditCard, Banknote, Copy, Check, ChevronUp, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -129,8 +129,14 @@ export default function CheckoutPage() {
         if (e.target.name === 'phone') {
             value = value.replace(/\D/g, '').replace(/^0+/, '').slice(0, 10);
         }
+        if (e.target.name === 'age') {
+            value = value.replace(/\D/g, '').slice(0, 3);
+        }
         setFormData({ ...formData, [e.target.name]: value });
     };
+
+    const ageNum = Math.min(120, Math.max(0, parseInt(formData.age, 10) || 0));
+    const setAge = (value: number) => setFormData({ ...formData, age: value ? String(value) : '' });
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -361,8 +367,8 @@ export default function CheckoutPage() {
                                         placeholder="john@example.com"
                                     />
                                 </div>
-                                <div className="flex gap-4">
-                                    <div className="flex-1">
+                                <div className="flex flex-col sm:flex-row gap-4 min-w-0">
+                                    <div className="flex-1 min-w-0">
                                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Phone Number</label>
                                         <div className="flex items-center border border-gray-300 rounded overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500">
                                             <span className="px-3 py-2 bg-gray-100 text-gray-600 text-sm font-medium border-r border-gray-300">+91</span>
@@ -378,15 +384,40 @@ export default function CheckoutPage() {
                                             />
                                         </div>
                                     </div>
-                                    <div className="w-24">
+                                    <div className="w-full sm:w-28 min-w-0 max-w-full">
                                         <label className="block text-xs font-bold text-gray-500 uppercase mb-1">Age</label>
-                                        <input
-                                            name="age" required type="number"
-                                            value={formData.age}
-                                            onChange={handleChange}
-                                            className="w-full border border-gray-300 rounded p-2 text-sm focus:border-blue-500 outline-none"
-                                            placeholder="21"
-                                        />
+                                        <div className="flex items-stretch border border-gray-300 rounded overflow-hidden focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 bg-white min-w-0">
+                                            <input
+                                                name="age"
+                                                required
+                                                type="number"
+                                                inputMode="numeric"
+                                                min={18}
+                                                max={120}
+                                                value={formData.age}
+                                                onChange={handleChange}
+                                                className="w-10 min-w-0 flex-1 border-0 rounded-none p-2 text-sm text-center focus:outline-none focus:ring-0 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                                                placeholder="21"
+                                            />
+                                            <div className="flex flex-col border-l border-gray-300 shrink-0">
+                                                <button
+                                                    type="button"
+                                                    aria-label="Increase age"
+                                                    onClick={() => setAge(ageNum >= 120 ? 120 : ageNum + 1)}
+                                                    className="flex items-center justify-center p-1.5 text-gray-600 hover:bg-gray-100 active:bg-gray-200 border-b border-gray-300 min-h-0 touch-manipulation"
+                                                >
+                                                    <ChevronUp size={16} strokeWidth={2.5} />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    aria-label="Decrease age"
+                                                    onClick={() => setAge(ageNum <= 0 ? '' : ageNum - 1)}
+                                                    className="flex items-center justify-center p-1.5 text-gray-600 hover:bg-gray-100 active:bg-gray-200 min-h-0 touch-manipulation"
+                                                >
+                                                    <ChevronDown size={16} strokeWidth={2.5} />
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <div>
